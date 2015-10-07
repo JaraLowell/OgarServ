@@ -39,6 +39,9 @@ function stats2file(gameServer) {
             data = "0";
             if( client.cells.length > 0 ) data = "1";
             wstream.write('ID:' + id +  ', Nick: ' + nick + ', Score: ' + score + ', Cells: ' + cells + ', Status: ' + data  + ' IP: ' + ip + '\n');
+
+            if( gameServer.sqlconfig.host != '' && ip != "BOT" && score > 100 )
+                gameServer.mysql.writeScore(nick, ip, score,gameServer.sqlconfig.table);
         }
     }
     wstream.end();

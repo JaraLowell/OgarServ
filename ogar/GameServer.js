@@ -47,6 +47,13 @@ function GameServer() {
     this.tickSpawn = 0; // Used with spawning food
 
     // Config
+    this.sqlconfig = {
+        host: '',
+        user: '',
+        password: '',
+        database: '',
+        table: ''
+    };
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
         serverPort: 44411,            // Server port
@@ -93,26 +100,20 @@ function GameServer() {
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
         chatMaxMessageLength: 70,     // Maximum message length
         serverResetTime: 24,          // Time in hours to reset (0 is off)
-
-        MAPPlayerTick: 5,             // airdrop maximum multiplyer
-        AirDropDispSec: 10,           // Time to show message
-        AirDropTimeSec: 60,           // Time to spawn airdrop in seconds
-        AirDropWinScore: 5000,        // Score to win
-        AirDropVirusChanceMin: 0,     // Virused Min
-        AirDropVirusChanceMax: 100,   // Virused Max
-        AirDropCenterChance: 30,      // Chance airdrop to spawn on center of the map
-        AirDropSmallMassChance: 20,   // Chance in percentage for small airdrop
-        AirDropSmallMassMin: 50,      // Small airdrop minimum size
-        AirDropSmallMassMax: 200,     // Small airdrop maximum size
-        AirDropSmallMultiplyerMin: 1, // Small airdrop minimum multiplyer
-        AirDropSmallMultiplyerMax: 4, // Small airdrop maximum multiplyer
-        AirDropMassMin: 100,          // airdrop minimum size
-        AirDropMassMax: 300,          // airdrop maximum size
-        AirDropMultiplyerMin: 2,      // airdrop minimum multiplyer
-        AirDropMultiplyerMax: 3,      // airdrop maximum multiplyer
     };
     // Parse config
     this.loadConfig();
+
+		// My SQL erver
+    if ( this.sqlconfig.host != '' )
+    {
+        console.log("* \u001B[33mMySQL config loaded Database set to " + this.sqlconfig.database + "." + this.sqlconfig.table + "\u001B[0m");
+        MySQL = require("./modules/mysql");
+        this.mysql = new MySQL();
+        this.mysql.init(this.sqlconfig);
+        this.mysql.connect();
+        this.mysql.createTable(this.sqlconfig.table,this.sqlconfig.database);
+    }
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -912,6 +913,16 @@ GameServer.prototype.loadConfig = function() {
         console.log("* Config not found... Generating new config");
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
+    }
+
+    try {
+        // Load the contents of the mysql config file
+        var load = ini.parse(fs.readFileSync('./mysql.ini', 'utf-8'));
+        for (var obj in load) {
+            this.sqlconfig[obj] = load[obj];
+        }
+    } catch (err) {
+        // Noting to do...
     }
 };
 

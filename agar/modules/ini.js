@@ -105,8 +105,8 @@ function decode (str) {
 
         // safeguard against resetting a previously defined
         // array by accidentally forgetting the brackets
-        if (isInt(value)) {
-            p[key] = parseInt(value);
+        if (isNaN(value)) {
+            p[key] = value;
         } else {
             p[key] = parseFloat(value);
         }
