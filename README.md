@@ -25,7 +25,7 @@ To have it active, create an ini file inside the folder called mysql.ini and in 
 
 ## Console Commands
 - addbot [Number of Bots] 
-* add one or more bot to the server
+  * add one or more bot to the server
 - ban [IP]
   * ban a player with IP
 - banlist
