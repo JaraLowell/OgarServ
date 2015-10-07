@@ -15,6 +15,14 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
   Currently being tested!
 * Store and Retrieve Bans from file
 
+## MySQL High Score!
+To have it active, create an ini file inside the folder called mysql.ini and in there write down 
+* host = my squl server:ip usualy `localhost`
+* user = mysql username (make sure you added it and it has write access)
+* password = mysql user password
+* database = the database to use example `agario`
+* table = the score table name (in case you have more then 1 server example: `score`)
+
 ## Console Commands
 * addbot     : add one or more bot to the server
 * ban        : ban a player with IP
