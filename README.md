@@ -5,4 +5,4 @@ Copy of ogar that I heavily modified, and will continue to update. The [OgarProj
 * MySQL   : Adding MySQL Highscore system
 
 ## License
-Please see [this link](https://github.com/JaraLowell/OgarServ/master/LICENSE.md)
+Please see [this link](https://github.com/JaraLowell/OgarServ/blob/OgarServer/LICENSE)
