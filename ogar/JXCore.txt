@@ -1,0 +1,12 @@
+run the following commands from console before starting
+
+curl http://jxcore.com/xil.sh | bash
+jx install querystring ws http fs sys
+
+The first line installs JXcore, the second line installs the node require files.
+You only would need do that once. So once you have those installed you can
+run the server from command line usingthe command
+
+jx index.js
+
+or ./runserver.sh to start it looped.
