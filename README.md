@@ -17,15 +17,15 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 
 ## MySQL High Score!
 To have it active, create an ini file inside the folder called mysql.ini and in there write down 
-* host = my squl server:ip usualy `localhost`
+* host = mysql server ip:port usualy `localhost`
 * user = mysql username (make sure you added it and it has write access)
 * password = mysql user password
 * database = the database to use example `agario`
 * table = the score table name (in case you have more then 1 server example: `score`)
 
 ## Console Commands
-- addbot [Number of Bots]
-  * add one or more bot to the server
+- addbot [Number of Bots] 
+* add one or more bot to the server
 - ban [IP]
   * ban a player with IP
 - banlist
