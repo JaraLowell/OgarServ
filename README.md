@@ -1,6 +1,9 @@
 ## Ogar
 Copy of Ogar that I heavily modified, and will continue to update. The [OgarProject](https://ogarproject.com) owns Ogar, and I do not claim it as mine! Original Ogar found [here](https://github.com/OgarProject/Ogar)
 
+## JXcore
+Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory managment for long hour running prodjects. Please see [this link](https://github.com/jxcore/jxcore)
+
 ## What is Done
 * Clean up the code
 * Make two version Ogar and Agar, Agar is agar.io client compatible, while ogar is for those that use an older protocol. eventually i hope we can remove support for older protocols when people with web clients know how to edit there java source. But that later.
