@@ -3,9 +3,11 @@ Project Info:
 [![License](https://img.shields.io/badge/license-GPLv3-663399.svg)](https://github.com/JaraLowell/OgarServ/blob/OgarServer/LICENSE)
 
 ## Ogar
+![Language](https://img.shields.io/badge/Ogar-Node-red.svg)
 Copy of Ogar that I heavily modified, and will continue to update. The [OgarProject](https://ogarproject.com) owns Ogar, and I do not claim it as mine! Original Ogar found [here](https://github.com/OgarProject/Ogar)
 
 ## JXcore
+![Language](https://img.shields.io/badge/JXCore-Nodejx-red.svg)
 Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory managment for long hour running prodjects. Please see [this link](https://github.com/jxcore/jxcore)
 
 ## What is Done
@@ -15,6 +17,7 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 * Added Master Server or Tracker, this server announces it is online to the tracker page. You can there then monitor your server and other people can find your server there as well to play on. See [this link](http://ogar.mivabe.nl/master) for the Tracker page.
 
 ## We working on
+![Language](https://img.shields.io/badge/language-MySQL-red.svg)
 * MySQL   : Adding MySQL Highscore system 
   Currently being tested!
 * Store and Retrieve Bans from file
