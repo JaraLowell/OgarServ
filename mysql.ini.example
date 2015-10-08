@@ -1,0 +1,5 @@
+﻿host = localhost
+user = rabit
+password = carrot
+database = agario
+table = score
