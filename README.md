@@ -14,6 +14,7 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 * Cleaned up the console response and commands, see list below
 * `serverBots = [Number]` is now Bot min Players, if more players are alive in the game and bots get killed they dont return till the live users drops under the Number set in serverBots.
 * Added `Master Server` or Tracker, this server announces it is online to the tracker page. You can there then monitor your server and other people can find your server there as well to play on. See [-= Ogar Tracker =-](http://ogar.mivabe.nl/master) for the Tracker page.
+* Added auto shutdown server (for auto resets) this by default is set to 24 hours, but can be changed trough `serverResetTime: 24` in your gameserver.ini. Setting it to 0 (zero) disables auto shutdown.
 
 ## We working on
 * MySQL   : Adding MySQL Highscore system 
@@ -83,4 +84,3 @@ To have it active, create an ini file inside the folder called mysql.ini and in 
   * spawn virus at a specified Location
 
 Enjoy!
-
