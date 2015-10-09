@@ -42,7 +42,7 @@ if (showConsole) {
 
 stdin.addListener("data", function(d) {
     if ( d.toString().trim() === '' ) return;
-
+		process.stdout.write('\033[1A\033[2K');
     console.log("\u001B[36m[CMD] " + d.toString().trim() + "\u001B[0m" );
     parseCommands( d.toString().trim() );
 });
