@@ -1,4 +1,4 @@
-### Downloads
+## Downloads
 See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads
 
 ## Project Info
