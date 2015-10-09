@@ -1,3 +1,6 @@
+### Downloads
+See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads
+
 ## Project Info
 ![Language](https://img.shields.io/badge/language-Java-yellow.svg)
 [![License](https://img.shields.io/badge/license-GPLv3-663399.svg)](https://github.com/JaraLowell/OgarServ/blob/OgarServer/LICENSE)
