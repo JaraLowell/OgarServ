@@ -891,11 +891,11 @@ GameServer.prototype.loadConfig = function() {
         var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
 
         for (var obj in load) {
-            this.config[obj] = load[obj];
+            if ( obj.substr(0,2) != "//" ) this.config[obj] = load[obj];
         }
-        // console.log("* \u001B[33mConfig from gameserve.ini loaded\u001B[0m");
+        console.log("\u001B[33mServer Config from gameserve.ini loaded\u001B[0m");
     } catch (err) {
-        console.log("* Config not found... Generating new config");
+        console.log("\u001B[33mConfig not found... Generating new config\u001B[0m");
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
     }
@@ -904,7 +904,7 @@ GameServer.prototype.loadConfig = function() {
         // Load the contents of the mysql config file
         var load = ini.parse(fs.readFileSync('./mysql.ini', 'utf-8'));
         for (var obj in load) {
-            this.sqlconfig[obj] = load[obj];
+            if ( obj.substr(0,2) != "//" ) this.sqlconfig[obj] = load[obj];
         }
     } catch (err) {
         // Noting to do...
