@@ -6,14 +6,19 @@ var GameServer = require('./GameServer');
 var showConsole = true;
 
 // Start msg
-console.log("** Ogar - An open source Agar.io server implementation **");
+console.log("   ___                  ___");
+console.log("  / _ \\ __ _ __ _ _ _  / __| ___ _ ___ _____ _ _");
+console.log(" | (_) / _` / _` | '_| \\__ \\/ -_) '_\\ V / -_) '_|");
+console.log("  \\___/\\__, \\__,_|_|   |___/\\___|_|  \\_/\\___|_|");
+console.log("       |___/  An open source Agar.io server");
+console.log("");
 
 // Handle arguments
 process.argv.forEach(function(val) {
     if (val == "--noconsole") {
         showConsole = false;
     } else if (val == "--help") {
-        console.log("Proper Usage: node index.js");
+        console.log("Proper Usage: jx index.js");
         console.log("    --noconsole         Disables the console");
         console.log("    --help              Help menu.");
         console.log("");
@@ -41,14 +46,6 @@ stdin.addListener("data", function(d) {
     console.log("\u001B[36m[CMD] " + d.toString().trim() + "\u001B[0m" );
     parseCommands( d.toString().trim() );
 });
-
-/* // Console functions
-function prompt() {
-    in_.question("", function(str) {
-        parseCommands(str);
-        return prompt(); // Too lazy to learn async
-    });
-}; */
 
 function parseCommands(str) {
     // Don't process ENTER
