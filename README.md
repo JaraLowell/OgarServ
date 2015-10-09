@@ -36,57 +36,47 @@ To have it active, create an ini file inside the folder called mysql.ini and in 
 * `table =` the score table name (in case you have more then 1 server example: `score`)
 
 ## Console Commands
-- `addbot [Number of Bots]`
-  * add one or more bot to the server
-- `ban [IP]`
-  * ban a player with IP
-- `banlist`
-  * show current ban list
-- `board [Text]`
-  * set scoreboard text
-- `boardreset`
-  * reset scoreboard text
-- `change`
-  * change specified settings
-- `clear`
-  * clear console output
-- `color [Player ID] [Color Red 0~255] [Color Green 0~255] [Color Blue 0~255]`
-  * set cell(s) color by client ID
-- `exit`
-  * stop the server
-- `food [Position X] [ Position Y] [Mass]`
-  * spawn food at specified Location
-- `gamemode [number]`
-  * change server gamemode
-- `kick [Player ID]`
-  * kick player or bot by client ID
-- `kill [Player ID]`
-  * kill cell(s) by client ID
-- `killall`
-  * kill everyone
-- `mass [Player ID] [Mass]`
-  * set cell(s) mass by client ID
-- `merge [Player ID]`
-  * force a player to merge
-- `name [Player ID] [New Name]`
-  * change cell(s) name by client ID
-- `playerlist`
-  * get list of players and bots
-- `pause`
-  * pause game , freeze all cells
-- `reload`
-  * reload config
-- `say [Text]`
-  * chat from console
-- `split [Player ID]`
-  * force a player to split
-- `status`
-  * get server status
-- `tp [Player ID] [Position X] [ Position Y]`
-  * teleport player to specified location
-- `unban [IP]`
-  * un ban a player with IP
-- `virus [Position X] [ Position Y] [Mass]`
-  * spawn virus at a specified Location
+Command | Info
+--------|--------
+addbot [Number of Bots] | add one or more bot to the server
+ban [IP] |  ban a player with IP
+banlist | show current ban list
+board [Text] | set scoreboard text
+boardreset | reset scoreboard text
+change | change specified settings
+clear | clear console output
+color [Player ID] [Color R] [Color G] [Color B] | set cell(s) color by client ID
+exit | stop the server
+food [Position X] [ Position Y] [Mass] | spawn food at specified Location
+gamemode [number] | change server gamemode
+kick [Player ID] | kick player or bot by client ID
+kill [Player ID] | kill cell(s) by client ID
+killall | kill everyone
+mass [Player ID] [Mass] | set cell(s) mass by client ID
+merge [Player ID] | force a player to merge
+name [Player ID] [New Name] | change cell(s) name by client ID
+playerlist | get list of players and bots
+pause | pause game , freeze all cells
+reload | reload config
+say [Text] | chat from console
+split [Player ID] | force a player to split
+status | get server status
+tp [Player ID] [Position X] [ Position Y] | teleport player to specified location
+unban [IP] | un ban a player with IP
+virus [Position X] [ Position Y] [Mass]` | spawn virus at a specified Location
+
+## Game Mode's Currently Available
+ Number | Full Name
+--------|--------
+0 | Free For All
+1 | Teams
+2 | Experimental
+10 | Tournament
+11 | Hunger Games
+12 | Zombie
+13 | Zombie Teams
+14 | Zombie Experimental Teams
+20 | Rainbow
+22 | Blackhole
 
 Enjoy!
