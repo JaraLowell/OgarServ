@@ -59,7 +59,7 @@ function GameServer() {
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
         serverPort: 44411,            // Server port
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
-        serverResetTime: 24           // Time in hours to reset (0 is off)
+        serverResetTime: 24,          // Time in hours to reset (0 is off)
         serverName: '',               // The name to display on the tracker (leave empty will show ip:port)
         serverBots: 0,                // Amount of player bots to spawn
         serverBotsIgnoreViruses: 0,

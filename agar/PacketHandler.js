@@ -59,10 +59,15 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 16:
             // Discard broken packets
             if (view.byteLength == 21) {
-                // Mouse Move
+                // Old Clients
                 var client = this.socket.playerTracker;
                 client.mouse.x = view.getFloat64(1, true);
                 client.mouse.y = view.getFloat64(9, true);
+            } else if (view.byteLength == 9) {
+                // Client v561.20 and up
+                var client = this.socket.playerTracker;
+                client.mouse.x = view.getInt16(1, true);
+                client.mouse.y = view.getInt16(3, true);
             }
             break;
         case 17:
@@ -80,6 +85,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
+        case 80:
+        		// Some Code Agar.io Sends us o.O
+            var yada = "";
+            for (var i = 1; i < view.byteLength; i++) {
+                var charCode = view.getUint8(i, true);
+                yada += String.fromCharCode(charCode);
+            }
         case 90:
             // Send Server Info
             var player = 0;

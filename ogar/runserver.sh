@@ -8,7 +8,7 @@ fi
 
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  jx install querystring ws http fs sys mysql
+  jx install gyp querystring ws http fs sys mysql
   sleep 2
   clear
 fi
