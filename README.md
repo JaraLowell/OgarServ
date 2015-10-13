@@ -86,6 +86,7 @@ serverMaxConnections: 64 | Maximum amount of connections to the server
 serverPort: 44411 | Server port
 serverGamemode: 0 | Gamemode, See list above
 serverResetTime: 24 | Time in hours to reset (0 is off)
+serverName: My url| The name to display on the tracker (leave empty will show ip:port, max 32char)
 serverBots: 0 | Amount of player bots min players on server
 serverViewBaseX: 1024 | Base view X distance of players (Warning: high values may cause lag)
 serverViewBaseY: 592 | Base view Y distance of players
