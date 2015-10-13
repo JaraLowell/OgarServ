@@ -59,6 +59,8 @@ function GameServer() {
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
         serverPort: 44411,            // Server port
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
+        serverResetTime: 24           // Time in hours to reset (0 is off)
+        serverName: '',               // The name to display on the tracker (leave empty will show ip:port)
         serverBots: 0,                // Amount of player bots to spawn
         serverBotsIgnoreViruses: 0,
         serverViewBaseX: 1024,        // Base view distance of players. Warning: high values may cause lag
@@ -99,8 +101,7 @@ function GameServer() {
         tourneyTimeLimit: 20,         // Time limit of the game, in minutes.
         tourneyAutoFill: 0,           // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
-        chatMaxMessageLength: 70,     // Maximum message length
-        serverResetTime: 24           // Time in hours to reset (0 is off)
+        chatMaxMessageLength: 70      // Maximum message length
     };
     // Parse config
     this.loadConfig();
@@ -184,6 +185,8 @@ GameServer.prototype.start = function() {
             return;
         }
 
+				var origin = ws.upgradeReq.headers.origin;
+
         function close(error) {
             this.server.log.onDisconnect(this.socket.remoteAddress);
             var client = this.socket.playerTracker;
@@ -204,7 +207,7 @@ GameServer.prototype.start = function() {
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
-        console.log( "(" + this.clients.length + "/" + this.config.serverMaxConnections  + ") \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+"\u001B[0m");
+        console.log( "(" + this.clients.length + "/" + this.config.serverMaxConnections  + ") \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+" [origin "+origin+"]\u001B[0m");
 
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
@@ -966,6 +969,9 @@ GameServer.prototype.MasterPing = function() {
         if ( this.sqlconfig.host != '' && humans == 0 )
             this.mysql.ping();
 
+        var sName = 'Unnamed Server';
+        if ( this.config.serverName != '' ) sName = this.config.serverName;
+
         var data = {
             current_players: players,
             alive: humans,
@@ -974,6 +980,7 @@ GameServer.prototype.MasterPing = function() {
             sport: this.config.serverPort,
             gamemode: this.gameMode.name,
             agario: "true",
+            name: sName,
             opp: myos.platform() + " " + myos.arch(),
             uptime: process.uptime(),
             start_time: this.startTime.getTime()
