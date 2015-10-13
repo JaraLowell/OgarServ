@@ -68,6 +68,7 @@ function GameServer() {
         serverStatsPort: 88,          // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,        // Amount of seconds per update for the server stats
         serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
+        gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
         borderLeft: 0,                // Left border of map (Vanilla value: 0)
         borderRight: 6000,            // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0,                 // Top border of map (Vanilla value: 0)
