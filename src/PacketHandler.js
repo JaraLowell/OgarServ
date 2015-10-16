@@ -1,4 +1,5 @@
 var Packet = require('./packet');
+var Commands = require('./modules/CommandList');
 var LastMsg;
 var SpamBlock;
 
@@ -59,10 +60,15 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 16:
             // Discard broken packets
             if (view.byteLength == 21) {
-                // Mouse Move
+                // Old Clients
                 var client = this.socket.playerTracker;
                 client.mouse.x = view.getFloat64(1, true);
                 client.mouse.y = view.getFloat64(9, true);
+            } else if (view.byteLength == 9) {
+                // Client v561.20 and up
+                var client = this.socket.playerTracker;
+                client.mouse.x = view.getInt16(1, true);
+                client.mouse.y = view.getInt16(3, true);
             }
             break;
         case 17:
@@ -80,6 +86,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
+        case 80:
+        		// Some Code Agar.io Sends us o.O
+            var yada = "";
+            for (var i = 1; i < view.byteLength; i++) {
+                var charCode = view.getUint8(i, true);
+                yada += String.fromCharCode(charCode);
+            }
         case 90:
             // Send Server Info
             var player = 0;
@@ -93,15 +106,6 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 255:
             // Connection Start
             if (view.byteLength == 5) {
-/* Protocoll Check              
- *                this.protocol = view.getUint32(1, true);
- *							  if ( this.protocol !=  1441210800 )
- *               {
- *                   console.log("\u001B[31mClient Auto Banned: " + this.socket.remoteAddress + ":" + this.socket.remotePort + " Error wrong protocol\u001B[0m");
- *                   this.gameServer.banned.push(this.socket.remoteAddress);
- *                   this.socket.close();
- *               } 
- */
                 var c = this.gameServer.config;
                 var player = 0;
                 var client;
@@ -142,6 +146,30 @@ PacketHandler.prototype.handleMessage = function(message) {
                 message += String.fromCharCode(charCode);
             }
 
+            var zname = wname = this.socket.playerTracker.name;
+            if ( wname == "" ) wname = "Spectator";
+
+            if ( this.gameServer.config.serverAdminPass != '' )
+            {
+                var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
+                if ( message.substr(0,passkey.length) == passkey ) {
+                    var cmd = message.substr(passkey.length, message.length );
+                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd );
+                    var split = cmd.split(" ");
+                    var first = split[0].toLowerCase();
+                    var execute = this.gameServer.commands[first];
+                    if (typeof execute != 'undefined') {
+                        execute(this.gameServer,split);
+                    } else {
+                        console.log("Invalid Command!");
+                    }
+                    break;
+                } else if ( message.substr(0,6) == "/rcon " ) {
+                		console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!" );
+                		break;
+                }
+            }
+
             if( message == LastMsg ) {
                 ++SpamBlock;
                 if( SpamBlock > 10 ) this.gameServer.banned.push(this.socket.remoteAddress);
@@ -156,8 +184,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             var min  = date.getMinutes();
             min = (min < 10 ? "0" : "") + min;
             hour += ":" + min;
-            var zname = wname = this.socket.playerTracker.name;
-            if ( wname == "" ) wname = "Spectator";
+
             console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
 
             var fs = require('fs');

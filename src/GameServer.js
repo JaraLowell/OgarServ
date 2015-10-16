@@ -58,14 +58,18 @@ function GameServer() {
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
         serverPort: 44411,            // Server port
+        serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
+        serverResetTime: 24,          // Time in hours to reset (0 is off)
+        serverName: '',               // The name to display on the tracker (leave empty will show ip:port)
+        serverAdminPass: '',          // Remote console commands password
         serverBots: 0,                // Amount of player bots to spawn
-        serverBotsIgnoreViruses: 0,
         serverViewBaseX: 1024,        // Base view distance of players. Warning: high values may cause lag
         serverViewBaseY: 592,
         serverStatsPort: 88,          // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,        // Amount of seconds per update for the server stats
         serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
+        gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
         borderLeft: 0,                // Left border of map (Vanilla value: 0)
         borderRight: 6000,            // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0,                 // Top border of map (Vanilla value: 0)
@@ -99,11 +103,27 @@ function GameServer() {
         tourneyTimeLimit: 20,         // Time limit of the game, in minutes.
         tourneyAutoFill: 0,           // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
-        chatMaxMessageLength: 70,     // Maximum message length
-        serverResetTime: 24           // Time in hours to reset (0 is off)
+        chatMaxMessageLength: 70      // Maximum message length
     };
     // Parse config
     this.loadConfig();
+
+    // Gamemodes
+    this.gameMode = Gamemode.get(this.config.serverGamemode);
+}
+
+module.exports = GameServer;
+
+GameServer.prototype.start = function() {
+    // Logging
+    this.log.setup(this);
+
+		// Rcon Info
+    if ( this.config.serverAdminPass != '' )
+    {
+        console.log("* \u001B[33mRcon enabled, passkey set to " + this.config.serverAdminPass + "\u001B[0m");
+        console.log("* \u001B[33mTo use in chat type /rcon " + this.config.serverAdminPass + " <server command>\u001B[0m");
+    }
 
 		// My SQL erver
     if ( this.sqlconfig.host != '' )
@@ -115,16 +135,6 @@ function GameServer() {
         this.mysql.connect();
         this.mysql.createTable(this.sqlconfig.table,this.sqlconfig.database);
     }
-
-    // Gamemodes
-    this.gameMode = Gamemode.get(this.config.serverGamemode);
-}
-
-module.exports = GameServer;
-
-GameServer.prototype.start = function() {
-    // Logging
-    this.log.setup(this);
 
     // Gamemode configurations
     this.gameMode.onServerInit(this);
@@ -153,6 +163,11 @@ GameServer.prototype.start = function() {
         if (this.config.serverResetTime > 0 ) {
             console.log("* \u001B[33mAuto shutdown after "+this.config.serverResetTime+" hours\u001B[0m");
         }
+        
+        if ( this.config.serverVersion == 1 )
+        		console.log("* \u001B[33mProtocol set to new, clients with version 561.20 and up can connect to this server\u001B[0m");
+        if ( this.config.serverVersion == 0 )
+        		console.log("* \u001B[33mProtocol set to old, clients with version 561.19 and older can connect to this server\u001B[0m");
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -184,6 +199,8 @@ GameServer.prototype.start = function() {
             return;
         }
 
+				var origin = ws.upgradeReq.headers.origin;
+
         function close(error) {
             this.server.log.onDisconnect(this.socket.remoteAddress);
             var client = this.socket.playerTracker;
@@ -204,7 +221,7 @@ GameServer.prototype.start = function() {
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
-        console.log( "(" + this.clients.length + "/" + this.config.serverMaxConnections  + ") \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+"\u001B[0m");
+        console.log( "(" + this.clients.length + "/" + this.config.serverMaxConnections  + ") \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+" [origin "+origin+"]\u001B[0m");
 
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
@@ -891,11 +908,10 @@ GameServer.prototype.loadConfig = function() {
         var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
 
         for (var obj in load) {
-            this.config[obj] = load[obj];
+            if ( obj.substr(0,2) != "//" ) this.config[obj] = load[obj];
         }
-        // console.log("* \u001B[33mConfig from gameserve.ini loaded\u001B[0m");
     } catch (err) {
-        console.log("* Config not found... Generating new config");
+        console.log("\u001B[33mConfig not found... Generating new config\u001B[0m");
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
     }
@@ -904,7 +920,7 @@ GameServer.prototype.loadConfig = function() {
         // Load the contents of the mysql config file
         var load = ini.parse(fs.readFileSync('./mysql.ini', 'utf-8'));
         for (var obj in load) {
-            this.sqlconfig[obj] = load[obj];
+            if ( obj.substr(0,2) != "//" ) this.sqlconfig[obj] = load[obj];
         }
     } catch (err) {
         // Noting to do...
@@ -966,6 +982,12 @@ GameServer.prototype.MasterPing = function() {
         if ( this.sqlconfig.host != '' && humans == 0 )
             this.mysql.ping();
 
+        var sName = 'Unnamed Server';
+        if ( this.config.serverName != '' ) sName = this.config.serverName;
+
+				var pversion = 'true';
+				if ( this.config.serverVersion == 0 ) pversion = 'false';
+
         var data = {
             current_players: players,
             alive: humans,
@@ -973,7 +995,8 @@ GameServer.prototype.MasterPing = function() {
             max_players: this.config.serverMaxConnections,
             sport: this.config.serverPort,
             gamemode: this.gameMode.name,
-            agario: "true",
+            agario: pversion,
+            name: sName,
             opp: myos.platform() + " " + myos.arch(),
             uptime: process.uptime(),
             start_time: this.startTime.getTime()
@@ -1038,7 +1061,7 @@ WebSocket.prototype.sendPacket = function(packet) {
         try {
             this.send(packet.build(), {binary: true});
         } catch (e) {
-            console.log("\u001B[31m[Socket Error] " + e + "\u001B[0m");
+            // console.log("\u001B[31m[Socket Error] " + e + "\u001B[0m");
         }
     } else {
         // Remove socket

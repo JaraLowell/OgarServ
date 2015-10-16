@@ -10,7 +10,7 @@ console.log("   ___                  ___");
 console.log("  / _ \\ __ _ __ _ _ _  / __| ___ _ ___ _____ _ _");
 console.log(" | (_) / _` / _` | '_| \\__ \\/ -_) '_\\ V / -_) '_|");
 console.log("  \\___/\\__, \\__,_|_|   |___/\\___|_|  \\_/\\___|_|");
-console.log("       |___/  An open source Agar.io server");
+console.log("       |___/  \u001B[32mAn open source Agar.io server\u001B[0m");
 console.log("");
 
 // Handle arguments
