@@ -1,7 +1,8 @@
-function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
+function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, serverVersion) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
     this.nonVisibleNodes = nonVisibleNodes;
+    this.serverVersion = serverVersion;
 }
 
 module.exports = UpdateNodes;
@@ -15,8 +16,10 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
-
-        nodesLength = nodesLength + 16 + (node.getName().length * 2);
+        if( this.serverVersion == 1 )
+        	nodesLength = nodesLength + 20 + (node.getName().length * 2);
+        else
+        	nodesLength = nodesLength + 16 + (node.getName().length * 2);
     }
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
@@ -50,16 +53,27 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
-
-        view.setUint32(offset, node.nodeId, true); // Node ID
-        view.setUint16(offset + 4, node.position.x, true); // X position
-        view.setUint16(offset + 6, node.position.y, true); // Y position
-        view.setUint16(offset + 8, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
-        view.setUint8(offset + 10, node.color.r, true); // Color (R)
-        view.setUint8(offset + 11, node.color.g, true); // Color (G)
-        view.setUint8(offset + 12, node.color.b, true); // Color (B)
-        view.setUint8(offset + 13, node.spiked, true); // Flags
-        offset += 14;
+        if( this.serverVersion == 1 ) {
+        		view.setUint32(offset, node.nodeId, true);
+        		view.setInt32(offset + 4, node.position.x, true);
+        		view.setInt32(offset + 8, node.position.y, true);
+        		view.setUint16(offset + 12, node.getSize(), true);
+        		view.setUint8(offset + 14, node.color.r, true);
+        		view.setUint8(offset + 15, node.color.g, true);
+        		view.setUint8(offset + 16, node.color.b, true);
+        		view.setUint8(offset + 17, node.spiked, true);
+        		offset += 18;
+        } else {
+		        view.setUint32(offset, node.nodeId, true);
+		        view.setUint16(offset + 4, node.position.x, true);
+		        view.setUint16(offset + 6, node.position.y, true);
+		        view.setUint16(offset + 8, node.getSize(), true);
+		        view.setUint8(offset + 10, node.color.r, true);
+		        view.setUint8(offset + 11, node.color.g, true);
+		        view.setUint8(offset + 12, node.color.b, true);
+		        view.setUint8(offset + 13, node.spiked, true);
+		        offset += 14;
+      	}
 
         var name = node.getName();
         if (name) {

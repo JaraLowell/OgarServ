@@ -1,3 +1,6 @@
+## Downloads
+See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.5.6)
+
 ## Project Info
 ![Language](https://img.shields.io/badge/language-Java-yellow.svg)
 [![License](https://img.shields.io/badge/license-GPLv3-663399.svg)](https://github.com/JaraLowell/OgarServ/blob/OgarServer/LICENSE)
@@ -10,11 +13,12 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 
 ## What is Done
 * Clean up the code
-* Make two version `Ogar` and `Agar`, Agar is agar.io client compatible, while ogar is for those that use an older protocol. eventually i hope we can remove support for older protocols when people with web clients know how to edit there java source. But that later.
+* Made this version both agar.io client compatible and older protocol clients compatible. You can set this now in gameserver.ini! So if in your webclient you see huge balls or none at all, switch the serverVersion from 1 to 0!
 * Cleaned up the console response and commands, see list below
 * `serverBots = [Number]` is now Bot min Players, if more players are alive in the game and bots get killed they dont return till the live users drops under the Number set in serverBots.
 * Added `Master Server` or Tracker, this server announces it is online to the tracker page. You can there then monitor your server and other people can find your server there as well to play on. See [-= Ogar Tracker =-](http://ogar.mivabe.nl/master) for the Tracker page.
 * Added auto shutdown server (for auto resets) this by default is set to 24 hours, but can be changed trough `serverResetTime: 24` in your gameserver.ini. Setting it to 0 (zero) disables auto shutdown.
+* Added remote commands!, you can now issue commands to the server from your chat in the client (that be if you use an client that has chat support) by default this is set off.
 
 * ![Language](https://img.shields.io/badge/Chat-99-green.svg) This Server supports Chat for both ogar and agar (Package 99)
 * ![Language](https://img.shields.io/badge/Info-90-green.svg) This Server supports Server Info for both ogar and agar (Package 90)
@@ -32,58 +36,15 @@ To have it active, create an ini file inside the folder called mysql.ini and in 
 * `database =` the database to use example `agario`
 * `table =` the score table name (in case you have more then 1 server example: `score`)
 
-## Console Commands
-- `addbot [Number of Bots]`
-  * add one or more bot to the server
-- `ban [IP]`
-  * ban a player with IP
-- `banlist`
-  * show current ban list
-- `board [Text]`
-  * set scoreboard text
-- `boardreset`
-  * reset scoreboard text
-- `change`
-  * change specified settings
-- `clear`
-  * clear console output
-- `color [Player ID] [Color Red 0~255] [Color Green 0~255] [Color Blue 0~255]`
-  * set cell(s) color by client ID
-- `exit`
-  * stop the server
-- `food [Position X] [ Position Y] [Mass]`
-  * spawn food at specified Location
-- `gamemode [number]`
-  * change server gamemode
-- `kick [Player ID]`
-  * kick player or bot by client ID
-- `kill [Player ID]`
-  * kill cell(s) by client ID
-- `killall`
-  * kill everyone
-- `mass [Player ID] [Mass]`
-  * set cell(s) mass by client ID
-- `merge [Player ID]`
-  * force a player to merge
-- `name [Player ID] [New Name]`
-  * change cell(s) name by client ID
-- `playerlist`
-  * get list of players and bots
-- `pause`
-  * pause game , freeze all cells
-- `reload`
-  * reload config
-- `say [Text]`
-  * chat from console
-- `split [Player ID]`
-  * force a player to split
-- `status`
-  * get server status
-- `tp [Player ID] [Position X] [ Position Y]`
-  * teleport player to specified location
-- `unban [IP]`
-  * un ban a player with IP
-- `virus [Position X] [ Position Y] [Mass]`
-  * spawn virus at a specified Location
+For more info see the wiki [Server MySQL High Scores](https://github.com/JaraLowell/OgarServ/wiki/Server-MySQL-High-Scores)
 
-Enjoy!
+## Console Commands
+See the wiki [Console Commands](https://github.com/JaraLowell/OgarServ/wiki/Console-Commands)
+
+## Game Mode's Currently Available
+See the wiki [Server Game Mode's](https://github.com/JaraLowell/OgarServ/wiki/Server-Game-Mode's)
+
+## gameserver.ini
+See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Console-Commands)
+
+## Enjoy!
