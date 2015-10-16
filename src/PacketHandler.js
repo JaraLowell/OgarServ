@@ -64,6 +64,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var client = this.socket.playerTracker;
                 client.mouse.x = view.getFloat64(1, true);
                 client.mouse.y = view.getFloat64(9, true);
+            } else if (view.byteLength == 13) {
+                var client = this.socket.playerTracker;
+                client.mouse.x = view.getInt32(1, true);
+                client.mouse.y = view.getInt32(5, true);
             } else if (view.byteLength == 9) {
                 // Client v561.20 and up
                 var client = this.socket.playerTracker;
