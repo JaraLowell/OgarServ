@@ -1,4 +1,5 @@
 var Packet = require('./packet');
+var Commands = require('./modules/CommandList');
 var LastMsg;
 var SpamBlock;
 
@@ -105,15 +106,6 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 255:
             // Connection Start
             if (view.byteLength == 5) {
-/* Protocoll Check              
- *                this.protocol = view.getUint32(1, true);
- *							  if ( this.protocol !=  1441210800 )
- *               {
- *                   console.log("\u001B[31mClient Auto Banned: " + this.socket.remoteAddress + ":" + this.socket.remotePort + " Error wrong protocol\u001B[0m");
- *                   this.gameServer.banned.push(this.socket.remoteAddress);
- *                   this.socket.close();
- *               } 
- */
                 var c = this.gameServer.config;
                 var player = 0;
                 var client;
@@ -154,6 +146,30 @@ PacketHandler.prototype.handleMessage = function(message) {
                 message += String.fromCharCode(charCode);
             }
 
+            var zname = wname = this.socket.playerTracker.name;
+            if ( wname == "" ) wname = "Spectator";
+
+            if ( this.gameServer.config.serverAdminPass != '' )
+            {
+                var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
+                if ( message.substr(0,passkey.length) == passkey ) {
+                    var cmd = message.substr(passkey.length, message.length );
+                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd );
+                    var split = cmd.split(" ");
+                    var first = split[0].toLowerCase();
+                    var execute = this.gameServer.commands[first];
+                    if (typeof execute != 'undefined') {
+                        execute(this.gameServer,split);
+                    } else {
+                        console.log("Invalid Command!");
+                    }
+                    break;
+                } else if ( message.substr(0,6) == "/rcon " ) {
+                		console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!" );
+                		break;
+                }
+            }
+
             if( message == LastMsg ) {
                 ++SpamBlock;
                 if( SpamBlock > 10 ) this.gameServer.banned.push(this.socket.remoteAddress);
@@ -168,8 +184,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             var min  = date.getMinutes();
             min = (min < 10 ? "0" : "") + min;
             hour += ":" + min;
-            var zname = wname = this.socket.playerTracker.name;
-            if ( wname == "" ) wname = "Spectator";
+
             console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
 
             var fs = require('fs');
