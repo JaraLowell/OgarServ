@@ -491,12 +491,7 @@ Commands.list = {
         console.log("\u001B[36mServer: \u001B[0mSpawned 1 virus at ("+pos.x+" , "+pos.y+")");
     },
     exit: function(gameServer,split) {
-        process.stdout.write('\033c');
-        process.stdout.write('\2');
-        console.log("\u001B[36mServer: \u001B[0mServer Shutdown!\2");
-        gameServer.socketServer.close();
-        process.exit(1);
-        window.close();
+				gameServer.exitserver();
     },
     say: function(gameServer,split) {
         var  message = "";

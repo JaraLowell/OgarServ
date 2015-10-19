@@ -444,18 +444,24 @@ GameServer.prototype.mainLoop = function() {
         // Auto Server Reset
         if( this.config.serverResetTime > 0 && ( local - this.startTime ) > ( this.config.serverResetTime * 3600000 ) )
         {
-            process.stdout.write('\033c');
-            process.stdout.write('\2');
-            console.log("Server Auto Shutdown!\2");
-            this.socketServer.close();
-            process.exit(1);
-            window.close();
+            this.exitserver();
         }
 
         // Reset
         this.tick = 0;
     }
 };
+
+GameServer.prototype.exitserver = function() {
+    console.log("Server Shutdown!");
+    if ( this.sqlconfig.host != '' )
+    {
+        this.mysql.connect();
+		}
+		this.socketServer.close();
+		process.exit(1);
+		window.close();		
+}
 
 GameServer.prototype.updateClients = function() {
     for (var i = 0; i < this.clients.length; i++) {
