@@ -58,21 +58,16 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 16:
-            // Discard broken packets
-            if (view.byteLength == 21) {
-                // Old Clients
-                var client = this.socket.playerTracker;
-                client.mouse.x = view.getFloat64(1, true);
-                client.mouse.y = view.getFloat64(9, true);
-            } else if (view.byteLength == 13) {
-                var client = this.socket.playerTracker;
+            var client = this.socket.playerTracker;
+            if (view.byteLength == 13) {
                 client.mouse.x = view.getInt32(1, true);
                 client.mouse.y = view.getInt32(5, true);
             } else if (view.byteLength == 9) {
-                // Client v561.20 and up
-                var client = this.socket.playerTracker;
                 client.mouse.x = view.getInt16(1, true);
                 client.mouse.y = view.getInt16(3, true);
+            } else if (view.byteLength == 21) {
+                client.mouse.x = view.getFloat64(1, true);
+                client.mouse.y = view.getFloat64(9, true);
             }
             break;
         case 17:
@@ -110,9 +105,9 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 255:
             // Connection Start
             if (view.byteLength == 5) {
-                var c = this.gameServer.config;
-                var player = 0;
-                var client;
+                var c = this.gameServer.config,
+                		player = 0,
+                		client;
                 for (var i = 0; i < this.gameServer.clients.length; i++) {
                     client = this.gameServer.clients[i].playerTracker;
                     if ( ( client.disconnect <= 0 ) && ( client.spectate == false ) ) ++player;
@@ -129,19 +124,15 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 99:
-            var message = "";
-            var maxLen = this.gameServer.config.chatMaxMessageLength * 2; // 2 bytes per char
-            var offset = 2;
-            var flags = view.getUint8(1); // for future use (e.g. broadcast vs local message)
-            if (flags & 2) {
-                offset += 4;
-            }
-            if (flags & 4) {
-                offset += 8;
-            }
-            if (flags & 8) {
-                offset += 16;
-            }
+            var message = "",
+            		maxLen = this.gameServer.config.chatMaxMessageLength * 2,
+            		offset = 2,
+            		flags = view.getUint8(1);
+
+            if (flags & 2) { offset += 4;  }
+            if (flags & 4) { offset += 8;  }
+            if (flags & 8) { offset += 16; }
+
             for (var i = offset; i < view.byteLength && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
@@ -159,9 +150,9 @@ PacketHandler.prototype.handleMessage = function(message) {
                 if ( message.substr(0,passkey.length) == passkey ) {
                     var cmd = message.substr(passkey.length, message.length );
                     console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd );
-                    var split = cmd.split(" ");
-                    var first = split[0].toLowerCase();
-                    var execute = this.gameServer.commands[first];
+                    var split = cmd.split(" "),
+                    		first = split[0].toLowerCase(),
+                    		execute = this.gameServer.commands[first];
                     if (typeof execute != 'undefined') {
                         execute(this.gameServer,split);
                     } else {
@@ -182,14 +173,15 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             LastMsg = message;
             SpamBlock = 0;
-            var date = new Date();
-            var hour = date.getHours();
+
+            console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
+
+            var date = new Date(),
+            		hour = date.getHours();
             hour = (hour < 10 ? "0" : "") + hour;
             var min  = date.getMinutes();
             min = (min < 10 ? "0" : "") + min;
             hour += ":" + min;
-
-            console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
 
             var fs = require('fs');
             var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});

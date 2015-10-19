@@ -19,7 +19,7 @@ MySQL.prototype.init = function(sqlconfig) {
 
 MySQL.prototype.connect = function() {
     this.connection.connect(function(err) {
-        if(err) {
+        if( err != null ) {
             console.log('\u001B[31mMySQL Error!\u001B[0m\n', err);
         }
     });
@@ -27,7 +27,6 @@ MySQL.prototype.connect = function() {
 
 MySQL.prototype.ping = function() {
     this.connection.query('SELECT 1');
-    console.log('\u001B[33mSending MySQL hearthbeat\u001B[0m');
 };
 
 MySQL.prototype.close = function() {
