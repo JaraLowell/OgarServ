@@ -89,6 +89,7 @@ function GameServer() {
         ejectSpawnPlayer: 50,         // Chance for a player to spawn from ejected mass
         playerStartMass: 10,          // Starting mass of the player cell.
         playerMaxMass: 22500,         // Maximum mass a player can have
+        playerSpeed: 30,							// Player base speed
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
