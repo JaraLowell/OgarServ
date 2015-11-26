@@ -45,6 +45,6 @@ See the wiki [Console Commands](https://github.com/JaraLowell/OgarServ/wiki/Cons
 See the wiki [Server Game Mode's](https://github.com/JaraLowell/OgarServ/wiki/Server-Game-Mode's)
 
 ## gameserver.ini
-See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Console-Commands)
+See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Server-Config)
 
 ## Enjoy!
