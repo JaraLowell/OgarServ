@@ -27,6 +27,8 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 * MySQL   : Adding MySQL Highscore system 
   - Currently being tested!
 * Store and Retrieve Bans from file
+* Better Spam Filter (store last chat time per player)
+* Hide chat from Console Log trough config
 
 ## [![Language](https://img.shields.io/badge/language-MySQL-red.svg)](https://www.mysql.com) MySQL High Score!
 To have it active, create an ini file inside the folder called mysql.ini and in there write down 
