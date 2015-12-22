@@ -69,6 +69,7 @@ function PlayerTracker(gameServer, socket) {
     this.WriteInfo = 0; // Update for score file
     this.mouseCells = []; // For individual cell movement
     this.team = 0;
+    this.cTime = new Date();
     this.spectate = true;
     this.spectatedPlayer = -1; // Current player that this player is watching
 

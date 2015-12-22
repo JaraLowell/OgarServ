@@ -104,7 +104,9 @@ function GameServer() {
         tourneyTimeLimit: 20,         // Time limit of the game, in minutes.
         tourneyAutoFill: 0,           // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
-        chatMaxMessageLength: 70      // Maximum message length
+        chatMaxMessageLength: 70,     // Maximum message length
+        chatToConsole: 1,             // Log Chat To Console
+        chatIntervalTime: 10000       // Set the delay between messages and commands (in millisecond)
     };
     // Parse config
     this.loadConfig();

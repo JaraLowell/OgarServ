@@ -165,19 +165,32 @@ PacketHandler.prototype.handleMessage = function(message) {
                 }
             }
 
+            var date = new Date(),
+            		hour = date.getHours();
+
+						if( ( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime )
+						{
+								var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime))/1000)%60);
+								var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
+                this.socket.sendPacket(packet);
+								break;
+						}
+
+						this.socket.playerTracker.cTime = date;
+
             if( message == LastMsg ) {
                 ++SpamBlock;
-                if( SpamBlock > 10 ) this.gameServer.banned.push(this.socket.remoteAddress);
                 if( SpamBlock > 5 ) this.socket.close();
                 break;
             }
             LastMsg = message;
             SpamBlock = 0;
 
-            console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
+						if( this.gameServer.config.chatToConsole == 1 )
+						{
+            		console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
+          	}
 
-            var date = new Date(),
-            		hour = date.getHours();
             hour = (hour < 10 ? "0" : "") + hour;
             var min  = date.getMinutes();
             min = (min < 10 ? "0" : "") + min;
