@@ -14,41 +14,6 @@ var fillChar = function (data, char, fieldLength, rTL) {
     return result;
 };
 
-function stats2file(gameServer) {
-    var fs = require('fs');
-    var wstream = fs.createWriteStream('logs/playerlog.txt');
-    wstream.write( 'OGar Server - Game Mode: ' + gameServer.gameMode.name + ' - ');
-    wstream.write( 'Running Time: ' + parseInt( process.uptime() ) + 'sec\n');
-
-    for (var i = 0; i < gameServer.clients.length; i++) {
-        var client = gameServer.clients[i].playerTracker;
-        var id = fillChar((client.pID), ' ', 5, true);
-
-        // Get ip (15 digits length)
-        var ip = "BOT";
-        if (typeof gameServer.clients[i].remoteAddress != 'undefined' ) {
-            ip = gameServer.clients[i].remoteAddress;
-        }
-        // ip = fillChar(ip, ' ', 15);
-
-        var nick = '', cells = '', score = '', data = '';
-        if ( ( client.hscore > 0 ) && ( client.cscore > 0 ) ) {
-            nick  = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
-            cells = fillChar( parseInt(client.cscore), ' ', 2, true);
-            score = fillChar( parseInt(client.hscore), ' ', 6, true);
-            data = "0";
-            if( client.cells.length > 0 ) data = "1";
-            wstream.write('ID:' + id +  ', Nick: ' + nick + ', Score: ' + score + ', Cells: ' + cells + ', Status: ' + data  + ' IP: ' + ip + '\n');
-
-            if( gameServer.sqlconfig.host != '' && ip != "BOT" && score > 100 )
-                gameServer.mysql.writeScore(nick, ip, score,gameServer.sqlconfig.table);
-        }
-    }
-    wstream.end();
-}
-
-module.exports = stats2file;
-
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
@@ -66,9 +31,9 @@ function PlayerTracker(gameServer, socket) {
     this.mouse = {x: 0, y: 0};
     this.tickLeaderboard = 0; //
     this.tickViewBox = 0;
-    this.WriteInfo = 0; // Update for score file
     this.mouseCells = []; // For individual cell movement
     this.team = 0;
+    this.cTime = new Date();
     this.spectate = true;
     this.spectatedPlayer = -1; // Current player that this player is watching
 
@@ -214,15 +179,8 @@ PlayerTracker.prototype.update = function() {
     if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(this.gameServer.lb_packet);
         this.tickLeaderboard = 25; // 20 ticks = 1 second
-        this.WriteInfo--;
     } else {
         this.tickLeaderboard--;
-    }
-
-    // Write Score File
-    if (this.WriteInfo <= 0) {
-        stats2file(this.gameServer);
-        this.WriteInfo = 12;
     }
 
     // Handles disconnections

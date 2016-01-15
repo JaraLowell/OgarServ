@@ -1,5 +1,5 @@
 ## Downloads
-See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.5.8)
+See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.5.9)
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-Java-yellow.svg)
@@ -27,6 +27,8 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 * MySQL   : Adding MySQL Highscore system 
   - Currently being tested!
 * Store and Retrieve Bans from file
+* Better Spam Filter (store last chat time per player)
+* Hide chat from Console Log trough config
 
 ## [![Language](https://img.shields.io/badge/language-MySQL-red.svg)](https://www.mysql.com) MySQL High Score!
 To have it active, create an ini file inside the folder called mysql.ini and in there write down 
@@ -45,6 +47,6 @@ See the wiki [Console Commands](https://github.com/JaraLowell/OgarServ/wiki/Cons
 See the wiki [Server Game Mode's](https://github.com/JaraLowell/OgarServ/wiki/Server-Game-Mode's)
 
 ## gameserver.ini
-See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Console-Commands)
+See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Server-Config)
 
 ## Enjoy!
