@@ -254,7 +254,11 @@ BotPlayer.prototype.decide = function(cell) {
             var angle = Math.atan2(deltaX,deltaY);
 
             // Now reverse the angle
-            angle = this.reverseAngle(angle);
+            if (angle > Math.PI) {
+                angle -= Math.PI;
+            } else {
+                angle += Math.PI;
+            }
 
             // Direction to move
             var x1 = cell.position.x + (500 * Math.sin(angle));
