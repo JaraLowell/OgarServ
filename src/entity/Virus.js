@@ -36,7 +36,7 @@ Virus.prototype.getEatingRange = function() {
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
     var client = consumer.owner;
-    
+
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits,maxSplits);
@@ -66,21 +66,29 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
         numSplits--;
     }
 
+    // Calculate endmass and virus splitspeed
+    endMass = consumer.mass - (numSplits * splitMass);
+    for (var k = 0; k < bigSplits; k++) {
+        endMass *= 0.75;
+    }
+    var endSize = Math.ceil(Math.sqrt(100 * endMass));
+    var virusSplitSpeed = (endSize + Math.min(200 / endSize, 1) * 500) / 3.6;
+
     // Splitting
     var angle = 0; // Starting angle
     for (var k = 0; k < numSplits; k++) {
         angle += 6/numSplits; // Get directions of splitting cells
-        gameServer.newCellVirused(client, consumer, angle, splitMass,150);
+        gameServer.newCellVirused(client, consumer, angle, splitMass, virusSplitSpeed);
         consumer.mass -= splitMass;
     }
 
     for (var k = 0; k < bigSplits; k++) {
         angle = Math.random() * 6.28; // Random directions
         splitMass = consumer.mass / 4;
-        gameServer.newCellVirused(client, consumer, angle, splitMass,20);
+        gameServer.newCellVirused(client, consumer, angle, splitMass, virusSplitSpeed);
         consumer.mass -= splitMass;
     }
-	
+
     // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
