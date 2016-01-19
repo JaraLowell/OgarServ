@@ -411,21 +411,9 @@ Commands.list = {
     },
     status: function(gameServer,split) {
         // Get amount of humans/bots
-        var humans = 0, bots = 0, players = 0, client;
-        for (var i = 0; i < gameServer.clients.length; i++) {
-            client = gameServer.clients[i].playerTracker;
-            if (client.disconnect == -1 )
-            {
-                if ('_socket' in gameServer.clients[i]) {
-                    humans++;
-                } else {
-                    bots++;
-                }
-                players++;
-            }
-        }
-        console.log("\u001B[36mServer: \u001B[0mConnected players: "+players+"/"+gameServer.config.serverMaxConnections);
-        console.log("\u001B[36mServer: \u001B[0mPlayers: " + humans + " Bots: " +bots );
+        var serv = gameServer.getPlayers();
+        console.log("\u001B[36mServer: \u001B[0mConnected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
+        console.log("\u001B[36mServer: \u001B[0mPlayers: " + serv.humans + " Bots: " + serv.bots );
         console.log("\u001B[36mServer: \u001B[0mServer has been running for " + seconds2time( process.uptime() ));
 
         var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
