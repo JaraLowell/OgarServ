@@ -1,7 +1,7 @@
 // Library imports
 // jxcore.tasks.setThreadCount(4);
 var WebSocket = require('ws');
-var querystring = require("querystring");
+var request = require("request");
 var http = require('http');
 var fs = require("fs");
 var myos = require("os");
@@ -994,7 +994,8 @@ GameServer.prototype.getPlayers = function() {
 };
 
 GameServer.prototype.MasterPing = function() {
-    if ( this.time - this.master >= 30000 ) {
+    if ( this.time - this.master >= 30000 )
+    {
         /* Report our pressence to the Master Server
          * To list us on the Master server website
          * located at http://ogar.mivabe.nl/master
@@ -1005,39 +1006,28 @@ GameServer.prototype.MasterPing = function() {
             pversion = 'true'
 
         /* Sending Keepalive Ping to MySQL */
-        if ( this.sqlconfig.host != '' && serv.humans == 0 )
-            this.mysql.ping();
+        if ( this.sqlconfig.host != '' && serv.humans == 0 ) this.mysql.ping();
 
         if ( this.config.serverName != '' ) sName = this.config.serverName;
         if ( this.config.serverVersion == 0 ) pversion = 'false';
 
-        var data = {
-            current_players: serv.players,
-            alive: serv.humans,
-            spectators: serv.spectate,
-            max_players: this.config.serverMaxConnections,
-            sport: this.config.serverPort,
-            gamemode: this.gameMode.name,
-            agario: pversion,
-            name: sName,
-            opp: myos.platform() + ' ' + myos.arch(),
-            uptime: process.uptime(),
-            start_time: this.startTime.getTime()
-        };
-
-        var qs = querystring.stringify(data),
-            qslength = qs.length,
-            options = { hostname: 'ogar.mivabe.nl', port: 80, path: '/master.php', method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': qslength } },
-            buffer = '',
-            req = http.request(options, function(res) {
-                res.setEncoding('utf8');
-                res.on('data', function (chunk) {
-                    buffer+=chunk;
-                });
-            }).on('error', function(err) {
-                console.log("\u001B[31mHeartbeat Send error: " + err.message + "\u001B[0m");
-            });
-        req.write(qs), req.end();
+        request({
+            uri: "http://ogar.mivabe.nl/master",
+            method: "POST",
+            form: {
+                current_players: serv.players,
+                alive: serv.humans,
+                spectators: serv.spectate,
+                max_players: this.config.serverMaxConnections,
+                sport: this.config.serverPort,
+                gamemode: this.gameMode.name,
+                agario: pversion,
+                name: sName,
+                opp: myos.platform() + ' ' + myos.arch(),
+                uptime: process.uptime(),
+                start_time: this.startTime.getTime()
+            }
+        });
     }
 }
 
