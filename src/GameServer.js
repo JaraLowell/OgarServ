@@ -90,7 +90,7 @@ function GameServer() {
         ejectSpawnPlayer: 50,         // Chance for a player to spawn from ejected mass
         playerStartMass: 10,          // Starting mass of the player cell.
         playerMaxMass: 22500,         // Maximum mass a player can have
-        playerSpeed: 30,							// Player base speed
+        playerSpeed: 30,              // Player base speed
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
@@ -122,14 +122,14 @@ GameServer.prototype.start = function() {
     // Logging
     this.log.setup(this);
 
-		// Rcon Info
+    // Rcon Info
     if ( this.config.serverAdminPass != '' )
     {
         console.log("* \u001B[33mRcon enabled, passkey set to " + this.config.serverAdminPass + "\u001B[0m");
         console.log("* \u001B[33mTo use in chat type /rcon " + this.config.serverAdminPass + " <server command>\u001B[0m");
     }
 
-		// My SQL erver
+    // My SQL erver
     if ( this.sqlconfig.host != '' )
     {
         console.log("* \u001B[33mMySQL config loaded Database set to " + this.sqlconfig.database + "." + this.sqlconfig.table + "\u001B[0m");
@@ -167,11 +167,11 @@ GameServer.prototype.start = function() {
         if (this.config.serverResetTime > 0 ) {
             console.log("* \u001B[33mAuto shutdown after "+this.config.serverResetTime+" hours\u001B[0m");
         }
-        
+
         if ( this.config.serverVersion == 1 )
-        		console.log("* \u001B[33mProtocol set to new, clients with version 561.20 and up can connect to this server\u001B[0m");
+            console.log("* \u001B[33mProtocol set to new, clients with version 561.20 and up can connect to this server\u001B[0m");
         if ( this.config.serverVersion == 0 )
-        		console.log("* \u001B[33mProtocol set to old, clients with version 561.19 and older can connect to this server\u001B[0m");
+            console.log("* \u001B[33mProtocol set to old, clients with version 561.19 and older can connect to this server\u001B[0m");
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -193,7 +193,8 @@ GameServer.prototype.start = function() {
     });
 
     function connectionEstablished(ws) {
-        if (this.clients.length >= this.config.serverMaxConnections) { // Server full
+        var serv = this.getPlayers();
+        if (serv.players >= this.config.serverMaxConnections) { // Server full
             console.log("\u001B[33mClient tried to connect, but server player limit has been reached!\u001B[0m");
             ws.close();
             return;
@@ -202,8 +203,8 @@ GameServer.prototype.start = function() {
             ws.close();
             return;
         }
-
-				var origin = ws.upgradeReq.headers.origin;
+        
+        var origin = ws.upgradeReq.headers.origin;
 
         function close(error) {
             this.server.log.onDisconnect(this.socket.remoteAddress);
@@ -225,7 +226,7 @@ GameServer.prototype.start = function() {
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
-        console.log( "(" + this.clients.length + "/" + this.config.serverMaxConnections  + ") \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+" [origin "+origin+"]\u001B[0m");
+        console.log( "(" + ( 1 + serv.players ) + "/" + this.config.serverMaxConnections  + " [Spec:" + serv.spectate  + ",Bots:" + serv.bots + "]) \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+" [origin "+origin+"]\u001B[0m");
 
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
@@ -300,15 +301,6 @@ GameServer.prototype.getRandomSpawn = function() {
 };
 
 GameServer.prototype.getRandomColor = function() {
-    /* Original Color war
-    var index = Math.floor(Math.random() * this.colors.length);
-    var color = this.colors[index];
-    return {
-        r: color.r,
-        b: color.b,
-        g: color.g
-    }; 
-    */
     var colorRGB = [0xFF, 0x07, ((Math.random() * (256 - 7)) >> 0) + 7];
     colorRGB.sort(function () { return 0.5 - Math.random() });
 
@@ -987,6 +979,18 @@ GameServer.prototype.switchSpectator = function(player) {
     }
 };
 
+GameServer.prototype.getPlayers = function() {
+    for(var i=0, humans=0, bots=0, players=0, spectate=0, client; i<this.clients.length; i++)
+        client = this.clients[i].playerTracker, -1 == client.disconnect && ("_socket"in this.clients[i] ? client.spectate ? spectate++:humans++:bots++,players++);
+
+    return {
+        players: players,
+        humans: humans,
+        spectate: spectate,
+        bots: bots
+    };
+};
+
 GameServer.prototype.MasterPing = function() {
     var timenow = new Date();
     if ( ( timenow - this.master ) > 30000 )
@@ -996,12 +1000,10 @@ GameServer.prototype.MasterPing = function() {
          * located at http://ogar.mivabe.nl/master
          */
         this.master = timenow;
-
-        for(var i=0, humans=0, bots=0, players=0, spectate=0, client; i<this.clients.length; i++)
-            client = this.clients[i].playerTracker, -1 == client.disconnect && ("_socket"in this.clients[i] ? client.spectate ? spectate++:humans++:bots++,players++);
+        var serv = this.getPlayers();
 
         /* Sending Keepalive Ping to MySQL */
-        if ( this.sqlconfig.host != '' && humans == 0 )
+        if ( this.sqlconfig.host != '' && serv.humans == 0 )
             this.mysql.ping();
 
         var sName = 'Unnamed Server';
@@ -1011,9 +1013,9 @@ GameServer.prototype.MasterPing = function() {
 				if ( this.config.serverVersion == 0 ) pversion = 'false';
 
         var data = {
-            current_players: players,
-            alive: humans,
-            spectators: spectate,
+            current_players: serv.players,
+            alive: serv.humans,
+            spectators: serv.spectate,
             max_players: this.config.serverMaxConnections,
             sport: this.config.serverPort,
             gamemode: this.gameMode.name,
@@ -1063,13 +1065,12 @@ GameServer.prototype.startStatsServer = function(port) {
 }
 
 GameServer.prototype.getStats = function() {
-    for(var i=0, humans=0, bots=0, players=0, spectate=0, client; i<this.clients.length; i++)
-        client = this.clients[i].playerTracker, -1 == client.disconnect && ("_socket"in this.clients[i] ? client.spectate ? spectate++:humans++:bots++,players++);
+    var serv = this.getPlayers();
 
     var s = {
-        'current_players': players,
-        'alive': humans,
-        'spectators': spectate,
+        'current_players': serv.players,
+        'alive': serv.humans,
+        'spectators': serv.spectate,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
         'start_time': this.startTime
