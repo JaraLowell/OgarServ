@@ -619,7 +619,7 @@ GameServer.prototype.updateMoveEngine = function() {
         if (check.moveEngineTicks > 0) {
             check.onAutoMove(this);
             // If the cell has enough move ticks, then move it
-            check.calcMovePhys(this.config);
+            check.calcMovePhys(this.config,this);
         } else {
             // Auto move is done
             check.moveDone(this);

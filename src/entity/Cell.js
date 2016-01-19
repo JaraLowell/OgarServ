@@ -134,7 +134,7 @@ Cell.prototype.visibleCheck = function(box,centerPos) {
     return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
 };
 
-Cell.prototype.calcMovePhys = function(config) {
+Cell.prototype.calcMovePhys = function(config, gameServer) {
     // Movement engine (non player controlled movement)
     var speed = this.moveEngineSpeed;
     var r = this.getSize();
@@ -178,8 +178,8 @@ Cell.prototype.calcMovePhys = function(config) {
             totTravel = Math.min(totTravel + maxTravel, speed);
             var x1 = this.position.x + (totTravel * sin) + xd;
             var y1 = this.position.y + (totTravel * cos) + yd;
-            for (var i = 0; i < this.owner.gameServer.nodesEjected.length; i++) {
-                var cell = this.owner.gameServer.nodesEjected[i];
+            for (var i = 0; i < gameServer.nodesEjected.length; i++) {
+                var cell = gameServer.nodesEjected[i];
                 if (this.nodeId == cell.nodeId) {
                     continue;
                 }
@@ -200,8 +200,8 @@ Cell.prototype.calcMovePhys = function(config) {
                     yd += -ymove;
                     if (cell.moveEngineTicks == 0) {
                         cell.setMoveEngineData(0, 1); //make sure a collided cell checks again for collisions with other cells
-                        if (this.owner.gameServer.movingNodes.indexOf(cell) == -1) {
-                            this.owner.gameServer.setAsMovingNode(cell);
+                        if (gameServer.movingNodes.indexOf(cell) == -1) {
+                            gameServer.setAsMovingNode(cell);
                         }
                     }
                     if (this.moveEngineTicks == 0) {
