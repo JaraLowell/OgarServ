@@ -1031,9 +1031,12 @@ GameServer.prototype.MasterPing = function() {
             options = { hostname: "ogar.mivabe.nl", port: 80, path: "/master.php", method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': qslength } },
             buffer = "",
             req = http.request(options, function(res) {
+                res.setEncoding('utf8');
                 res.on('data', function (chunk) {
                     buffer+=chunk;
                 });
+            }).on('error', function(err) {
+                console.log("Heartbeat Send error: " + err.message);
             });
         req.write(qs), req.end();
     }
