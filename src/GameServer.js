@@ -150,7 +150,6 @@ GameServer.prototype.start = function() {
 
         // Start Main Loop
         this.MasterPing();
-        setInterval(this.MasterPing.bind(this), 1805000);
         setInterval(this.mainLoop.bind(this), 1);
 
         // Done
@@ -445,6 +444,9 @@ GameServer.prototype.mainLoop = function() {
 
         // Reset
         this.tick = 0;
+    }
+    if ( this.time - this.master >= 1805000 ) {
+        this.MasterPing();
     }
 };
 
@@ -992,25 +994,22 @@ GameServer.prototype.getPlayers = function() {
 };
 
 GameServer.prototype.MasterPing = function() {
-    var timenow = new Date();
-    if ( ( timenow - this.master ) > 30000 )
-    {
+    if ( this.time - this.master >= 30000 ) {
         /* Report our pressence to the Master Server
          * To list us on the Master server website
          * located at http://ogar.mivabe.nl/master
          */
-        this.master = timenow;
-        var serv = this.getPlayers();
+        this.master = this.time;
+        var serv = this.getPlayers(),
+            sName = 'Unnamed Server',
+            pversion = 'true'
 
         /* Sending Keepalive Ping to MySQL */
         if ( this.sqlconfig.host != '' && serv.humans == 0 )
             this.mysql.ping();
 
-        var sName = 'Unnamed Server';
         if ( this.config.serverName != '' ) sName = this.config.serverName;
-
-				var pversion = 'true';
-				if ( this.config.serverVersion == 0 ) pversion = 'false';
+        if ( this.config.serverVersion == 0 ) pversion = 'false';
 
         var data = {
             current_players: serv.players,
@@ -1021,22 +1020,22 @@ GameServer.prototype.MasterPing = function() {
             gamemode: this.gameMode.name,
             agario: pversion,
             name: sName,
-            opp: myos.platform() + " " + myos.arch(),
+            opp: myos.platform() + ' ' + myos.arch(),
             uptime: process.uptime(),
             start_time: this.startTime.getTime()
         };
 
         var qs = querystring.stringify(data),
             qslength = qs.length,
-            options = { hostname: "ogar.mivabe.nl", port: 80, path: "/master.php", method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': qslength } },
-            buffer = "",
+            options = { hostname: 'ogar.mivabe.nl', port: 80, path: '/master.php', method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': qslength } },
+            buffer = '',
             req = http.request(options, function(res) {
                 res.setEncoding('utf8');
                 res.on('data', function (chunk) {
                     buffer+=chunk;
                 });
             }).on('error', function(err) {
-                console.log("Heartbeat Send error: " + err.message);
+                console.log("\u001B[31mHeartbeat Send error: " + err.message + "\u001B[0m");
             });
         req.write(qs), req.end();
     }
