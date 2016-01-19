@@ -17,7 +17,6 @@ while true
 do
   # Insert your invocation below mt:4 multicore 4x
   jx index.js
-  echo Server went off, waiting five sec then restarting it...
-  sleep 5
-  clear
+  echo Server went off, waiting ten sec then restarting it...
+  sleep 10
   done
