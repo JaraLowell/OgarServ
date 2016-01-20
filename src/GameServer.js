@@ -122,6 +122,10 @@ GameServer.prototype.start = function() {
     // Logging
     this.log.setup(this);
 
+    if ( this.banned.length > 0 ) {
+        console.log("* \u001B[33mBan file loaded!\u001B[0m");
+    }
+
     // Rcon Info
     if ( this.config.serverAdminPass != '' )
     {
@@ -451,14 +455,23 @@ GameServer.prototype.mainLoop = function() {
 };
 
 GameServer.prototype.exitserver = function() {
-    console.log("Server Shutdown!");
-    if ( this.sqlconfig.host != '' )
-    {
-        this.mysql.connect();
-		}
-		this.socketServer.close();
-		process.exit(1);
-		window.close();		
+    console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
+
+    // Close MySQL
+    if ( this.sqlconfig.host != '' ) {
+        console.log("* \u001B[33mClosing mysql connection...\u001B[0m");
+        this.mysql.close();
+    }
+
+    // Store Ban File
+    if ( this.banned.length > 0 ) {
+        console.log("* \u001B[33mSaving ban file...\u001B[0m");
+        fs.writeFileSync('./gameserver.ban', ini.stringify(this.banned));
+    }
+
+    this.socketServer.close();
+    process.exit(1);
+    window.close();
 }
 
 GameServer.prototype.updateClients = function() {
@@ -933,6 +946,19 @@ GameServer.prototype.loadConfig = function() {
     }
 
     try {
+        // Load ban file...
+        var load = ini.parse(fs.readFileSync('./gameserver.ban', 'utf-8'));
+
+        for (var obj in load) {
+            if ( obj.substr(0,2) != "//" ) {
+                this.banned.push( load[obj] );
+            }
+        }
+    } catch (err) {
+        // Noting to do...
+    }
+
+    try {
         // Load the contents of the mysql config file
         var load = ini.parse(fs.readFileSync('./mysql.ini', 'utf-8'));
         for (var obj in load) {
@@ -1026,6 +1052,10 @@ GameServer.prototype.MasterPing = function() {
                 opp: myos.platform() + ' ' + myos.arch(),
                 uptime: process.uptime(),
                 start_time: this.startTime.getTime()
+            }
+        }, function(error, response, body) {
+            if (error && response.statusCode != 200) {
+                console.log("\u001B[31m[Tracker Error] " + error + ": " + body + "\u001B[0m");
             }
         });
     }
