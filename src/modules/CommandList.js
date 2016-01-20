@@ -2,6 +2,8 @@
 var GameMode = require('../gamemodes');
 var Packet = require('../packet');
 var Entity = require('../entity');
+var fs = require("fs");
+var ini = require('./ini.js');
 
 function Commands() {
     this.list = { }; // Empty
@@ -64,7 +66,7 @@ Commands.list = {
         console.log("\u001B[36mkill       \u001B[0m: kill cell(s) by client ID");
         console.log("\u001B[36mkillall    \u001B[0m: kill everyone");
         console.log("\u001B[36mmass       \u001B[0m: set cell(s) mass by client ID");
-				console.log("\u001B[36mmerge	    \u001B[0m: force a player to merge");
+        console.log("\u001B[36mmerge      \u001B[0m: force a player to merge");
         console.log("\u001B[36mname       \u001B[0m: change cell(s) name by client ID");
         console.log("\u001B[36mplayerlist \u001B[0m: get list of players and bots");
         console.log("\u001B[36mpause      \u001B[0m: pause game , freeze all cells");
@@ -75,7 +77,7 @@ Commands.list = {
         console.log("\u001B[36mtp         \u001B[0m: teleport player to specified location");
         console.log("\u001B[36munban      \u001B[0m: un ban a player with IP");
         console.log("\u001B[36mvirus      \u001B[0m: spawn virus at a specified Location");
-				console.log("============================================================");
+        console.log("============================================================");
     },
     addbot: function(gameServer,split) {
         var add = parseInt(split[1]);
@@ -93,11 +95,12 @@ Commands.list = {
         if (gameServer.banned.indexOf(ip) == -1) {
             gameServer.banned.push(ip);
             console.log("\u001B[36mServer: \u001B[0mAdded "+ip+" to the banlist");
+            fs.writeFileSync('./gameserver.ban', ini.stringify(gameServer.banned));
             // Remove from game
             for (var i in gameServer.clients) {
                 var c = gameServer.clients[i];
                 if (!c.remoteAddress) {
-                    continue; 
+                    continue;.
                 }
                 if (c.remoteAddress == ip) {
                     c.sendPacket(new Packet.ServerMsg(91));
@@ -113,6 +116,7 @@ Commands.list = {
         if ((typeof split[1] != 'undefined') && (split[1].toLowerCase() == "clear")) {
             gameServer.banned = [];
             console.log("\u001B[36mServer: \u001B[0mCleared ban list");
+            fs.unlinkSync('./gameserver.ban');
             return;
         }
 
@@ -277,10 +281,10 @@ Commands.list = {
             }
         }
     },
-		merge: function(gameServer,split) {
-				// Validation checks
-				var id = parseInt(split[1]);
-        if (isNaN(id)) {
+    merge: function(gameServer,split) {
+    	  // Validation checks
+    	  var id = parseInt(split[1]);
+    	  if (isNaN(id)) {
             console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
             return;
         }
@@ -291,32 +295,32 @@ Commands.list = {
                 for (var j in client.cells) {
                     client.cells[j].calcMergeTime(-10000);
                 }
-		            console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to merge cells");
-    		        break;
+                console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to merge cells");
+                break;
             }
         }
     },
     split: function(gameServer,split) {
-				// Validation checks
-				var id = parseInt(split[1]);
-				var count = parseInt(split[2]);
+    	  // Validation checks
+    	  var id = parseInt(split[1]);
+    	  var count = parseInt(split[2]);
         if (isNaN(id)) {
             console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
             return;
         }
         if (isNaN(count)) {
-						//Split into 16 cells
-						count = 4;
+        	  //Split into 16 cells
+        	  count = 4;
         }
 
         // Split!
         for (var i in gameServer.clients) {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
-								//Split
-								for(var i =0;i<count;i++) {
-										gameServer.splitCells(client);
-								}
+                //Split
+                for(var i =0;i<count;i++) {
+                	  gameServer.splitCells(client);
+                }
                 console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to split cells");
                 break;
             }
@@ -457,6 +461,11 @@ Commands.list = {
         if (index > -1) {
             gameServer.banned.splice(index,1);
             console.log("\u001B[36mServer: \u001B[0mUnbanned "+ip);
+            if( gameServer.banned.length > 0 ) {
+                fs.writeFileSync('./gameserver.ban', '');
+            } else {
+                fs.unlinkSync('./gameserver.ban');
+            }
         } else {
             console.log("\u001B[36mServer: \u001B[0mThat IP is not banned");
         }
