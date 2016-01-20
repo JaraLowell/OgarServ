@@ -47,3 +47,4 @@ See the wiki [Server Game Mode's](https://github.com/JaraLowell/OgarServ/wiki/Se
 See the wiki [Server Config](https://github.com/JaraLowell/OgarServ/wiki/Server-Config)
 
 ## Enjoy!
+![Image of Ogar](http://i375.photobucket.com/albums/oo195/Jara_Lowell/game_zps4c5xwssv.jpg)
