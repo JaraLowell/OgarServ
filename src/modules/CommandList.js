@@ -100,7 +100,7 @@ Commands.list = {
             for (var i in gameServer.clients) {
                 var c = gameServer.clients[i];
                 if (!c.remoteAddress) {
-                    continue;.
+                    continue;
                 }
                 if (c.remoteAddress == ip) {
                     c.sendPacket(new Packet.ServerMsg(91));
