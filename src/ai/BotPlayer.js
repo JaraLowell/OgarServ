@@ -2,33 +2,24 @@ var PlayerTracker = require('../PlayerTracker');
 
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
-    //this.color = gameServer.getRandomColor();
 
     // AI only
     this.gameState = 0;
-    this.path = [];
-
     this.predators = []; // List of cells that can eat this bot
     this.threats = []; // List of cells that can eat this bot but are too far away
     this.prey = []; // List of cells that can be eaten by this bot
     this.food = [];
-    this.foodImportant = []; // Not used - Bots will attempt to eat this regardless of nearby prey/predators
     this.virus = []; // List of viruses
-
     this.juke = false;
-
     this.target;
     this.targetVirus; // Virus used to shoot into the target
-
     this.ejectMass = 1; // Amount of times to eject mass
-    this.oldPos = {x: 0, y:0};
 }
 
 module.exports = BotPlayer;
 BotPlayer.prototype = new PlayerTracker();
 
 // Functions
-
 BotPlayer.prototype.getLowestCell = function() {
     // Gets the cell with the lowest mass
     if (this.cells.length <= 0) {
@@ -46,7 +37,6 @@ BotPlayer.prototype.getLowestCell = function() {
 };
 
 // Override
-
 BotPlayer.prototype.updateSightRange = function() { // For view distance
     var range = 1500; // Base sight range
 
@@ -170,7 +160,6 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
 };
 
 // Custom
-
 BotPlayer.prototype.clearLists = function() {
     this.predators = [];
     this.threats = [];
@@ -207,7 +196,6 @@ BotPlayer.prototype.getState = function(cell) {
             return 2;
         }
     }
-
     // Bot wanders by default
     return 0;
 };
@@ -393,14 +381,14 @@ BotPlayer.prototype.findNearest = function(cell,list) {
     return shortest;
 };
 
+// Gets a random cell from the array
 BotPlayer.prototype.getRandom = function(list) {
-    // Gets a random cell from the array
     var n = Math.floor(Math.random() * list.length);
     return list[n];
 };
 
+// Gets the angles of all enemies approaching the cell
 BotPlayer.prototype.combineVectors = function(list) {
-    // Gets the angles of all enemies approaching the cell
     var pos = {x: 0, y: 0};
     var check;
     for (var i = 0; i < list.length; i++) {
@@ -416,9 +404,8 @@ BotPlayer.prototype.combineVectors = function(list) {
     return pos;
 };
 
+// Checks if the cell is in the way
 BotPlayer.prototype.checkPath = function(cell,check) {
-    // Checks if the cell is in the way
-
     // Get angle of vector (cell -> path)
     var v1 = Math.atan2(cell.position.x - this.mouse.x,cell.position.y - this.mouse.y);
 
@@ -433,8 +420,8 @@ BotPlayer.prototype.checkPath = function(cell,check) {
     }
 };
 
+// Gets the biggest cell from the array
 BotPlayer.prototype.getBiggest = function(list) {
-    // Gets the biggest cell from the array
     var biggest = list[0];
     for (var i = 1; i < list.length; i++) {
         var check = list[i];
@@ -442,7 +429,6 @@ BotPlayer.prototype.getBiggest = function(list) {
             biggest = check;
         }
     }
-
     return biggest;
 };
 
@@ -472,8 +458,6 @@ BotPlayer.prototype.checkPath = function(cell,check) {
         // Path collides
         return true;
     } 
-
-    // No collide
     return false;
 }
 
@@ -513,4 +497,3 @@ BotPlayer.prototype.reverseAngle = function(angle) {
     }
     return angle;
 };
-
