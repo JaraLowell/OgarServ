@@ -396,7 +396,7 @@ Commands.list = {
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore(true), ' ', 6, true);
                 position = fillChar(client.centerPos.x.toFixed(0), ' ', 5, true) + ', ' + fillChar(client.centerPos.y.toFixed(0), ' ', 5, true);
-                console.log(" "+id+" | "+ip+" | "+nick+" | "+cells+" | "+score+" | "+position);
+                console.log(" "+id+" | "+ip+" |\u001B[36m "+nick+" \u001B[0m| "+cells+" | "+score+" | "+position);
             } else { 
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
@@ -414,18 +414,20 @@ Commands.list = {
         console.log("\u001B[36mServer: \u001B[0mReloaded the config file successfully");
     },
     status: function(gameServer,split) {
-        // Get amount of humans/bots
         var serv = gameServer.getPlayers();
-        console.log("\u001B[36mServer: \u001B[0mConnected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
-        console.log("\u001B[36mServer: \u001B[0mPlayers: " + serv.humans + " Bots: " + serv.bots );
-        console.log("\u001B[36mServer: \u001B[0mServer has been running for " + seconds2time( process.uptime() ));
-
+        console.log("Connected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
+        console.log("Playing:    " + fillChar(serv.humans, ' ', 5, true) + " | Connecting: " + fillChar((serv.players-(serv.humans+serv.spectate+serv.bots)), ' ', 5, true) + " | Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " | Bot:        " + fillChar(serv.bots, ' ', 5, true));
+        console.log("-------------------------------------------------------------------------------");
+        console.log("clients : " + fillChar(gameServer.clients.length, ' ', 27, true) + " | player :  " + fillChar(gameServer.nodesPlayer.length, ' ', 27, true));
+        console.log("nodes   : " + fillChar(gameServer.nodes.length, ' ', 27, true) + " | moving :  " + fillChar(gameServer.movingNodes.length, ' ', 27, true));
+        console.log("virus   : " + fillChar(gameServer.nodesVirus.length, ' ', 27, true) + " | leader :  " + fillChar(gameServer.leaderboard.length, ' ', 27, true));
+        console.log("ejected : " + fillChar(gameServer.nodesEjected.length, ' ', 27, true) + " | banned :  " + fillChar(gameServer.banned.length, ' ', 27, true));
+        console.log("-------------------------------------------------------------------------------");
+        console.log("Server has been running for " + seconds2time( process.uptime() ));
         var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
         var total = (process.memoryUsage().heapTotal / 1024 ).toFixed(0);
-        console.log("\u001B[36mServer: \u001B[0mCurrent memory usage: " + used + "/" + total + " Kb");
-
-        // console.log("Current memory usage: "+process.memoryUsage().heapUsed/1000+"/"+process.memoryUsage().heapTotal/1000+" kb");
-        console.log("\u001B[36mServer: \u001B[0mCurrent game mode: "+gameServer.gameMode.name);
+        console.log("Current memory usage: " + used + "/" + total + " Kb");
+        console.log("Current game mode: "+gameServer.gameMode.name);
     },
     tp: function(gameServer,split) {
         var id = parseInt(split[1]);
