@@ -405,9 +405,13 @@ Commands.list = {
         }
     },
     pause: function(gameServer,split) {
-        gameServer.run = !gameServer.run; // Switches the pause state
-        var s = gameServer.run ? "Unpaused" : "Paused";
-        console.log("\u001B[36mServer: \u001B[0m" + s + " the game.");
+        if ( gameServer.config.serverAutoPause == 0 ) {
+            gameServer.run = !gameServer.run; // Switches the pause state
+            var s = gameServer.run ? "Unpaused" : "Paused";
+            console.log("\u001B[36mServer: \u001B[0m" + s + " the game.");
+        }
+        else
+            console.log("\u001B[36mServer: \u001B[0mCan not use pause in auto pause mode");
     },
     reload: function(gameServer) {
         gameServer.loadConfig();

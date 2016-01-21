@@ -62,7 +62,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
         this.visibleNodes = this.calcViewBox();
         this.tickViewBox = 10;
     } else {
-        this.tickViewBox--;
+        if ( this.tickViewBox > -100 ) this.tickViewBox--;
         return;
     }
 
