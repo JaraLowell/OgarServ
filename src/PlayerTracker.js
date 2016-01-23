@@ -95,92 +95,95 @@ PlayerTracker.prototype.getTeam = function() {
 // Functions
 
 PlayerTracker.prototype.update = function() {
-// Actions buffer (So that people cant spam packets)
-    if (this.socket.packetHandler.pressSpace) { // Split cell
-        this.gameServer.gameMode.pressSpace(this.gameServer,this);
-        this.socket.packetHandler.pressSpace = false;
-    }
+    // Actions buffer (So that people cant spam packets)
+    if ( this.gameServer.run )
+    {
+        if (this.socket.packetHandler.pressSpace) { // Split cell
+            this.gameServer.gameMode.pressSpace(this.gameServer,this);
+            this.socket.packetHandler.pressSpace = false;
+        }
 
-    if (this.socket.packetHandler.pressW) { // Eject mass
-        this.gameServer.gameMode.pressW(this.gameServer,this);
-        this.socket.packetHandler.pressW = false;
-    }
+        if (this.socket.packetHandler.pressW) { // Eject mass
+            this.gameServer.gameMode.pressW(this.gameServer,this);
+            this.socket.packetHandler.pressW = false;
+        }
 
-    if (this.socket.packetHandler.pressQ) { // Q Press
-        this.gameServer.gameMode.pressQ(this.gameServer,this);
-        this.socket.packetHandler.pressQ = false;
-    }
+        if (this.socket.packetHandler.pressQ) { // Q Press
+            this.gameServer.gameMode.pressQ(this.gameServer,this);
+            this.socket.packetHandler.pressQ = false;
+        }
 
-    var updateNodes = []; // Nodes that need to be updated via packet
+        var updateNodes = []; // Nodes that need to be updated via packet
 
-    // Remove nodes from visible nodes if possible
-    var d = 0;
-    while (d < this.nodeDestroyQueue.length) {
-        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
-        if (index > -1) {
-            this.visibleNodes.splice(index, 1);
-            d++; // Increment
+        // Remove nodes from visible nodes if possible
+        var d = 0;
+        while (d < this.nodeDestroyQueue.length) {
+            var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
+            if (index > -1) {
+                this.visibleNodes.splice(index, 1);
+                d++; // Increment
+            } else {
+                // Node was never visible anyways
+                this.nodeDestroyQueue.splice(d,1);
+            }
+        }
+
+        // Get visible nodes every 400 ms
+        var nonVisibleNodes = []; // Nodes that are not visible
+        if (this.tickViewBox <= 0) {
+            var newVisible = this.calcViewBox();
+
+            // Compare and destroy nodes that are not seen
+            for (var i = 0; i < this.visibleNodes.length; i++) {
+                var index = newVisible.indexOf(this.visibleNodes[i]);
+                if (index == -1) {
+                    // Not seen by the client anymore
+                    nonVisibleNodes.push(this.visibleNodes[i]);
+                }
+            }
+
+            // Add nodes to client's screen if client has not seen it already
+            for (var i = 0; i < newVisible.length; i++) {
+                var index = this.visibleNodes.indexOf(newVisible[i]);
+                if (index == -1) {
+                    updateNodes.push(newVisible[i]);
+                }
+            }
+            this.visibleNodes = newVisible;
+            // Reset Ticks
+            this.tickViewBox = 4;
         } else {
-            // Node was never visible anyways
-            this.nodeDestroyQueue.splice(d,1);
+            this.tickViewBox--;
+            // Add nodes to screen
+            for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
+                var node = this.nodeAdditionQueue[i];
+                this.visibleNodes.push(node);
+                updateNodes.push(node);
+            }
         }
-    }
 
-    // Get visible nodes every 400 ms
-    var nonVisibleNodes = []; // Nodes that are not visible
-    if (this.tickViewBox <= 0) {
-        var newVisible = this.calcViewBox();
-
-        // Compare and destroy nodes that are not seen
+        // Update moving nodes
         for (var i = 0; i < this.visibleNodes.length; i++) {
-            var index = newVisible.indexOf(this.visibleNodes[i]);
-            if (index == -1) {
-                // Not seen by the client anymore
-                nonVisibleNodes.push(this.visibleNodes[i]);
+            var node = this.visibleNodes[i];
+            if (node.sendUpdate()) {
+                // Sends an update if cell is moving
+                updateNodes.push(node);
             }
         }
 
-        // Add nodes to client's screen if client has not seen it already
-        for (var i = 0; i < newVisible.length; i++) {
-            var index = this.visibleNodes.indexOf(newVisible[i]);
-            if (index == -1) {
-                updateNodes.push(newVisible[i]);
-            }
+        // Send packet
+        this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes,this.gameServer.config.serverVersion));
+
+        this.nodeDestroyQueue = []; // Reset destroy queue
+        this.nodeAdditionQueue = []; // Reset addition queue
+
+        // Update leaderboard
+        if (this.tickLeaderboard <= 0) {
+            this.socket.sendPacket(this.gameServer.lb_packet);
+            this.tickLeaderboard = 25; // 20 ticks = 1 second
+        } else {
+            this.tickLeaderboard--;
         }
-        this.visibleNodes = newVisible;
-        // Reset Ticks
-        this.tickViewBox = 4;
-    } else {
-        this.tickViewBox--;
-        // Add nodes to screen
-        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
-            var node = this.nodeAdditionQueue[i];
-            this.visibleNodes.push(node);
-            updateNodes.push(node);
-        }
-    }
-
-    // Update moving nodes
-    for (var i = 0; i < this.visibleNodes.length; i++) {
-        var node = this.visibleNodes[i];
-        if (node.sendUpdate()) {
-            // Sends an update if cell is moving
-            updateNodes.push(node);
-        }
-    }
-
-    // Send packet
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes,this.gameServer.config.serverVersion));
-
-    this.nodeDestroyQueue = []; // Reset destroy queue
-    this.nodeAdditionQueue = []; // Reset addition queue
-
-    // Update leaderboard
-    if (this.tickLeaderboard <= 0) {
-        this.socket.sendPacket(this.gameServer.lb_packet);
-        this.tickLeaderboard = 25; // 20 ticks = 1 second
-    } else {
-        this.tickLeaderboard--;
     }
 
     // Handles disconnections

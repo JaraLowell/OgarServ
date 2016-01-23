@@ -14,7 +14,6 @@ var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
-var BotLoader = require('./ai/BotLoader');
 var Logger = require('./modules/log');
 
 // GameServer implementation
@@ -34,7 +33,6 @@ function GameServer() {
     this.leaderboard = [];
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
-    this.bots = new BotLoader(this);
     this.log = new Logger();
     this.commands;    // Command handler
     this.banned = []; // List of banned IPs
@@ -112,6 +110,14 @@ function GameServer() {
     };
     // Parse config
     this.loadConfig();
+
+    // Load Bot system in config has it enabled. -1 is disabled
+    if ( this.config.serverBots != -1 )
+    {
+        console.log("[     ] * \u001B[33mLoading AI Bot System...\u001B[0m");
+        var BotLoader = require('./ai/BotLoader');
+        this.bots = new BotLoader(this);
+    }
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -413,25 +419,25 @@ GameServer.prototype.mainLoop = function() {
 
         // Update the client's maps
         this.updateClients();
-
-        // Update cells/leaderboard loop
-        this.tickMain++;
-        if (this.tickMain >= 20) { // 1 Second
-            setTimeout(this.cellUpdateTick(), 0);
-
-            // Update leaderboard with the gamemode's method
-            this.leaderboard = [];
-            this.gameMode.updateLB(this);
-            this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard,this.gameMode.packetLB);
-
-            this.tickMain = 0; // Reset
-        }
-
-        // Check Bot Min Players
         var info = this.getPlayers();
-        if ( ( info.humans + info.bots ) < this.config.serverBots )
-        {
-            this.bots.addBot();
+
+        if (this.run) {
+            // Update cells/leaderboard loop
+            this.tickMain++;
+            if (this.tickMain >= 20) { // 1 Second
+                setTimeout(this.cellUpdateTick(), 0);
+
+                // Update leaderboard with the gamemode's method
+                this.leaderboard = [];
+                this.gameMode.updateLB(this);
+                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard,this.gameMode.packetLB);
+                this.tickMain = 0; // Reset
+            }
+            // Check Bot Min Players
+            if ( ( ( info.humans + info.bots ) < this.config.serverBots ) && ( this.config.serverBots > 0 ) )
+            {
+                this.bots.addBot();
+            }
         }
 
         // Pause and Unpause on player connects
@@ -444,23 +450,24 @@ GameServer.prototype.mainLoop = function() {
             } else if ( this.run && temp == 0 ) {
                 console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
                 this.run = false;
+                this.nodesEjected = [];
+                this.leaderboard = [];
             }
         }
-
-        // Debug
-        //console.log(this.tick - 50);
 
         // Auto Server Reset
         if( this.config.serverResetTime > 0 && ( local - this.startTime ) > ( this.config.serverResetTime * 3600000 ) )
         {
             this.exitserver();
         }
-
+        
         // Reset
         this.tick = 0;
-    }
-    if ( this.time - this.master >= 1805000 ) {
-        this.MasterPing();
+        
+        // Send Master Server Ping
+        if ( this.time - this.master >= 1805000 ) {
+            this.MasterPing();
+        }
     }
 };
 
@@ -1064,7 +1071,7 @@ GameServer.prototype.MasterPing = function() {
                 start_time: this.startTime.getTime()
             }
         }, function(error, response, body) {
-            if (error && response.statusCode != 200) {
+            if (error) {
                 console.log("\u001B[31m[Tracker Error] " + error + ": " + body + "\u001B[0m");
             }
         });
