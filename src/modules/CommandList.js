@@ -47,6 +47,10 @@ var seconds2time = function(seconds) {
     return time;
 };
 
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // Commands
 Commands.list = {
     help: function(gameServer,split) {
@@ -426,15 +430,16 @@ Commands.list = {
         console.log("Connected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
         console.log("Playing:    " + fillChar(serv.humans, ' ', 5, true) + " | Connecting: " + fillChar((serv.players-(serv.humans+serv.spectate+serv.bots)), ' ', 5, true) + " | Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " | Bot:        " + fillChar(serv.bots, ' ', 5, true));
         console.log("-------------------------------------------------------------------------------");
-        console.log("clients : " + fillChar(gameServer.clients.length, ' ', 27, true) + " | player :  " + fillChar(gameServer.nodesPlayer.length, ' ', 27, true));
-        console.log("nodes   : " + fillChar(gameServer.nodes.length, ' ', 27, true) + " | moving :  " + fillChar(gameServer.movingNodes.length, ' ', 27, true));
-        console.log("virus   : " + fillChar(gameServer.nodesVirus.length, ' ', 27, true) + " | leader :  " + fillChar(gameServer.leaderboard.length, ' ', 27, true));
-        console.log("ejected : " + fillChar(gameServer.nodesEjected.length, ' ', 27, true) + " | banned :  " + fillChar(gameServer.banned.length, ' ', 27, true));
+        console.log("clients : " + fillChar(numberWithCommas(gameServer.clients.length), ' ', 27, true) + " | cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true));
+        console.log("food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " | moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true));
+        console.log("virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " | leader :  " + fillChar(numberWithCommas(gameServer.leaderboard.length), ' ', 27, true));
+        console.log("ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " | banned :  " + fillChar(numberWithCommas(gameServer.banned.length), ' ', 27, true));
         console.log("-------------------------------------------------------------------------------");
-        console.log("Server has been running for " + seconds2time( process.uptime() ));
         var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
         var total = (process.memoryUsage().heapTotal / 1024 ).toFixed(0);
-        console.log("Current memory usage: " + used + "/" + total + " Kb");
+        var rss = (process.memoryUsage().rss / 1024 ).toFixed(0);
+        console.log("Current memory usage: " + numberWithCommas(rss) + " Kb ( Heap: " + numberWithCommas(used) + " / " + numberWithCommas(total) + " Kb )");
+        console.log("Server has been running for " + seconds2time( process.uptime() ));
         console.log("Current game mode: "+gameServer.gameMode.name);
     },
     tp: function(gameServer,split) {

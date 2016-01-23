@@ -1,6 +1,16 @@
-# Dependency directory
-src/node_modules
-*.project
+# OS X
+.DS_Store
 
 # Logs
+logs
 *.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Dependency directory
+# https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
+node_modules
+*.project
