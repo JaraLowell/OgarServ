@@ -1,28 +1,32 @@
 {
-    "name":"OgarServ",
-    "version":"1.6.0",
-    "description":"My ogar server http://ogar.mivabe.nl",
-    "main":"src/index.js",
-    "dependencies":{
-        "fs":"^0.0.2"
-        "http":"^0.0.0"
-        "mysql":"^2.10.2"
-        "request":"^2.67.0"
-        "sys":"^0.0.1"
-        "ws":"^1.0.1"        
+    "name": "OgarServ",
+    "version": "1.6.0",
+    "description": "My ogar server http://ogar.mivabe.nl",
+    "author": "Jara Lowell (http://ogar.mivabe.nl/)",
+    "license": "GPLv3",
+    "homepage": "https://github.com/JaraLowell/OgarServ",
+    "main": "src/index.js",
+    "engines": {
+        "node": ">=0.10.25"
     },
-    "devDependencies":{},
-    "scripts":{
-        "test":"echo \"Error: no test specified\" && exit 1"
+    "dependencies": {
+        "fs": "^0.0.2",
+        "http": "^0.0.0",
+        "mysql": "^2.10.2",
+        "request": "^2.67.0",
+        "sys": "^0.0.1",
+        "ws": "^1.0.1"
     },
-    "repository":{
-        "type":"git",
-        "url":"https://github.com/JaraLowell/OgarServ"
+    "devDependencies": {
     },
-    "author":"Jara Lowell (http://ogar.mivabe.nl/)",
-    "license":"GPLv3",
-    "bugs":{
-        "url":"https://github.com/JaraLowell/OgarServ/issues"
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "homepage":"https://github.com/JaraLowell/OgarServ"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/JaraLowell/OgarServ"
+    },
+    "bugs": {
+        "url": "https://github.com/JaraLowell/OgarServ/issues"
+    }
 }
