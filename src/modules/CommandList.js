@@ -80,15 +80,19 @@ Commands.list = {
         console.log("============================================================");
     },
     addbot: function(gameServer,split) {
-        var add = parseInt(split[1]);
-        if (isNaN(add)) {
-            add = 1; // Adds 1 bot if user doesnt specify a number
-        }
-
-        for (var i = 0; i < add; i++) {
-            gameServer.bots.addBot();
-        }
-        console.log("\u001B[36mServer: \u001B[0mAdded "+add+" player bot(s)");
+       if ( gameServer.config.serverBots != -1 )
+       {
+           var add = parseInt(split[1]);
+           if (isNaN(add)) {
+               add = 1; // Adds 1 bot if user doesnt specify a number
+           }
+           for (var i = 0; i < add; i++) {
+               gameServer.bots.addBot();
+           }
+           console.log("\u001B[36mServer: \u001B[0mAdded "+add+" player bot(s)");
+       }
+       else
+           console.log("\u001B[36mServer: \u001B[0mCan not add bots when config file has bot system disabled (serverBots = -1)");
     },
     ban: function(gameServer,split) {
         var ip = split[1]; // Get ip
