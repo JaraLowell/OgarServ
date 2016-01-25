@@ -78,6 +78,10 @@ function GameServer() {
         foodStartAmount: 100,         // The starting amount of food in the map
         foodMaxAmount: 500,           // Maximum food cells on the map
         foodMass: 1,                  // Starting food size (In mass)
+        foodMassGrow: 1,              // Enable or Disable food mass grow
+        foodMassGrowPossiblity: 50,   // Chance for a food to has the ability to be self growing
+        foodMassLimit: 5,             // Maximum mass for a food can grow
+        foodMassTimeout: 120,         // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10,           // Minimum amount of viruses on the map.
         virusMaxAmount: 50,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,          // Starting virus size (In mass)
@@ -216,10 +220,14 @@ GameServer.prototype.start = function() {
         
         var origin = ws.upgradeReq.headers.origin;
 
-        function close(error) {
+        function close(error,err) {
             this.server.log.onDisconnect(this.socket.remoteAddress);
             var client = this.socket.playerTracker;
-            console.log( "\u001B[31mClient Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +" Error " + error + "\u001B[0m");
+            if (err == 1)
+                console.log( "\u001B[31mClient Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +" Error " + error + "\u001B[0m");
+            else
+                console.log( "\u001B[31mClient Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +"\u001B[0m");
+
             var len = this.socket.playerTracker.cells.length;
             for (var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[i];
@@ -243,8 +251,8 @@ GameServer.prototype.start = function() {
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
 
         var bindObject = { server: this, socket: ws };
-        ws.on('error', close.bind(bindObject));
-        ws.on('close', close.bind(bindObject));
+        ws.on('error', close.bind(bindObject,1));
+        ws.on('close', close.bind(bindObject,0));
         this.clients.push(ws);
         this.MasterPing();
     }
@@ -515,7 +523,7 @@ GameServer.prototype.updateFood = function() {
 };
 
 GameServer.prototype.spawnFood = function() {
-    var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass);
+    var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass, this);
     f.setColor(this.getRandomColor());
     this.addNode(f);
     this.currentFood++;
@@ -593,11 +601,36 @@ GameServer.prototype.virusCheck = function() {
     }
 };
 
+GameServer.prototype.getDist = function(x1, y1, x2, y2) {
+    var deltaX = Math.abs(x1 - x2);
+    var deltaY = Math.abs(y1 - y2);
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+}
+
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
     var len = this.nodesPlayer.length;
+
+    // Sort cells to move the cells close to the mouse first
+    var srt = [];
     for (var i = 0; i < len; i++) {
-        var cell = this.nodesPlayer[i];
+        srt[i] = i;
+    }
+
+    for (var i = 0; i < len; i++) {
+        for (var j = i + 1; j < len; j++) {
+            var clientI = this.nodesPlayer[srt[i]].owner;
+            var clientJ = this.nodesPlayer[srt[j]].owner;
+            if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y ) > this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y )) {
+                var aux = srt[i];
+                srt[i] = srt[j];
+                srt[j] = aux;
+            }
+        }
+    }
+
+    for (var i = 0; i < len; i++) {
+        var cell = this.nodesPlayer[srt[i]];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell) { //  || (cell.ignoreCollision)) {
@@ -936,8 +969,8 @@ GameServer.prototype.updateCells = function() {
             continue;
         }
 
+        // Recombining
         if (cell.recombineTicks > 0) {
-            // Recombining
             cell.recombineTicks--;
         }
 
@@ -1072,7 +1105,7 @@ GameServer.prototype.MasterPing = function() {
             }
         }, function(error, response, body) {
             if (error) {
-                console.log("\u001B[31m[Tracker Error] " + error + ": " + body + "\u001B[0m");
+                console.log("\u001B[31m[Tracker Error] " + error + "\u001B[0m");
             }
         });
     }

@@ -89,7 +89,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     this.clearLists();
 
     // Ignores targeting cells below this mass
-    var ignoreMass = Math.min(cell.mass / 2.5); 
+    var ignoreMass = Math.min(cell.mass / 2.5);
 
     // Loop
     for (i in this.visibleNodes) {
@@ -132,7 +132,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
                 this.food.push(check);
                 break;
             case 2: // Virus
-                this.virus.push(check);
+                if (!check.isMotherCell) this.virus.push(check); // Only real viruses! No mother cells;
                 break;
             case 3: // Ejected mass
                 if (cell.mass > 16) {
@@ -263,7 +263,7 @@ BotPlayer.prototype.decide = function(cell) {
             break;
         case 3: // Target prey
             if ((!this.target) || (cell.mass < (this.target.mass * 1.2)) || this.target.mass > 200 || (this.visibleNodes.indexOf(this.target) == -1)) {
-                this.target = this.getRandom(this.prey);
+                this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 
