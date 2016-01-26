@@ -70,17 +70,17 @@ Log.prototype.setup = function(gameServer) {
                 var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
                 var total = (process.memoryUsage().heapTotal / 1024 ).toFixed(0);
                 var rss = (process.memoryUsage().rss / 1024 ).toFixed(0);
-                var line1 = "\u001B[4mPlaying :   " + fillChar(serv.humans, ' ', 5, true) + " │ Connecting: " + fillChar((serv.players-(serv.humans+serv.spectate+serv.bots)), ' ', 5, true) + " │ Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " │ Bot:        " + fillChar(serv.bots, ' ', 5, true) + "\u001B[24m ";
+                var line1 = "\u001B[4mPlaying :   " + fillChar(serv.humans, ' ', 5, true) + " │ Connecting: " + fillChar((serv.players-(serv.humans+serv.spectate+serv.bots)), ' ', 5, true) + " │ Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " │ Bot:        " + fillChar(serv.bots, ' ', 5, true) + " \u001B[24m";
                 var line2 = "ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " │ cells    :" + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true) + " ";
                 var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " │ moving   :" + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
                 var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ leader   :" + fillChar(numberWithCommas(gameServer.leaderboard.length), ' ', 27, true) + " ";
-                var line5 = "uptime  : " + fillChar(numberWithCommas(seconds2time(process.uptime())), ' ', 27, true) + " │ memory   :" + fillChar(numberWithCommas(rss), ' ', 27, true) + "\u001B[24m ";
+                var line5 = "uptime  : " + fillChar(numberWithCommas(seconds2time(process.uptime())), ' ', 27, true) + " │ memory   :" + fillChar(numberWithCommas(rss), ' ', 27, true) + " \u001B[24m";
                 process.stdout.write("\u001B[s\u001B[H\u001B[6r");
                 process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
                 process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
                 process.stdout.write(" | (_) / _` / _` | '_|  " + line3 + EOL);
                 process.stdout.write("  \\___/\\__, \\__,_|_|    " + line4 + EOL);
-                process.stdout.write(" \u001B[4m      |___/ server     " + line5 + EOL);
+                process.stdout.write("\u001B[4m       |___/ server     " + line5 + EOL);
                 process.stdout.write("\u001B[0m\u001B[u");
             };
         case 1:
@@ -92,14 +92,13 @@ Log.prototype.setup = function(gameServer) {
                 else 
                 {
                     LastMsg = d;
-                    process.stdout.write("\u001B[s\u001B[H\u001B[2K\u001B[u");
 
                     var date = new Date();
                     var hour = date.getHours();
                     hour = (hour < 10 ? "0" : "") + hour;
                     var min  = date.getMinutes();
                     min = (min < 10 ? "0" : "") + min;
-                    var yada = "[" + hour +":" + min + "]";
+                    var yada = "[" + hour +":" + min + "] ";
 
                     var text = yada + util.format(d);
 
@@ -113,12 +112,9 @@ Log.prototype.setup = function(gameServer) {
                     text = text.replace("\u001B[36m",""); // Cyan
 
                     console_log.write(text + EOL);
-                    process.stdout.write(yada + util.format(d) + '\u001B[u' + EOL);
+                    process.stdout.write(yada + util.format(d) + EOL);
                 }
             };
-            // this.onCommand = function(command) {
-            //     console_log.write(">" + command + EOL);
-            // };
         case 0:
             // Prevent crashes
             process.on('uncaughtException', function(err) {
@@ -140,10 +136,6 @@ Log.prototype.onDisconnect = function(ip) {
 Log.prototype.onWriteConsole = function(gameServ) {
     // Nothing
 };
-
-Log.prototype.onCommand = function(command) {
-    // Nothing
-}
 
 Log.prototype.formatTime = function() {
     var date = new Date();
