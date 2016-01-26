@@ -36,7 +36,7 @@ if (showConsole) {
     // var readline = require('readline');
     // var in_ = readline.createInterface({ input: process.stdin, output: process.stdout });
     // setTimeout(prompt, 100);
-    var sys = require("sys");
+    var sys = require("util");
     var stdin = process.openStdin();
 }
 
