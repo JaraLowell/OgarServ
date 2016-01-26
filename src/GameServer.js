@@ -68,6 +68,7 @@ function GameServer() {
         serverStatsUpdate: 60,        // Amount of seconds per update for the server stats
         serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverAutoPause: 1,           // Enable or Disable audo gameworld pause
+        serverLiveStats: 1,           // Show Info in console (needs a 127characters wide console or ssh sesion)
         gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
         borderLeft: 0,                // Left border of map (Vanilla value: 0)
         borderRight: 6000,            // Right border of map (Vanilla value: 11180.3398875)
@@ -429,9 +430,14 @@ GameServer.prototype.mainLoop = function() {
         this.updateClients();
         var info = this.getPlayers();
 
+        this.tickMain++;
+
+        if ( this.config.serverLiveStats && this.tickMain >= 20 ) {
+            this.log.onWriteConsole(this);
+        }
+
         if (this.run) {
             // Update cells/leaderboard loop
-            this.tickMain++;
             if (this.tickMain >= 20) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 0);
 
@@ -439,7 +445,6 @@ GameServer.prototype.mainLoop = function() {
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
                 this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard,this.gameMode.packetLB);
-                this.tickMain = 0; // Reset
             }
             // Check Bot Min Players
             if ( ( ( info.humans + info.bots ) < this.config.serverBots ) && ( this.config.serverBots > 0 ) )
@@ -470,6 +475,9 @@ GameServer.prototype.mainLoop = function() {
         }
         
         // Reset
+        if (this.tickMain >= 20) {
+            this.tickMain = 0;
+        }
         this.tick = 0;
         
         // Send Master Server Ping
