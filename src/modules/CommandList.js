@@ -1,4 +1,4 @@
-// Imports
+﻿// Imports
 var GameMode = require('../gamemodes');
 var Packet = require('../packet');
 var Entity = require('../entity');
