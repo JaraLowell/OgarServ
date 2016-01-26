@@ -8,6 +8,45 @@ function Log() {
 
 module.exports = Log;
 
+var fillChar = function (data, char, fieldLength, rTL) {
+    var result = data.toString();
+    if (rTL === true) {
+        for (var i = result.length; i < fieldLength; i++)
+            result = char.concat(result);
+    }
+    else {
+        for (var i = result.length; i < fieldLength; i++)
+            result = result.concat(char);
+    }
+    return result;
+};
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+var seconds2time = function(seconds) {
+    var hours   = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds - (hours * 3600)) / 60);
+    var seconds = seconds - (hours * 3600) - (minutes * 60);
+    var time = "";
+
+    if (hours != 0) {
+      time = hours+":";
+    }
+    if (minutes != 0 || time !== "") {
+      minutes = (minutes < 10 && time !== "") ? "0"+minutes : String(minutes);
+      time += minutes+":";
+    }
+    if (time === "") {
+      time = seconds+" seconds";
+    }
+    else {
+      time += (seconds < 10) ? "0"+seconds : String(seconds);
+    }
+    return time;
+};
+
 Log.prototype.setup = function(gameServer) {
     if (!fs.existsSync('./logs')) {
         // Make log folder
@@ -25,6 +64,25 @@ Log.prototype.setup = function(gameServer) {
             this.onDisconnect = function(ip) {
                 ip_log.write("["+this.formatTime()+"] Disconnect: " + ip + EOL);
             };
+
+            this.onWriteConsole = function(gameServer) {
+                var serv = gameServer.getPlayers();
+                var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
+                var total = (process.memoryUsage().heapTotal / 1024 ).toFixed(0);
+                var rss = (process.memoryUsage().rss / 1024 ).toFixed(0);
+                var line1 = "Playing:    \u001B[33m" + fillChar(serv.humans, ' ', 5, true) + "\u001B[36m | Connecting: \u001B[33m" + fillChar((serv.players-(serv.humans+serv.spectate+serv.bots)), ' ', 5, true) + "\u001B[36m | Spectator:  \u001B[33m" + fillChar(serv.spectate, ' ', 5, true) + "\u001B[36m | Bot:        \u001B[33m" + fillChar(serv.bots, ' ', 5, true) + "\u001B[36m ";
+                var line2 = "ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " | cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true) + " ";
+                var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " | moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
+                var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " | leader :  " + fillChar(numberWithCommas(gameServer.leaderboard.length), ' ', 27, true) + " ";
+                var line5 = "uptime  : " + fillChar(numberWithCommas(seconds2time(process.uptime())), ' ', 27, true) + " | memory :  " + fillChar(numberWithCommas(rss), ' ', 27, true) + " ";
+                process.stdout.write("\u001B[s\u001B[H");
+                process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
+                process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
+                process.stdout.write(" | (_) / _` / _` | '_|  " + line3 + EOL);
+                process.stdout.write("  \\___/\\__, \\__,_|_|    " + line4 + EOL);
+                process.stdout.write("       |___/ server     " + line5 + EOL);
+                process.stdout.write("\u001B[0m\u001B[u");
+            };
         case 1:
             console_log = fs.createWriteStream('./logs/console.log', {flags : 'w'});
             var LastMsg;
@@ -40,7 +98,7 @@ Log.prototype.setup = function(gameServer) {
                     hour = (hour < 10 ? "0" : "") + hour;
                     var min  = date.getMinutes();
                     min = (min < 10 ? "0" : "") + min;
-                    var yada = "[" + hour +":" + min + "] ";
+                    var yada = "[" + hour +":" + min + "]";
 
                     var text = yada + util.format(d);
 
@@ -54,7 +112,7 @@ Log.prototype.setup = function(gameServer) {
                     text = text.replace("\u001B[36m",""); // Cyan
 
                     console_log.write(text + EOL);
-                    process.stdout.write(yada +  util.format(d) + EOL);
+                    process.stdout.write('\u001B[36m' + yada + '\u001B[0m' + util.format(d) + EOL);
                 }
             };
             // this.onCommand = function(command) {
@@ -75,6 +133,10 @@ Log.prototype.onConnect = function(ip) {
 };
 
 Log.prototype.onDisconnect = function(ip) {
+    // Nothing
+};
+
+Log.prototype.onWriteConsole = function(gameServ) {
     // Nothing
 };
 
