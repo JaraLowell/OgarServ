@@ -224,10 +224,11 @@ GameServer.prototype.start = function() {
         function close(error,err) {
             this.server.log.onDisconnect(this.socket.remoteAddress);
             var client = this.socket.playerTracker;
+            if ( client.name == "" || client.name == "Spectator" ) client.name = "Client";
             if (err == 1)
-                console.log( "\u001B[31mClient Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +" Error " + error + "\u001B[0m");
+                console.log( "\u001B[31m" + client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +" Error " + error + "\u001B[0m");
             else
-                console.log( "\u001B[31mClient Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +"\u001B[0m");
+                console.log( "\u001B[31m" + client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort +"\u001B[0m");
 
             var len = this.socket.playerTracker.cells.length;
             for (var i = 0; i < len; i++) {
