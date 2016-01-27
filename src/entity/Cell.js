@@ -272,6 +272,7 @@ Cell.prototype.onAutoMove = function(gameServer) {
 
 Cell.prototype.moveDone = function(gameServer) {
     // Called when this cell finished moving with the auto move engine
+    this.onAutoMove(gameServer);
 };
 
 Cell.prototype.simpleCollide = function(x1,y1,check,d) {
