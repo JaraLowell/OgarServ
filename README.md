@@ -23,6 +23,9 @@ Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory m
 * ![Language](https://img.shields.io/badge/Chat-99-green.svg) This Server supports Chat for both ogar and agar (Package 99)
 * ![Language](https://img.shields.io/badge/Info-90-green.svg) This Server supports Server Info for both ogar and agar (Package 90)
 
+![Image of Ogar](http://i375.photobucket.com/albums/oo195/Jara_Lowell/OgarServ_zpslhvqljpp.jpg)
+OgarServ in LiveStats Mode and Auto Pause
+
 ## We working on
 * MySQL   : Adding MySQL Highscore system 
   - Currently being tested!
