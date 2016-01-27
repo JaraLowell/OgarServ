@@ -95,7 +95,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 90:
             // Send Server Info
             var serv = this.gameServer.getPlayers();
-            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.players,this.gameServer.config.borderRight,this.gameServer.config.foodMaxAmount,this.gameServer.config.serverGamemode));
+            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,this.gameServer.config.borderRight,this.gameServer.config.foodMaxAmount,this.gameServer.config.serverGamemode));
             break;
         case 255:
             // Connection Start
@@ -110,7 +110,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     this.socket.close();
                 }
                 this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
-                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.players,c.borderRight,c.foodMaxAmount,this.gameServer.config.serverGamemode));
+                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,c.borderRight,c.foodMaxAmount,this.gameServer.config.serverGamemode));
                 break;
             }
             break;

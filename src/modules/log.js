@@ -75,6 +75,7 @@ Log.prototype.setup = function(gameServer) {
                 var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " │ moving   :" + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
                 var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ leader   :" + fillChar(numberWithCommas(gameServer.leaderboard.length), ' ', 27, true) + " ";
                 var line5 = "uptime  : " + fillChar(numberWithCommas(seconds2time(process.uptime())), ' ', 27, true) + " │ memory   :" + fillChar(numberWithCommas(rss), ' ', 27, true) + " \u001B[24m";
+                // process.stdout.write("\u001B[?7h"); // 132 character mode?
                 process.stdout.write("\u001B[s\u001B[H\u001B[6r");
                 process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
                 process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
