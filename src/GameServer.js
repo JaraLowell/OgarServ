@@ -1083,6 +1083,15 @@ GameServer.prototype.getPlayers = function() {
     };
 };
 
+GameServer.prototype.fbapi = function(token, ip) {
+    request('https://graph.facebook.com/me?fields=name&access_token=' + token, function(error, response, body) {
+        if(!error) {
+            var obj = JSON && JSON.parse(body) || $.parseJSON(bode);
+            console.log("\u001B[31m[UserInfo] \u001B[0m" + ip + ": " + obj.name + " @ Facebook");
+        }
+    });
+}
+
 GameServer.prototype.MasterPing = function() {
     if ( this.time - this.master >= 30000 )
     {

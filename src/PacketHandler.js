@@ -92,10 +92,21 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 82:
-            // Cookie Code + FC/Google login info code
-            // Also works as protection 1st msg 82 needs be same as package 80
-            for ( var message = '', i = 1; i < view.byteLength; i++ ) {
+            // User login access token
+            var service = view.getUint8(1, !0);
+            for ( var message = '', i = 2; i < view.byteLength; i++ ) {
                 message += String.fromCharCode( view.getUint8(i, !0) );
+            }
+            switch (service) {
+                case 1:
+                    // Recieved facebook access token
+                    this.gameServer.fbapi( message , this.socket.remoteAddress );
+                    break;
+                case 2:
+                    // recieved google+ access token
+                    break;
+                default:
+                    break;
             }
             break;
         case 90:
