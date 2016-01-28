@@ -207,6 +207,9 @@ PlayerTracker.prototype.update = function() {
             if (index != -1) {
                 this.gameServer.clients.splice(index,1);
             }
+            // Remove the socket... (Memory cleanup Prodject)
+            this.socket = null;
+            delete this.socket;
         }
     }
 };
