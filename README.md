@@ -11,6 +11,9 @@ Copy of Ogar that I heavily modified, and will continue to update. The [OgarProj
 ## [![Language](https://img.shields.io/badge/JXCore-Nodejx-red.svg)](https://github.com/jxcore/jxcore) JXcore
 Swiching fomr node to JXcore, JXcore is faster, multitreaths and bether memory managment for long hour running prodjects. Please see [JXcore](https://github.com/jxcore/jxcore) for more info.
 
+## Memory Tip
+If you have memory issues, run OgarServ with `--nouse-idle-notification --expose-gc` options on. For example `jx --nouse-idle-notification --expose-gc index.js` (or node if you use node) this will run the garbage collector when a user disconects.
+
 ## What is Done
 * Clean up the code
 * Made this version both agar.io client compatible and older protocol clients compatible. You can set this now in gameserver.ini! So if in your webclient you see huge balls or none at all, switch the serverVersion from 1 to 0!
