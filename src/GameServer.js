@@ -244,7 +244,9 @@ GameServer.prototype.start = function() {
             this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
 
             // Run garbage collection utility (Memory cleanup Prodject)
-            global.gc();
+            try {
+            		global.gc();
+            } catch (e) { }
         }
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
