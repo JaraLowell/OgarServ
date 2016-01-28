@@ -52,12 +52,12 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 1:
             // Spectate mode
             if (this.socket.playerTracker.cells.length <= 0) {
-                // Make sure client has no cells
                 this.gameServer.switchSpectator(this.socket.playerTracker);
                 this.socket.playerTracker.spectate = true;
             }
             break;
         case 16:
+            // Mouse coordinates
             var client = this.socket.playerTracker;
             if (view.byteLength == 13) {
                 client.mouse.x = view.getInt32(1, true);
@@ -86,35 +86,25 @@ PacketHandler.prototype.handleMessage = function(message) {
             this.pressW = true;
             break;
         case 80:
-        		// Some Code Agar.io Sends us o.O
-            var yada = "";
-            for (var i = 1; i < view.byteLength; i++) {
-                var charCode = view.getUint8(i, true);
-                yada += String.fromCharCode(charCode);
+            // Cookie Code from Agar.io
+            for ( var message = '', i = 1; i < view.byteLength; i++ ) {
+                message += String.fromCharCode( view.getUint8(i, !0) );
             }
+            break;
+        case 82:
+            // Cookie Code + FC/Google login info code
+            // Also works as protection 1st msg 82 needs be same as package 80
+            for ( var message = '', i = 1; i < view.byteLength; i++ ) {
+                message += String.fromCharCode( view.getUint8(i, !0) );
+            }
+            break;
         case 90:
             // Send Server Info
             var serv = this.gameServer.getPlayers();
             this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,this.gameServer.config.borderRight,this.gameServer.config.foodMaxAmount,this.gameServer.config.serverGamemode));
             break;
-        case 255:
-            // Connection Start
-            if (view.byteLength == 5) {
-                var c = this.gameServer.config,
-                    serv = this.gameServer.getPlayers();
-
-                // Boot Player if Server Full
-                if ( serv.players > c.serverMaxConnections )
-                {
-                    this.socket.sendPacket(new Packet.ServerMsg(93));
-                    this.socket.close();
-                }
-                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
-                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,c.borderRight,c.foodMaxAmount,this.gameServer.config.serverGamemode));
-                break;
-            }
-            break;
         case 99:
+            // Chat
             var message = "",
                 maxLen = this.gameServer.config.chatMaxMessageLength * 2,
                 offset = 2,
@@ -151,8 +141,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                     }
                     break;
                 } else if ( message.substr(0,6) == "/rcon " ) {
-                	  console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!" );
-                	  break;
+                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!" );
+                    break;
                 }
             }
 
@@ -160,10 +150,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 hour = date.getHours();
 
             if( ( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime ) {
-            	  var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime))/1000)%60);
-            	  var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
-            	  this.socket.sendPacket(packet);
-            	  break;
+                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime))/1000)%60);
+                var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
+                this.socket.sendPacket(packet);
+                break;
             }
 
             this.socket.playerTracker.cTime = date;
@@ -173,13 +163,14 @@ PacketHandler.prototype.handleMessage = function(message) {
                 if( SpamBlock > 5 ) this.socket.close();
                 break;
             }
+
             LastMsg = message;
             SpamBlock = 0;
 
-						if( this.gameServer.config.chatToConsole == 1 )
-						{
-            		console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
-          	}
+            if( this.gameServer.config.chatToConsole == 1 )
+            {
+                console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
+            }
 
             hour = (hour < 10 ? "0" : "") + hour;
             var min  = date.getMinutes();
@@ -197,7 +188,28 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.gameServer.clients[i].sendPacket(packet);
             }
             break;
+        case 254:
+            // Handshake setUint32(1, 5, !0)
+            break;
+        case 255:
+            // Connection Start
+            if (view.byteLength == 5) {
+                var c = this.gameServer.config,
+                    serv = this.gameServer.getPlayers();
+
+                // Boot Player if Server Full
+                if ( serv.players > c.serverMaxConnections )
+                {
+                    this.socket.sendPacket(new Packet.ServerMsg(93));
+                    this.socket.close();
+                }
+                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,c.borderRight,c.foodMaxAmount,this.gameServer.config.serverGamemode));
+                break;
+            }
+            break;
         default:
+            console.log("Unknown Packet ID: " + packetId );
             break;
     }
 };
@@ -215,4 +227,3 @@ PacketHandler.prototype.setNickname = function(newNick) {
         client.spectate = false;
     }
 };
-
