@@ -16,7 +16,7 @@ fi
 while true
 do
   # Insert your invocation below mt:4 multicore 4x
-  jx index.js
+  jx --nouse-idle-notification --expose-gc index.js
   echo Server went off, waiting ten sec then restarting it...
   sleep 10
   done

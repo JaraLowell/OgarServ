@@ -242,6 +242,9 @@ GameServer.prototype.start = function() {
             }
             client.disconnect = this.server.config.playerDisconnectTime * 20;
             this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
+
+            // Run garbage collection utility (Memory cleanup Prodject)
+            global.gc();
         }
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
