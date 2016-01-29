@@ -1,8 +1,9 @@
-function ClearNodes() {}
+function ClearNodes() {
+}
 
 module.exports = ClearNodes;
 
-ClearNodes.prototype.build = function() {
+ClearNodes.prototype.build = function () {
     var buf = new ArrayBuffer(1);
     var view = new DataView(buf);
 

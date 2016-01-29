@@ -25,12 +25,12 @@ Teams.prototype = new Mode();
 
 //Gamemode Specific Functions
 
-Teams.prototype.fuzzColorComponent = function(component) {
+Teams.prototype.fuzzColorComponent = function (component) {
     component += Math.random() * this.colorFuzziness >> 0;
     return component;
 };
 
-Teams.prototype.getTeamColor = function(team) {
+Teams.prototype.getTeamColor = function (team) {
     var color = this.colors[team];
     return {
         r: this.fuzzColorComponent(color.r),
@@ -41,14 +41,14 @@ Teams.prototype.getTeamColor = function(team) {
 
 // Override
 
-Teams.prototype.onPlayerSpawn = function(gameServer,player) {
+Teams.prototype.onPlayerSpawn = function (gameServer, player) {
     // Random color based on team
     player.color = this.getTeamColor(player.team);
     // Spawn player
     gameServer.spawnPlayer(player);
 };
 
-Teams.prototype.onServerInit = function(gameServer) {
+Teams.prototype.onServerInit = function (gameServer) {
     // Set up teams
     for (var i = 0; i < this.teamAmount; i++) {
         this.nodes[i] = [];
@@ -67,17 +67,17 @@ Teams.prototype.onServerInit = function(gameServer) {
     }
 };
 
-Teams.prototype.onPlayerInit = function(player) {
+Teams.prototype.onPlayerInit = function (player) {
     // Get random team
     player.team = Math.floor(Math.random() * this.teamAmount);
 };
 
-Teams.prototype.onCellAdd = function(cell) {
+Teams.prototype.onCellAdd = function (cell) {
     // Add to team list
     this.nodes[cell.owner.getTeam()].push(cell);
 };
 
-Teams.prototype.onCellRemove = function(cell) {
+Teams.prototype.onCellRemove = function (cell) {
     // Remove from team list
     var index = this.nodes[cell.owner.getTeam()].indexOf(cell);
     if (index != -1) {
@@ -85,16 +85,16 @@ Teams.prototype.onCellRemove = function(cell) {
     }
 };
 
-Teams.prototype.onCellMove = function(x1,y1,cell) {
+Teams.prototype.onCellMove = function (x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
 
     // Find team
-    for (var i = 0; i < cell.owner.visibleNodes.length;i++) {
+    for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
 
-        if ((check.getType() != 0) || (cell.owner == check.owner)){
+        if ((check.getType() != 0) || (cell.owner == check.owner)) {
             continue;
         }
 
@@ -102,20 +102,20 @@ Teams.prototype.onCellMove = function(x1,y1,cell) {
         if (check.owner.getTeam() == team) {
             // Check if in collision range
             var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
-            if (!cell.simpleCollide(x1,y1,check, collisionDist)) {
+            if (!cell.simpleCollide(x1, y1, check, collisionDist)) {
                 // Skip
                 continue;
             }
 
             // First collision check passed... now more precise checking
-            dist = cell.getDist(cell.position.x,cell.position.y,check.position.x,check.position.y);
+            dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
 
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
-                var newAngle = Math.atan2(newDeltaX,newDeltaY);
+                var newAngle = Math.atan2(newDeltaX, newDeltaY);
 
                 var move = collisionDist - dist;
 
@@ -126,7 +126,7 @@ Teams.prototype.onCellMove = function(x1,y1,cell) {
     }
 };
 
-Teams.prototype.updateLB = function(gameServer) {
+Teams.prototype.updateLB = function (gameServer) {
     var total = 0;
     var teamMass = [];
     // Get mass
@@ -135,7 +135,7 @@ Teams.prototype.updateLB = function(gameServer) {
         teamMass[i] = 0;
 
         // Loop through cells
-        for (var j = 0; j < this.nodes[i].length;j++) {
+        for (var j = 0; j < this.nodes[i].length; j++) {
             var cell = this.nodes[i][j];
 
             if (!cell) {
@@ -153,7 +153,7 @@ Teams.prototype.updateLB = function(gameServer) {
             continue;
         }
 
-        gameServer.leaderboard[i] = teamMass[i]/total;
+        gameServer.leaderboard[i] = teamMass[i] / total;
     }
 };
 

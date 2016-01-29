@@ -7,7 +7,7 @@ function Food() {
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
-    if (this.gameServer.config.foodMassGrow && Math.floor(Math.random()*101) > this.gameServer.config.foodMassGrowPossiblity && this.gameServer.run) {
+    if (this.gameServer.config.foodMassGrow && Math.floor(Math.random() * 101) > this.gameServer.config.foodMassGrowPossiblity && this.gameServer.run) {
         this.grow();
     }
 }
@@ -15,7 +15,7 @@ function Food() {
 module.exports = Food;
 Food.prototype = new Cell();
 
-Food.prototype.getSize = function() {
+Food.prototype.getSize = function () {
     return this.size;
 };
 
@@ -26,9 +26,9 @@ Food.prototype.getSquareSize = function () {
 Food.prototype.calcMove = null; // Food has no need to move
 
 // Main Functions
-Food.prototype.grow = function() {
+Food.prototype.grow = function () {
     setTimeout(function () {
-        this.mass ++; // food mass increased, we need to recalculate its size and squareSize, and send update to client side
+        this.mass++; // food mass increased, we need to recalculate its size and squareSize, and send update to client side
         this.size = Math.ceil(Math.sqrt(100 * this.mass));
         this.squareSize = (100 * this.mass) >> 0;
         this.shouldSendUpdate = true;
@@ -39,7 +39,7 @@ Food.prototype.grow = function() {
     }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
 };
 
-Food.prototype.sendUpdate = function() {
+Food.prototype.sendUpdate = function () {
     // Whether or not to include this cell in the update packet
     if (this.moveEngineTicks == 0) {
         return false;
@@ -51,11 +51,11 @@ Food.prototype.sendUpdate = function() {
     return true;
 };
 
-Food.prototype.onRemove = function(gameServer) {
+Food.prototype.onRemove = function (gameServer) {
     gameServer.currentFood--;
 };
 
-Food.prototype.onConsume = function(consumer,gameServer) {
+Food.prototype.onConsume = function (consumer, gameServer) {
     consumer.addMass(this.mass);
 };
 

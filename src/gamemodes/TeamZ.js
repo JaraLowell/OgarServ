@@ -11,10 +11,10 @@ var GS_splitCells = null;
 var GS_newCellVirused = null;
 var Virus_onConsume = Virus.prototype.onConsume;
 
-var GameState = { WF_PLAYERS: 0, WF_START: 1, IN_PROGRESS: 2 };
+var GameState = {WF_PLAYERS: 0, WF_START: 1, IN_PROGRESS: 2};
 
 // new Cell Type IDs of HERO and BRAIN are calculated based on Game Mode ID
-var CellType = { PLAYER: 0, FOOD: 1, VIRUS: 2, EJECTED_MASS: 3, HERO: 130, BRAIN: 131 };
+var CellType = {PLAYER: 0, FOOD: 1, VIRUS: 2, EJECTED_MASS: 3, HERO: 130, BRAIN: 131};
 
 var localLB = [];
 
@@ -35,14 +35,14 @@ function TeamZ() {
     this.brainEffectDuration = 200;     // ticks
     this.spawnBrainInterval = 1200;     // ticks
     this.spawnHeroInterval = 600;       // ticks
-    this.defaultColor = { r: 0x9b, g: 0x30, b: 0xff };
-    
+    this.defaultColor = {r: 0x9b, g: 0x30, b: 0xff};
+
     this.colorFactorStep = 5;
     this.colorLower = 50;               // Min 0
     this.colorUpper = 225;              // Max 255
     this.maxBrain = -1;                 // set this param to any negative number to keep the number of brains not exceed number of humans
     this.maxHero = 4;                   // set this param to any negative number to keep the number of heroes not exceed number of zombies
-    
+
     // game mode data:
     this.state = GameState.WF_PLAYERS;
     this.winTeam = -1;
@@ -90,11 +90,11 @@ TeamZ.prototype.nextZColorFactor = function (client) {
 
 TeamZ.prototype.updateZColor = function (client, mask) {
     var color = {
-        r: (mask & 0x4) > 0 ? client.zColorFactor : 7, 
+        r: (mask & 0x4) > 0 ? client.zColorFactor : 7,
         g: (mask & 0x2) > 0 ? client.zColorFactor : 7,
         b: (mask & 0x1) > 0 ? client.zColorFactor : 7
     };
-    client.color = { r: color.r, g: color.g, b: color.b };
+    client.color = {r: color.r, g: color.g, b: color.b};
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
         cell.setColor(color);
@@ -126,19 +126,19 @@ TeamZ.prototype.spawnDrug = function (gameServer, cell) { // spawn HERO or BRAIN
     }
     if (proceedNext) {
         var pos = gameServer.getRandomPosition();
-        
+
         // Check for players
         var collided = false;
         for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
             var check = gameServer.nodesPlayer[i];
             var r = check.getSize(); // Radius of checking player cell
-            
+
             // Collision box
             var topY = check.position.y - r;
             var bottomY = check.position.y + r;
             var leftX = check.position.x - r;
             var rightX = check.position.x + r;
-            
+
             // Check for collisions
             if (pos.y > bottomY) {
                 continue;
@@ -152,12 +152,12 @@ TeamZ.prototype.spawnDrug = function (gameServer, cell) { // spawn HERO or BRAIN
             if (pos.x < leftX) {
                 continue;
             }
-            
+
             // Collided
             collided = true;
             break;
         }
-        
+
         // Spawn if no cells are colliding
         if (!collided) {
             cell.position = pos;
@@ -174,13 +174,13 @@ TeamZ.prototype.turnToZombie = function (client) {
     client.team = 0; // team Z
     this.createZColorFactor(client);
     this.updateZColor(client, 0x7); // Gray
-    
+
     // remove from human list
     var index = this.humans.indexOf(client);
     if (index >= 0) {
         this.humans.splice(index, 1);
     }
-    
+
     // add to zombie list
     this.zombies.push(client);
 };
@@ -236,11 +236,11 @@ TeamZ.prototype.startGame = function (gameServer) {
             }
         }
     }
-    
+
     // Select random human to be the zombie
     var zombie = this.humans[(Math.random() * this.humans.length) >> 0];
     this.turnToZombie(zombie);
-    
+
     this.winTeam = -1;
     this.state = GameState.IN_PROGRESS;
     this.gameTimer = this.gameDuration;
@@ -259,7 +259,7 @@ TeamZ.prototype.endGame = function (gameServer) {
     this.spawnHeroTimer = 0;
     this.spawnBrainTimer = 0;
     localLB = []; // reset leader board
-    
+
     for (var i = 0; i < this.humans.length; i++) {
         var client = this.humans[i];
         client.color = this.defaultColor;
@@ -278,7 +278,7 @@ TeamZ.prototype.leaderboardAddSort = function (player, leaderboard) {
     // Adds the player and sorts the leaderboard
     var len = leaderboard.length - 1;
     var loop = true;
-    
+
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
         if (player.getScore(false) <= leaderboard[len].getScore(false)) {
@@ -298,7 +298,7 @@ TeamZ.prototype.leaderboardAddSort = function (player, leaderboard) {
 TeamZ.prototype.onServerInit = function (gameServer) {
     // Called when the server starts
     gameServer.run = true;
-    
+
     // Overwrite some server functions:
     GameServer = require('../GameServer.js');
     GS_getRandomColor = GameServer.prototype.getRandomColor; // backup
@@ -306,13 +306,15 @@ TeamZ.prototype.onServerInit = function (gameServer) {
     GS_getCellsInRange = GameServer.prototype.getCellsInRange;
     GS_splitCells = GameServer.prototype.splitCells;
     GS_newCellVirused = GameServer.prototype.newCellVirused;
-    
+
     //OVERWRITE GLOBAL FUNCTIONs to adapt Zombie Team mode
 
     // Change to AGARIO colorful scheme 
     GameServer.prototype.getRandomColor = function () {
         var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
-        colorRGB.sort(function () { return 0.5 - Math.random() });
+        colorRGB.sort(function () {
+            return 0.5 - Math.random()
+        });
         return {
             r: colorRGB[0],
             b: colorRGB[1],
@@ -324,13 +326,13 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         // More like getNearbyVirus
         var virus = null;
         var r = 100; // Checking radius
-        
+
         var topY = cell.position.y - r;
         var bottomY = cell.position.y + r;
-        
+
         var leftX = cell.position.x - r;
         var rightX = cell.position.x + r;
-        
+
         // loop through all heroes
         for (var i = 0; i < this.gameMode.heroes.length; i++) {
             var check = this.gameMode.heroes[i];
@@ -345,7 +347,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         }
         if (virus != null)
             return virus;
-        
+
         // loop through all brains
         for (var i = 0; i < this.gameMode.brains.length; i++) {
             var check = this.gameMode.brains[i];
@@ -358,7 +360,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             virus = check;
             break;
         }
-        
+
         if (virus != null)
             return virus;
 
@@ -367,45 +369,45 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         var len = this.nodesVirus.length;
         for (var i = 0; i < len; i++) {
             var check = this.nodesVirus[i];
-            
+
             if (typeof check === 'undefined') {
                 continue;
             }
-            
+
             if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
                 continue;
             }
-            
+
             // Add to list of cells nearby
             virus = check;
             break; // stop checking when a virus found
         }
         return virus;
     };
-    
+
     // this is almost same to the legacy function
     GameServer.prototype.getCellsInRange = function (cell) {
         var list = [];
-        
+
         if (this.gameMode.state != GameState.IN_PROGRESS)
             return list;
 
         var squareR = cell.getSquareSize(); // Get cell squared radius
-        
+
         // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
         var len = cell.owner.visibleNodes.length;
         for (var i = 0; i < len; i++) {
             var check = cell.owner.visibleNodes[i];
-            
+
             if (typeof check === 'undefined') {
                 continue;
             }
-            
+
             // if something already collided with this cell, don't check for other collisions
             if (check.inRange) {
                 continue;
             }
-            
+
             // HERO and BRAIN checking
             if (cell.owner.getTeam() == 0) {
                 // Z team
@@ -418,25 +420,25 @@ TeamZ.prototype.onServerInit = function (gameServer) {
                     continue;
             }
 
-            
+
             // Can't eat itself
             if (cell.nodeId == check.nodeId) {
                 continue;
             }
-            
+
             // Can't eat cells that have collision turned off
             if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
                 continue;
             }
-            
+
             // AABB Collision
             if (!check.collisionCheck2(squareR, cell.position)) {
                 continue;
             }
-            
+
             // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
             var multiplier = 1.25;
-            
+
             switch (check.getType()) {
                 case 1:// Food cell
                     list.push(check);
@@ -451,16 +453,16 @@ TeamZ.prototype.onServerInit = function (gameServer) {
                         if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
                             continue;
                         }
-                        
+
                         multiplier = 1.00;
                     }
-                    
+
                     // Can't eat team members
                     if (this.gameMode.haveTeams) {
                         if (!check.owner) { // Error check
                             continue;
                         }
-                        
+
                         if ((check.owner != cell.owner) && (check.owner.getTeam() == cell.owner.getTeam())) {
                             continue;
                         }
@@ -469,26 +471,26 @@ TeamZ.prototype.onServerInit = function (gameServer) {
                 default:
                     break;
             }
-            
+
             // Make sure the cell is big enough to be eaten.
             if ((check.mass * multiplier) > cell.mass) {
                 continue;
             }
-            
+
             // Eating range
             var xs = Math.pow(check.position.x - cell.position.x, 2);
             var ys = Math.pow(check.position.y - cell.position.y, 2);
             var dist = Math.sqrt(xs + ys);
-            
+
             var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
             if (dist > eatingRange) {
                 // Not in eating range
                 continue;
             }
-            
+
             // Add to list of cells nearby
             list.push(check);
-            
+
             // Something is about to eat this cell; no need to check for other collisions with it
             check.inRange = true;
         }
@@ -503,21 +505,21 @@ TeamZ.prototype.onServerInit = function (gameServer) {
                 // Player cell limit
                 continue;
             }
-            
+
             var cell = client.cells[i];
             if (!cell) {
                 continue;
             }
-            
+
             if (cell.mass < this.config.playerMinMassSplit) {
                 continue;
             }
-            
+
             // Get angle
             var deltaY = client.mouse.y - cell.position.y;
             var deltaX = client.mouse.x - cell.position.x;
             var angle = Math.atan2(deltaX, deltaY);
-            
+
             // Get starting position
             var size = cell.getSize() / 2;
             var startPos = {
@@ -533,7 +535,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             split.setAngle(angle);
             split.setMoveEngineData(splitSpeed, 32, 0.85);
             split.calcMergeTime(this.config.playerRecombineTime);
-            
+
             // boost speed if zombie eats brain
             if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
                 this.gameMode.boostSpeedCell(split);
@@ -543,13 +545,13 @@ TeamZ.prototype.onServerInit = function (gameServer) {
                 // fix "unable to split" bug: cell can be merged after finish moving (2nd param in setMoveEngineData)
                 split.recombineTicks = 2; // main-ticks, 1 main-tick = 1 s
             }
-            
+
             // Add to moving cells list
             this.setAsMovingNode(split);
             this.addNode(split);
         }
     };
-    
+
     // this function is almost same to the legacy
     GameServer.prototype.newCellVirused = function (client, parent, angle, mass, speed) {
         // Starting position
@@ -557,14 +559,14 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             x: parent.position.x,
             y: parent.position.y
         };
-        
+
         // Create cell
         newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
         newCell.setAngle(angle);
         newCell.setMoveEngineData(speed, 10);
         newCell.calcMergeTime(this.config.playerRecombineTime);
         newCell.ignoreCollision = true;  // Turn off collision
-        
+
         // boost speed if zombie eats brain
         if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
             this.gameMode.boostSpeedCell(newCell);
@@ -574,7 +576,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             // fix "unable to split" bug
             newCell.recombineTicks = 1;
         }
-        
+
         // Add to moving cells list
         this.addNode(newCell);
         this.setAsMovingNode(newCell);
@@ -582,20 +584,20 @@ TeamZ.prototype.onServerInit = function (gameServer) {
 
     Virus.prototype.onConsume = function (consumer, gameServer) {
         var client = consumer.owner;
-        
+
         var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
         var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
         numSplits = Math.min(numSplits, maxSplits);
         var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
-        
+
         // Cell consumes mass before splitting
         consumer.addMass(this.mass);
-        
+
         // Cell cannot split any further
         if (numSplits <= 0) {
             return;
         }
-        
+
         // Big cells will split into cells larger than 36 mass (1/4 of their mass)
         var bigSplits = 0;
         var endMass = consumer.mass - (numSplits * splitMass);
@@ -611,7 +613,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             bigSplits++;
             numSplits--;
         }
-        
+
         // Splitting
         var angle = 0; // Starting angle
         for (var k = 0; k < numSplits; k++) {
@@ -619,7 +621,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
             consumer.mass -= splitMass;
         }
-        
+
         for (var k = 0; k < bigSplits; k++) {
             angle = Math.random() * 6.28; // Random directions
             splitMass = consumer.mass / 4;
@@ -665,7 +667,7 @@ TeamZ.prototype.onChange = function (gameServer) {
         var node = this.heroes[i];
         gameServer.removeNode(node);
     }
-    
+
     // discard all boost:
     for (var i = 0; i < this.humans.length; i++) {
         var client = this.humans[i];
@@ -691,7 +693,7 @@ TeamZ.prototype.onChange = function (gameServer) {
 
 TeamZ.prototype.onTick = function (gameServer) {
     // Called on every game tick
-    
+
     switch (this.state) {
         case GameState.WF_PLAYERS:
             if (this.humans.length >= this.minPlayer) {
@@ -728,7 +730,7 @@ TeamZ.prototype.onTick = function (gameServer) {
                     this.winTeam = 1;
                 }
             }
-            
+
             if (this.winTeam >= 0) {
                 this.endGame(gameServer);
             }
@@ -756,7 +758,7 @@ TeamZ.prototype.onTick = function (gameServer) {
 
         this.updateZColor(client, 0x7); // Gray
     }
-    
+
     for (var i = 0; i < this.humans.length; i++) {
         var client = this.humans[i];
         if (this.isCrazy(client)) {
@@ -766,7 +768,7 @@ TeamZ.prototype.onTick = function (gameServer) {
                     var cell = client.cells[j];
                     // reset speed:
                     this.resetSpeedCell(cell);
-                    
+
                     // reset color:
                     if (client.cured == true)
                         cell.setColor(client.color);
@@ -792,10 +794,10 @@ TeamZ.prototype.onTick = function (gameServer) {
                     }
                     else {
                         if (client.cured == true) {
-                            blinkColor = { r: 255, g: 255, b: 7 }; // Yellow
+                            blinkColor = {r: 255, g: 255, b: 7}; // Yellow
                         }
                         else {
-                            blinkColor = { r: 75, g: 75, b: 75 }; // Gray
+                            blinkColor = {r: 75, g: 75, b: 75}; // Gray
                         }
                     }
 
@@ -812,9 +814,9 @@ TeamZ.prototype.onTick = function (gameServer) {
             if (client.eatenHeroTimer > 0) {
                 client.heroColorFactor = (client.heroColorFactor + 5) % 401;
                 if (client.heroColorFactor <= 200) {
-                    color = { r: 255, g: 255, b: client.heroColorFactor }; // Yellow scheme
+                    color = {r: 255, g: 255, b: client.heroColorFactor}; // Yellow scheme
                 } else {
-                    color = { r: 255, g: 255, b: 400 - client.heroColorFactor }; // Yellow scheme
+                    color = {r: 255, g: 255, b: 400 - client.heroColorFactor}; // Yellow scheme
                 }
             }
             else {
@@ -833,7 +835,7 @@ TeamZ.prototype.onTick = function (gameServer) {
     if (this.spawnHeroTimer >= this.spawnHeroInterval) {
         this.spawnHeroTimer = 0;
         var cell = new Hero(gameServer.getNextNodeId(), null);
-        while(!this.spawnDrug(gameServer, cell)); // collision detect algorithm needs enhancement
+        while (!this.spawnDrug(gameServer, cell)); // collision detect algorithm needs enhancement
     }
 
     // check timer to spawn Brain:
@@ -850,7 +852,7 @@ TeamZ.prototype.onCellAdd = function (cell) {
     var client = cell.owner;
     if (client.cells.length == 1) { // first cell
         client.team = client.pID;
-        client.color = { r: cell.color.r, g: cell.color.g, b: cell.color.b };
+        client.color = {r: cell.color.r, g: cell.color.g, b: cell.color.b};
         client.eatenBrainTimer = 0;
         client.eatenHeroTimer = 0;
         client.crazyTimer = 0;
@@ -889,20 +891,20 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
     // Called when a player cell is moved
     var team = cell.owner.getTeam();
     var r = cell.getSize();
-    
+
     // Find team
     for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
-        
+
         if ((check.getType() != 0) || (cell.owner == check.owner)) {
             continue;
         }
-        
+
         if ((this.hasEatenHero(check.owner)) || (this.hasEatenHero(cell.owner))) {
             continue;
         }
-        
+
         // Collision with zombies
         if (check.owner.getTeam() == 0 || team == 0) {
             // Check if in collision range
@@ -911,10 +913,10 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
                 // Skip
                 continue;
             }
-            
+
             // First collision check passed... now more precise checking
             dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
-            
+
             // Calculations
             if (dist < collisionDist) { // Collided
                 var crazyClient = null;
@@ -923,7 +925,7 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
                 } else if (team == 0 && check.owner.getTeam() != 0) {
                     crazyClient = check.owner;
                 }
-                
+
                 if (crazyClient != null && !this.isCrazy(crazyClient)) {
                     crazyClient.crazyTimer = this.crazyDuration;
                     crazyClient.colorToggle = 0;
@@ -934,9 +936,9 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
                 var newAngle = Math.atan2(newDeltaX, newDeltaY);
-                
+
                 var move = collisionDist - dist;
-                
+
                 check.position.x = check.position.x + (move * Math.sin(newAngle)) >> 0;
                 check.position.y = check.position.y + (move * Math.cos(newAngle)) >> 0;
             }
@@ -946,7 +948,7 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
 
 TeamZ.prototype.updateLB = function (gameServer) {
     var lb = gameServer.leaderboard;
-    
+
     if (this.winTeam == 0) {
         lb.push('ZOMBIE WINS');
         lb.push('_______________');
@@ -975,14 +977,14 @@ TeamZ.prototype.updateLB = function (gameServer) {
             lb.push('HUMAN: ' + this.humans.length);
             lb.push('ZOMBIE: ' + this.zombies.length);
             lb.push('_______________');
-            
+
             // Loop through all clients
             localLB = [];
             for (var i = 0; i < gameServer.clients.length; i++) {
                 if (typeof gameServer.clients[i] == 'undefined' || gameServer.clients[i].playerTracker.team == 0) {
                     continue;
                 }
-                
+
                 var player = gameServer.clients[i].playerTracker;
                 if (player.cells.length <= 0) {
                     continue;
@@ -1021,10 +1023,10 @@ TeamZ.prototype.updateLB = function (gameServer) {
 // HERO POISON CELL:
 function Hero() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-    
+
     this.cellType = CellType.HERO;
     //this.spiked = 1;
-    this.color = { r: 255, g: 255, b: 7 };
+    this.color = {r: 255, g: 255, b: 7};
     this.mass = 60;
 }
 
@@ -1055,7 +1057,7 @@ Hero.prototype.feed = function (feeder, gameServer) {
     this.setAngle(feeder.getAngle());
     this.moveEngineTicks = 5; // Amount of times to loop the movement function
     this.moveEngineSpeed = 60;
-    
+
     var index = gameServer.movingNodes.indexOf(this);
     if (index == -1) {
         gameServer.movingNodes.push(this);
@@ -1066,7 +1068,7 @@ Hero.prototype.onConsume = function (consumer, gameServer) {
     // Called when the cell is consumed
     var client = consumer.owner;
     consumer.addMass(this.mass); // delicious
-    
+
     if (gameServer.gameMode.isCrazy(client)) {
         // Neutralize the Zombie effect
         client.cured = true;
@@ -1075,7 +1077,7 @@ Hero.prototype.onConsume = function (consumer, gameServer) {
         // Become a hero
         client.eatenHeroTimer = gameServer.gameMode.heroEffectDuration;
         client.heroColorFactor = 0;
-        
+
         // Merge immediately
         for (var i = 0; i < client.cells.length; i++) {
             var cell = client.cells[i];
@@ -1089,10 +1091,10 @@ Hero.prototype.onConsume = function (consumer, gameServer) {
 // BRAIN CELL:
 function Brain() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-    
+
     this.cellType = CellType.BRAIN;
     //this.spiked = 1;
-    this.color = { r: 255, g: 7, b: 255 };
+    this.color = {r: 255, g: 7, b: 255};
     this.mass = 60;
 }
 
@@ -1123,7 +1125,7 @@ Brain.prototype.feed = function (feeder, gameServer) {
     this.setAngle(feeder.getAngle());
     this.moveEngineTicks = 5; // Amount of times to loop the movement function
     this.moveEngineSpeed = 60;
-    
+
     var index = gameServer.movingNodes.indexOf(this);
     if (index == -1) {
         gameServer.movingNodes.push(this);
@@ -1134,9 +1136,9 @@ Brain.prototype.onConsume = function (consumer, gameServer) {
     // Called when the cell is consumed
     var client = consumer.owner;
     consumer.addMass(this.mass); // yummy!
-    
+
     client.eatenBrainTimer = gameServer.gameMode.brainEffectDuration;
-    
+
     // Boost speed
     gameServer.gameMode.boostSpeed(client);
 };

@@ -10,14 +10,14 @@ function BotLoader(gameServer) {
 
 module.exports = BotLoader;
 
-BotLoader.prototype.getName = function() {
+BotLoader.prototype.getName = function () {
     var name = "";
 
     // Picks a random name for the bot
     if (this.randomNames.length > 0) {
         var index = Math.floor(Math.random() * this.randomNames.length);
-        name = this.randomNames[index].replace('\r','');
-        this.randomNames.splice(index,1);
+        name = this.randomNames[index].replace('\r', '');
+        this.randomNames.splice(index, 1);
     } else {
         name = "bot" + ++this.nameIndex;
     }
@@ -25,7 +25,7 @@ BotLoader.prototype.getName = function() {
     return "[BOT] " + name;
 };
 
-BotLoader.prototype.loadNames = function() {
+BotLoader.prototype.loadNames = function () {
     this.randomNames = [];
     // Load names
     try {
@@ -38,7 +38,7 @@ BotLoader.prototype.loadNames = function() {
     this.nameIndex = 0;
 };
 
-BotLoader.prototype.addBot = function() {
+BotLoader.prototype.addBot = function () {
     var s = new FakeSocket(this.gameServer);
     s.playerTracker = new BotPlayer(this.gameServer, s);
     s.packetHandler = new PacketHandler(this.gameServer, s);

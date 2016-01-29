@@ -9,7 +9,7 @@ function ServerInfo(uptime, players, msize, mfood, smode) {
 
 module.exports = ServerInfo;
 
-ServerInfo.prototype.build = function() {
+ServerInfo.prototype.build = function () {
     var buf = new ArrayBuffer(41);
     var view = new DataView(buf);
 

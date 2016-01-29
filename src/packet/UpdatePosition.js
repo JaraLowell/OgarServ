@@ -6,7 +6,7 @@ function UpdatePosition(x, y, size) {
 
 module.exports = UpdatePosition;
 
-UpdatePosition.prototype.build = function() {
+UpdatePosition.prototype.build = function () {
     var buf = new ArrayBuffer(13);
     var view = new DataView(buf);
 

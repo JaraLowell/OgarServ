@@ -18,29 +18,29 @@ module.exports = Cell;
 
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
-Cell.prototype.getName = function() {
-if (this.owner) {
+Cell.prototype.getName = function () {
+    if (this.owner) {
         return this.owner.name;
     } else {
         return "";
     }
 };
 
-Cell.prototype.setColor = function(color) {
+Cell.prototype.setColor = function (color) {
     this.color.r = color.r;
     this.color.b = color.b;
     this.color.g = color.g;
 };
 
-Cell.prototype.getColor = function() {
+Cell.prototype.getColor = function () {
     return this.color;
 };
 
-Cell.prototype.getType = function() {
+Cell.prototype.getType = function () {
     return this.cellType;
 };
 
-Cell.prototype.getSize = function() {
+Cell.prototype.getSize = function () {
     // Calculates radius based on cell mass
     return Math.ceil(Math.sqrt(100 * this.mass));
 };
@@ -50,51 +50,51 @@ Cell.prototype.getSquareSize = function () {
     return (100 * this.mass) >> 0;
 };
 
-Cell.prototype.addMass = function(n) {
-    if(this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
+Cell.prototype.addMass = function (n) {
+    if (this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
         this.mass = (this.mass + n) / 2;
         this.owner.gameServer.newCellVirused(this.owner, this, 0, this.mass, 150);
     } else {
-        this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
+        this.mass = Math.min(this.mass + n, this.owner.gameServer.config.playerMaxMass);
     }
 };
 
-Cell.prototype.getSpeed = function() {
+Cell.prototype.getSpeed = function () {
     // Old formula: 5 + (20 * (1 - (this.mass/(70+this.mass))));
     // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
     // (should possibly have a config value for this?)
-    return this.owner.gameServer.config.playerSpeed * Math.pow( this.mass, -1.0 / 4.5) * 50 / 40;
+    return this.owner.gameServer.config.playerSpeed * Math.pow(this.mass, -1.0 / 4.5) * 50 / 40;
 };
 
-Cell.prototype.setAngle = function(radians) {
+Cell.prototype.setAngle = function (radians) {
     this.angle = radians;
 };
 
-Cell.prototype.getAngle = function() {
+Cell.prototype.getAngle = function () {
     return this.angle;
 };
 
-Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
+Cell.prototype.setMoveEngineData = function (speed, ticks, decay) {
     this.moveEngineSpeed = speed;
     this.moveEngineTicks = ticks;
     this.moveDecay = isNaN(decay) ? 0.75 : decay;
 };
 
-Cell.prototype.getEatingRange = function() {
+Cell.prototype.getEatingRange = function () {
     return 0; // 0 for ejected cells
 };
 
-Cell.prototype.getKiller = function() {
+Cell.prototype.getKiller = function () {
     return this.killedBy;
 };
 
-Cell.prototype.setKiller = function(cell) {
+Cell.prototype.setKiller = function (cell) {
     this.killedBy = cell;
 };
 
 // Functions
 
-Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
+Cell.prototype.collisionCheck = function (bottomY, topY, rightX, leftX) {
     // Collision checking
     if (this.position.y > bottomY) {
         return false;
@@ -111,12 +111,12 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return this.position.x >= leftX;
 };
 
-Cell.prototype.visibleCheck = function(box,centerPos) {
+Cell.prototype.visibleCheck = function (box, centerPos) {
     // Checks if this cell is visible to the player
-    return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
+    return this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
 };
 
-Cell.prototype.calcMovePhys = function(config, gameServer) {
+Cell.prototype.calcMovePhys = function (config, gameServer) {
     // Movement engine (non player controlled movement)
     var speed = this.moveEngineSpeed;
     var r = this.getSize();
@@ -139,9 +139,9 @@ Cell.prototype.calcMovePhys = function(config, gameServer) {
             this.position.x = x1;
             this.position.y = y1;
             var list = this.owner.gameServer.getCellsInRange(this);
-            for (var j = 0; j < list.length ; j++) {
+            for (var j = 0; j < list.length; j++) {
                 var check = list[j];
-                check.onConsume(this,this.owner.gameServer);
+                check.onConsume(this, this.owner.gameServer);
                 check.setKiller(this);
                 this.owner.gameServer.removeNode(check);
             }
@@ -165,14 +165,14 @@ Cell.prototype.calcMovePhys = function(config, gameServer) {
                 if (this.nodeId == cell.nodeId) {
                     continue;
                 }
-                if (!this.simpleCollide(x1,y1,cell,collisionDist)) {
+                if (!this.simpleCollide(x1, y1, cell, collisionDist)) {
                     continue;
                 }
-                var dist = this.getDist(x1,y1,cell.position.x,cell.position.y);
+                var dist = this.getDist(x1, y1, cell.position.x, cell.position.y);
                 if (dist < collisionDist) { // Collided
                     var newDeltaY = cell.position.y - y1;
                     var newDeltaX = cell.position.x - x1;
-                    var newAngle = Math.atan2(newDeltaX,newDeltaY);
+                    var newAngle = Math.atan2(newDeltaX, newDeltaY);
                     var move = (collisionDist - dist + 5) / 2; //move cells each halfway until they touch
                     var xmove = move * Math.sin(newAngle);
                     var ymove = move * Math.cos(newAngle);
@@ -230,17 +230,17 @@ Cell.prototype.calcMovePhys = function(config, gameServer) {
 };
 
 // Lib
-Cell.prototype.simpleCollide = function(x1,y1,check,d) {
+Cell.prototype.simpleCollide = function (x1, y1, check, d) {
     // Simple collision check
     var len = d >> 0;
     return (this.abs(x1 - check.position.x) < len) && (this.abs(y1 - check.position.y) < len);
 };
 
-Cell.prototype.abs = function(x) {
+Cell.prototype.abs = function (x) {
     return x < 0 ? -x : x;
 };
 
-Cell.prototype.getDist = function(x1, y1, x2, y2) {
+Cell.prototype.getDist = function (x1, y1, x2, y2) {
     var xs = x2 - x1;
     xs = xs * xs;
 
@@ -251,28 +251,28 @@ Cell.prototype.getDist = function(x1, y1, x2, y2) {
 };
 
 // Override these
-Cell.prototype.sendUpdate = function() {
+Cell.prototype.sendUpdate = function () {
     // Whether or not to include this cell in the update packet
     return true;
 };
 
-Cell.prototype.onConsume = function(consumer,gameServer) {
+Cell.prototype.onConsume = function (consumer, gameServer) {
     // Called when the cell is consumed
 };
 
-Cell.prototype.onAdd = function(gameServer) {
+Cell.prototype.onAdd = function (gameServer) {
     // Called when this cell is added to the world
 };
 
-Cell.prototype.onRemove = function(gameServer) {
+Cell.prototype.onRemove = function (gameServer) {
     // Called when this cell is removed
 };
 
-Cell.prototype.onAutoMove = function(gameServer) {
+Cell.prototype.onAutoMove = function (gameServer) {
     // Called on each auto move engine tick
 };
 
-Cell.prototype.moveDone = function(gameServer) {
+Cell.prototype.moveDone = function (gameServer) {
     // Called when this cell finished moving with the auto move engine
     this.onAutoMove(gameServer);
 };

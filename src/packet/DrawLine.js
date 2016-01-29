@@ -5,7 +5,7 @@ function DrawLine(x, y) {
 
 module.exports = DrawLine;
 
-DrawLine.prototype.build = function() {
+DrawLine.prototype.build = function () {
     var buf = new ArrayBuffer(5);
     var view = new DataView(buf);
 

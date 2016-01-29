@@ -15,7 +15,7 @@ function PacketHandler(gameServer, socket) {
 
 module.exports = PacketHandler;
 
-PacketHandler.prototype.handleMessage = function(message) {
+PacketHandler.prototype.handleMessage = function (message) {
     function stobuf(buf) {
         var length = buf.length;
         var arrayBuf = new ArrayBuffer(length);
@@ -87,20 +87,20 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 80:
             // Cookie Code from Agar.io
-            for ( var message = '', i = 1; i < view.byteLength; i++ ) {
-                message += String.fromCharCode( view.getUint8(i, !0) );
+            for (var message = '', i = 1; i < view.byteLength; i++) {
+                message += String.fromCharCode(view.getUint8(i, !0));
             }
             break;
         case 82:
             // User login access token
             var service = view.getUint8(1, !0);
-            for ( var message = '', i = 2; i < view.byteLength; i++ ) {
-                message += String.fromCharCode( view.getUint8(i, !0) );
+            for (var message = '', i = 2; i < view.byteLength; i++) {
+                message += String.fromCharCode(view.getUint8(i, !0));
             }
             switch (service) {
                 case 1:
                     // Recieved facebook access token
-                    this.gameServer.fbapi( message , this.socket.remoteAddress );
+                    this.gameServer.fbapi(message, this.socket.remoteAddress);
                     break;
                 case 2:
                     // recieved google+ access token
@@ -112,7 +112,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 90:
             // Send Server Info
             var serv = this.gameServer.getPlayers();
-            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,this.gameServer.config.borderRight,this.gameServer.config.foodMaxAmount,this.gameServer.config.serverGamemode));
+            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), serv.humans, this.gameServer.config.borderRight, this.gameServer.config.foodMaxAmount, this.gameServer.config.serverGamemode));
             break;
         case 99:
             // Chat
@@ -121,9 +121,15 @@ PacketHandler.prototype.handleMessage = function(message) {
                 offset = 2,
                 flags = view.getUint8(1);
 
-            if (flags & 2) { offset += 4;  }
-            if (flags & 4) { offset += 8;  }
-            if (flags & 8) { offset += 16; }
+            if (flags & 2) {
+                offset += 4;
+            }
+            if (flags & 4) {
+                offset += 8;
+            }
+            if (flags & 8) {
+                offset += 16;
+            }
 
             for (var i = offset; i < view.byteLength && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
@@ -133,26 +139,25 @@ PacketHandler.prototype.handleMessage = function(message) {
                 message += String.fromCharCode(charCode);
             }
 
-            var zname = wname = this.socket.playerTracker.name;
-            if ( wname == "" ) wname = "Spectator";
+            var wname = this.socket.playerTracker.name;
+            if (wname == "") wname = "Spectator";
 
-            if ( this.gameServer.config.serverAdminPass != '' )
-            {
+            if (this.gameServer.config.serverAdminPass != '') {
                 var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
-                if ( message.substr(0,passkey.length) == passkey ) {
-                    var cmd = message.substr(passkey.length, message.length );
-                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd );
+                if (message.substr(0, passkey.length) == passkey) {
+                    var cmd = message.substr(passkey.length, message.length);
+                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd);
                     var split = cmd.split(" "),
                         first = split[0].toLowerCase(),
                         execute = this.gameServer.commands[first];
                     if (typeof execute != 'undefined') {
-                        execute(this.gameServer,split);
+                        execute(this.gameServer, split);
                     } else {
                         console.log("Invalid Command!");
                     }
                     break;
-                } else if ( message.substr(0,6) == "/rcon " ) {
-                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!" );
+                } else if (message.substr(0, 6) == "/rcon ") {
+                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!");
                     break;
                 }
             }
@@ -160,8 +165,8 @@ PacketHandler.prototype.handleMessage = function(message) {
             var date = new Date(),
                 hour = date.getHours();
 
-            if( ( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime ) {
-                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime))/1000)%60);
+            if (( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime) {
+                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime)) / 1000) % 60);
                 var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
                 this.socket.sendPacket(packet);
                 break;
@@ -169,28 +174,27 @@ PacketHandler.prototype.handleMessage = function(message) {
 
             this.socket.playerTracker.cTime = date;
 
-            if( message == LastMsg ) {
+            if (message == LastMsg) {
                 ++SpamBlock;
-                if( SpamBlock > 5 ) this.socket.close();
+                if (SpamBlock > 5) this.socket.close();
                 break;
             }
 
             LastMsg = message;
             SpamBlock = 0;
 
-            if( this.gameServer.config.chatToConsole == 1 )
-            {
-                console.log( "\u001B[36m" + wname + ": \u001B[0m" + message );
+            if (this.gameServer.config.chatToConsole == 1) {
+                console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
 
             hour = (hour < 10 ? "0" : "") + hour;
-            var min  = date.getMinutes();
+            var min = date.getMinutes();
             min = (min < 10 ? "0" : "") + min;
             hour += ":" + min;
 
             var fs = require('fs');
             var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
-            wstream.write( '[' + hour + '] ' + wname + ': ' + message + '\n');
+            wstream.write('[' + hour + '] ' + wname + ': ' + message + '\n');
             wstream.end();
 
             var packet = new Packet.Chat(this.socket.playerTracker, message);
@@ -209,30 +213,29 @@ PacketHandler.prototype.handleMessage = function(message) {
                     serv = this.gameServer.getPlayers();
 
                 // Boot Player if Server Full
-                if ( serv.players > c.serverMaxConnections )
-                {
+                if (serv.players > c.serverMaxConnections) {
                     this.socket.sendPacket(new Packet.ServerMsg(93));
                     this.socket.close();
                 }
                 this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
-                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),serv.humans,c.borderRight,c.foodMaxAmount,this.gameServer.config.serverGamemode));
+                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), serv.humans, c.borderRight, c.foodMaxAmount, this.gameServer.config.serverGamemode));
                 break;
             }
             break;
         default:
-            console.log("Unknown Packet ID: " + packetId );
+            console.log("Unknown Packet ID: " + packetId);
             break;
     }
 };
 
-PacketHandler.prototype.setNickname = function(newNick) {
+PacketHandler.prototype.setNickname = function (newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // Set name first
         client.setName(newNick);
 
         // If client has no cells... then spawn a player
-        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
+        this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);
 
         // Turn off spectate mode
         client.spectate = false;

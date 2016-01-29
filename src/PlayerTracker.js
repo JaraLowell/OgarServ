@@ -1,19 +1,6 @@
 var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
-var fillChar = function (data, char, fieldLength, rTL) {
-    var result = data.toString();
-    if (rTL === true) {
-        for (var i = result.length; i < fieldLength; i++)
-            result = char.concat(result);
-    }
-    else {
-        for (var i = result.length; i < fieldLength; i++)
-            result = result.concat(char);
-    }
-    return result;
-};
-
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
@@ -40,7 +27,7 @@ function PlayerTracker(gameServer, socket) {
     // Viewing box
     this.sightRangeX = 0;
     this.sightRangeY = 0;
-    this.centerPos = {x: 3000, y: 3000 };
+    this.centerPos = {x: 3000, y: 3000};
     this.viewBox = {
         topY: 0,
         bottomY: 0,
@@ -61,55 +48,54 @@ module.exports = PlayerTracker;
 
 // Setters/Getters
 
-PlayerTracker.prototype.setName = function(name) {
+PlayerTracker.prototype.setName = function (name) {
     this.name = name;
 };
 
-PlayerTracker.prototype.getName = function() {
+PlayerTracker.prototype.getName = function () {
     return this.name;
 };
 
-PlayerTracker.prototype.getScore = function(reCalcScore) {
+PlayerTracker.prototype.getScore = function (reCalcScore) {
     if (reCalcScore) {
         var s = 0;
         for (var i = 0; i < this.cells.length; i++) {
             s += this.cells[i].mass;
             this.score = s;
-            if ( s > this.hscore ) this.hscore = s;
+            if (s > this.hscore) this.hscore = s;
         }
     }
-    if ( this.cells.length > this.cscore ) this.cscore = this.cells.length;
+    if (this.cells.length > this.cscore) this.cscore = this.cells.length;
     return this.score >> 0;
 };
 
-PlayerTracker.prototype.setColor = function(color) {
+PlayerTracker.prototype.setColor = function (color) {
     this.color.r = color.r;
     this.color.b = color.b;
     this.color.g = color.g;
 };
 
-PlayerTracker.prototype.getTeam = function() {
+PlayerTracker.prototype.getTeam = function () {
     return this.team;
 };
 
 // Functions
 
-PlayerTracker.prototype.update = function() {
+PlayerTracker.prototype.update = function () {
     // Actions buffer (So that people cant spam packets)
-    if ( this.gameServer.run )
-    {
+    if (this.gameServer.run) {
         if (this.socket.packetHandler.pressSpace) { // Split cell
-            this.gameServer.gameMode.pressSpace(this.gameServer,this);
+            this.gameServer.gameMode.pressSpace(this.gameServer, this);
             this.socket.packetHandler.pressSpace = false;
         }
 
         if (this.socket.packetHandler.pressW) { // Eject mass
-            this.gameServer.gameMode.pressW(this.gameServer,this);
+            this.gameServer.gameMode.pressW(this.gameServer, this);
             this.socket.packetHandler.pressW = false;
         }
 
         if (this.socket.packetHandler.pressQ) { // Q Press
-            this.gameServer.gameMode.pressQ(this.gameServer,this);
+            this.gameServer.gameMode.pressQ(this.gameServer, this);
             this.socket.packetHandler.pressQ = false;
         }
 
@@ -124,7 +110,7 @@ PlayerTracker.prototype.update = function() {
                 d++; // Increment
             } else {
                 // Node was never visible anyways
-                this.nodeDestroyQueue.splice(d,1);
+                this.nodeDestroyQueue.splice(d, 1);
             }
         }
 
@@ -172,7 +158,7 @@ PlayerTracker.prototype.update = function() {
         }
 
         // Send packet
-        this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes,this.gameServer.config.serverVersion));
+        this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes, this.gameServer.config.serverVersion));
 
         this.nodeDestroyQueue = []; // Reset destroy queue
         this.nodeAdditionQueue = []; // Reset addition queue
@@ -187,10 +173,10 @@ PlayerTracker.prototype.update = function() {
     }
 
     // Handles disconnections
-    if ( this.disconnect > 0 ) {
+    if (this.disconnect > 0) {
         // Player has disconnected... remove it when the timer hits -1
         this.disconnect--;
-        if ( this.cells.length ) {
+        if (this.cells.length) {
             // Remove all client cells
             var len = this.cells.length;
             for (var i = 0; i < len; i++) {
@@ -201,11 +187,11 @@ PlayerTracker.prototype.update = function() {
                 this.gameServer.removeNode(cell);
             }
         }
-        if ( this.disconnect == 0 ) {
+        if (this.disconnect == 0) {
             // Remove from client list
             var index = this.gameServer.clients.indexOf(this.socket);
             if (index != -1) {
-                this.gameServer.clients.splice(index,1);
+                this.gameServer.clients.splice(index, 1);
             }
             // Remove the socket... (Memory cleanup Prodject)
             this.socket = null;
@@ -215,11 +201,11 @@ PlayerTracker.prototype.update = function() {
 };
 
 // Viewing box
-PlayerTracker.prototype.updateSightRange = function() { // For view distance
+PlayerTracker.prototype.updateSightRange = function () { // For view distance
     var totalSize = 1.0;
     var len = this.cells.length;
 
-    for (var i = 0; i < len;i++) {
+    for (var i = 0; i < len; i++) {
         if (!this.cells[i]) {
             continue;
         }
@@ -231,7 +217,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
     this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;
 };
 
-PlayerTracker.prototype.updateCenter = function() { // Get center of cells
+PlayerTracker.prototype.updateCenter = function () { // Get center of cells
     var len = this.cells.length;
 
     if (len <= 0) {
@@ -240,7 +226,7 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
 
     var X = 0;
     var Y = 0;
-    for (var i = 0; i < len ;i++) {
+    for (var i = 0; i < len; i++) {
         if (!this.cells[i]) {
             continue;
         }
@@ -253,7 +239,7 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     this.centerPos.y = Y / len >> 0;
 };
 
-PlayerTracker.prototype.calcViewBox = function() {
+PlayerTracker.prototype.calcViewBox = function () {
     if (this.spectate) {
         // Spectate mode
         return this.getSpectateNodes();
@@ -272,14 +258,14 @@ PlayerTracker.prototype.calcViewBox = function() {
     this.viewBox.height = this.sightRangeY;
 
     var newVisible = [];
-    for (var i = 0; i < this.gameServer.nodes.length ;i++) {
+    for (var node, i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
 
         if (!node) {
             continue;
         }
 
-        if (node.visibleCheck(this.viewBox,this.centerPos)) {
+        if (node.visibleCheck(this.viewBox, this.centerPos)) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }
@@ -287,7 +273,7 @@ PlayerTracker.prototype.calcViewBox = function() {
     return newVisible;
 };
 
-PlayerTracker.prototype.getSpectateNodes = function() {
+PlayerTracker.prototype.getSpectateNodes = function () {
     var specPlayer;
 
     if (this.gameServer.getMode().specByLeaderboard) {
@@ -311,7 +297,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         // TODO: Send packet elsewhere so it is send more often
         this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
         // TODO: Recalculate visible nodes for spectator to match specZoom
-        return specPlayer.visibleNodes.slice(0,specPlayer.visibleNodes.length);
+        return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
     } else {
         return []; // Nothing
     }

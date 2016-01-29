@@ -12,7 +12,7 @@ module.exports = {
     Blackhole: require('./Blackhole')
 };
 
-var get = function(id) {
+var get = function (id) {
     var mode;
     switch (id) {
         case 1: // Teams

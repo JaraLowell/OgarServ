@@ -5,7 +5,7 @@ exports.unsafe = unsafe;
 
 var eol = process.platform === "win32" ? "\r\n" : "\n";
 
-function encode (obj, opt) {
+function encode(obj, opt) {
     var children = [],
         out = "";
 
@@ -24,7 +24,7 @@ function encode (obj, opt) {
     Object.keys(obj).forEach(function (k, _, __) {
         var val = obj[k];
         if (val && Array.isArray(val)) {
-            val.forEach(function(item) {
+            val.forEach(function (item) {
                 out += safe(k + "[]") + separator + safe(item) + "\n";
             });
         }
@@ -55,7 +55,7 @@ function encode (obj, opt) {
     return out;
 }
 
-function dotSplit (str) {
+function dotSplit(str) {
     return str.replace(/\1/g, '\u0002LITERAL\\1LITERAL\u0002')
         .replace(/\\\./g, '\u0001')
         .split(/\./).map(function (part) {
@@ -64,11 +64,11 @@ function dotSplit (str) {
         });
 }
 
-function decode (str) {
+function decode(str) {
     var out = {},
         p = out,
         state = "START",
-        // section     |key = value
+    // section     |key = value
         re = /^\[([^\]]*)\]$|^([^=]+)(=(.*))?$/i,
         lines = str.split(/[\r\n]+/g),
         section = null;
@@ -140,23 +140,23 @@ function decode (str) {
     return out;
 }
 
-function isQuoted (val) {
+function isQuoted(val) {
     return (val.charAt(0) === "\"" && val.slice(-1) === "\"")
         || (val.charAt(0) === "'" && val.slice(-1) === "'");
 }
 
-function safe (val) {
+function safe(val) {
     return (typeof val !== "string"
-             || val.match(/[=\r\n]/)
-             || val.match(/^\[/)
-             || (val.length > 1
-                 && isQuoted(val))
-             || val !== val.trim())
+    || val.match(/[=\r\n]/)
+    || val.match(/^\[/)
+    || (val.length > 1
+    && isQuoted(val))
+    || val !== val.trim())
         ? JSON.stringify(val)
         : val.replace(/;/g, '\\;').replace(/#/g, "\\#");
 }
 
-function unsafe (val, doUnesc) {
+function unsafe(val, doUnesc) {
     val = (val || "").trim();
     if (isQuoted(val)) {
         // remove the single quotes before calling JSON.parse
@@ -165,7 +165,8 @@ function unsafe (val, doUnesc) {
         }
         try {
             val = JSON.parse(val);
-        } catch (_) {}
+        } catch (_) {
+        }
     } else {
         // walk the val to find the first not-escaped ; character
         var esc = false;
@@ -193,6 +194,6 @@ function unsafe (val, doUnesc) {
     return val;
 }
 
-var isInt = function(n) {
+var isInt = function (n) {
     return parseInt(n) === n;
 };
