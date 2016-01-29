@@ -251,7 +251,12 @@ GameServer.prototype.start = function() {
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
-        console.log( "(" + ( 1 + serv.players ) + "/" + this.config.serverMaxConnections  + " [Spec:" + serv.spectate  + ",Bots:" + serv.bots + "]) \u001B[32mClient connect: "+ws.remoteAddress+":"+ws.remotePort+" [origin "+origin+"]\u001B[0m");
+        var yada = '';
+        if ( this.config.serverLiveStats == 0 )
+        {
+            yada = "(Play:" + serv.humans + " Spec: " + serv.spectate + ") ";
+        }
+        console.log( yada + "\u001B[32mClient connect: " + ws.remoteAddress + ":" + ws.remotePort + " [origin " + ws.upgradeReq.headers.origin + "]\u001B[0m");
 
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
@@ -489,6 +494,9 @@ GameServer.prototype.mainLoop = function() {
         // Send Master Server Ping
         if ( this.time - this.master >= 1805000 ) {
             this.MasterPing();
+            try {
+                global.gc();
+            } catch (e) { }
         }
     }
 };

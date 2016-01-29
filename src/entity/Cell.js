@@ -117,18 +117,6 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return true;
 };
 
-// This collision checking function is based on CIRCLE shape
-Cell.prototype.collisionCheck2 = function (objectSquareSize, objectPosition) {
-    // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
-    // (O1O2 + r)^2 <= R^2
-    // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
-
-    var dx = this.position.x - objectPosition.x;
-    var dy = this.position.y - objectPosition.y;
-
-    return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
-};
-
 Cell.prototype.visibleCheck = function(box,centerPos) {
     // Checks if this cell is visible to the player
     return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
@@ -247,8 +235,28 @@ Cell.prototype.calcMovePhys = function(config, gameServer) {
     this.position.y = y1 >> 0;
 };
 
-// Override these
+// Lib
+Cell.prototype.simpleCollide = function(x1,y1,check,d) {
+    // Simple collision check
+    var len = d >> 0;
+    return (this.abs(x1 - check.position.x) < len) && (this.abs(y1 - check.position.y) < len);
+};
 
+Cell.prototype.abs = function(x) {
+    return x < 0 ? -x : x;
+};
+
+Cell.prototype.getDist = function(x1, y1, x2, y2) {
+    var xs = x2 - x1;
+    xs = xs * xs;
+
+    var ys = y2 - y1;
+    ys = ys * ys;
+
+    return Math.sqrt(xs + ys);
+};
+
+// Override these
 Cell.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
     return true;
@@ -273,26 +281,4 @@ Cell.prototype.onAutoMove = function(gameServer) {
 Cell.prototype.moveDone = function(gameServer) {
     // Called when this cell finished moving with the auto move engine
     this.onAutoMove(gameServer);
-};
-
-Cell.prototype.simpleCollide = function(x1,y1,check,d) {
-    // Simple collision check
-    var len = d >> 0; // Width of cell + width of the box (Int)
-
-    return (this.abs(x1 - check.position.x) < len) &&
-           (this.abs(y1 - check.position.y) < len);
-};
-
-Cell.prototype.abs = function(x) {
-    return x < 0 ? -x : x;
-};
-
-Cell.prototype.getDist = function(x1, y1, x2, y2) {
-    var xs = x2 - x1;
-    xs = xs * xs;
-
-    var ys = y2 - y1;
-    ys = ys * ys;
-
-    return Math.sqrt(xs + ys);
 };
