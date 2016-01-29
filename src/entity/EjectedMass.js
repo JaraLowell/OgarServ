@@ -25,11 +25,8 @@ EjectedMass.prototype.calcMove = null; // Only for player controlled movement
 
 EjectedMass.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
-    if (this.moveEngineTicks == 0) {
-        return false;
-    }
-    return true;
-}
+    return this.moveEngineTicks != 0;
+};
 
 EjectedMass.prototype.onRemove = function(gameServer) { 
     // Remove from list of ejected mass

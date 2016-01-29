@@ -15,7 +15,7 @@ function Teams() {
     this.colors = [
         {'r': 223, 'g': 0, 'b': 0},
         {'r': 0, 'g': 223, 'b': 0},
-        {'r': 0, 'g': 0, 'b': 223},
+        {'r': 0, 'g': 0, 'b': 223}
     ]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     this.nodes = []; // Teams
 }

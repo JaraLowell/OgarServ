@@ -66,7 +66,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer,player) {
     
     // Spawn player
     gameServer.spawnPlayer(player,pos,startMass);
-}
+};
 
 FFA.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
@@ -85,7 +85,7 @@ FFA.prototype.updateLB = function(gameServer) {
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
-            continue;
+
         } else if (lb.length < gameServer.config.gameLBlength) {
             this.leaderboardAddSort(player,lb);
         } else {

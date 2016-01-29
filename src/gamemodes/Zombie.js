@@ -157,7 +157,7 @@ Zombie.prototype.updateLB = function(gameServer) {
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
-            continue;
+
         } else if (lb.length < 10) {
             this.leaderboardAddSort(player,lb);
         } else {

@@ -400,7 +400,7 @@ GameServer.prototype.removeNode = function(node) {
 GameServer.prototype.cellTick = function() {
     // Move cells
     this.updateMoveEngine();
-}
+};
 
 GameServer.prototype.spawnTick = function() {
     // Spawn food
@@ -410,17 +410,17 @@ GameServer.prototype.spawnTick = function() {
         this.virusCheck();  // Spawn viruses
         this.tickSpawn = 0; // Reset
     }
-}
+};
 
 GameServer.prototype.gamemodeTick = function() {
     // Gamemode tick
     this.gameMode.onTick(this);
-}
+};
 
 GameServer.prototype.cellUpdateTick = function() {
     // Update cells
     this.updateCells();
-}
+};
 
 GameServer.prototype.mainLoop = function() {
     // Timer
@@ -519,7 +519,7 @@ GameServer.prototype.exitserver = function() {
     this.socketServer.close();
     process.exit(1);
     window.close();
-}
+};
 
 GameServer.prototype.updateClients = function() {
     for (var i = 0; i < this.clients.length; i++) {
@@ -627,7 +627,7 @@ GameServer.prototype.getDist = function(x1, y1, x2, y2) {
     var deltaX = Math.abs(x1 - x2);
     var deltaY = Math.abs(y1 - y2);
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-}
+};
 
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
@@ -773,7 +773,7 @@ GameServer.prototype.canEjectMass = function(client) {
         return true;
     } else
         return false;
-}
+};
 
 GameServer.prototype.ejectMass = function(client) {
     if (!this.canEjectMass(client))
@@ -839,7 +839,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 GameServer.prototype.shootVirus = function(parent) {
     var parentPos = {
         x: parent.position.x,
-        y: parent.position.y,
+        y: parent.position.y
     };
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
@@ -852,7 +852,7 @@ GameServer.prototype.shootVirus = function(parent) {
 };
 
 GameServer.prototype.getCellsInRange = function(cell) {
-    var list = new Array();
+    var list = [];
     var squareR = cell.getSquareSize(); // Get cell squared radius
 
     // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
@@ -1098,7 +1098,7 @@ GameServer.prototype.fbapi = function(token, ip) {
             console.log("\u001B[31m[UserInfo] \u001B[0m" + ip + " social ID: " + obj.id + " = " + obj.name);
         }
     });
-}
+};
 
 GameServer.prototype.MasterPing = function() {
     if ( this.time - this.master >= 30000 )
@@ -1110,7 +1110,7 @@ GameServer.prototype.MasterPing = function() {
         this.master = this.time;
         var serv = this.getPlayers(),
             sName = 'Unnamed Server',
-            pversion = 'true'
+            pversion = 'true';
 
         /* Sending Keepalive Ping to MySQL */
         if ( this.sqlconfig.host != '' && serv.humans == 0 ) this.mysql.ping();
@@ -1140,7 +1140,7 @@ GameServer.prototype.MasterPing = function() {
             }
         });
     }
-}
+};
 
 // Stats server
 GameServer.prototype.startStatsServer = function(port) {
@@ -1165,7 +1165,7 @@ GameServer.prototype.startStatsServer = function(port) {
         console.log("* \u001B[33mLoaded stats server on port " + port + "\u001B[0m");
         setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
     }.bind(this));
-}
+};
 
 GameServer.prototype.getStats = function() {
     var serv = this.getPlayers();

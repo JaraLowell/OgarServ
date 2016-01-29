@@ -107,7 +107,7 @@ Tournament.prototype.prepare = function(gameServer) {
 
 Tournament.prototype.onPlayerDeath = function(gameServer) {
     // Nothing
-}
+};
 
 Tournament.prototype.formatTime = function(time) {
     if (time < 0) {
@@ -118,7 +118,7 @@ Tournament.prototype.formatTime = function(time) {
     var sec = this.timeLimit%60;
     sec = (sec > 9) ? sec : "0" + sec.toString() ; 
     return min+":"+sec;
-}
+};
 
 // Override
 
@@ -246,4 +246,3 @@ Tournament.prototype.updateLB = function(gameServer) {
             break;
     }
 };
-

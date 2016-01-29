@@ -65,4 +65,4 @@ function parseCommands(str) {
     } else {
         console.log("Invalid Command!");
     }
-};
+}

@@ -37,7 +37,7 @@ function Rainbow() {
         {'r':143, 'g':  0, 'b':255}, // Purple
         {'r':171, 'g':  0, 'b':192},
         {'r':199, 'g':  0, 'b':128},
-        {'r':227, 'g':  0, 'b': 64},
+        {'r':227, 'g':  0, 'b': 64}
     ];
     this.colorsLength = this.colors.length -1;
     this.speed = 1; // Speed of color change
@@ -59,19 +59,19 @@ Rainbow.prototype.changeColor = function(node) {
 	
     node.color = this.colors[node.rainbow];
     node.rainbow += this.speed;
-}
+};
 
 // Override
 
 Rainbow.prototype.onServerInit = function() {
     // Overrides the update function
     Food.prototype.sendUpdate = function() {return true;};
-}
+};
 
 Rainbow.prototype.onChange = function() {
     // Reset
     Food.prototype.sendUpdate = FoodUp;
-}
+};
 
 Rainbow.prototype.onTick = function(gameServer) {
     var color, node;

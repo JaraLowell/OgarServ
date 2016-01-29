@@ -413,11 +413,7 @@ BotPlayer.prototype.checkPath = function(cell,check) {
     var v2 = this.getAngle(check,cell);
     v2 = this.reverseAngle(v2);
 
-    if ((v1 <= (v2 + .25) ) && (v1 >= (v2 - .25) )) {
-        return true;
-    } else {
-        return false;
-    }
+    return !!((v1 <= (v2 + .25) ) && (v1 >= (v2 - .25) ));
 };
 
 // Gets the biggest cell from the array
@@ -454,12 +450,8 @@ BotPlayer.prototype.checkPath = function(cell,check) {
 
     var inRange = Math.atan((2 * cell.getSize())/dist); // Opposite/adjacent
     console.log(inRange);
-    if ((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange))) {
-        // Path collides
-        return true;
-    } 
-    return false;
-}
+    return !!((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange)));
+};
 
 BotPlayer.prototype.getDist = function(cell,check) {
     // Fastest distance - I have a crappy computer to test with :(

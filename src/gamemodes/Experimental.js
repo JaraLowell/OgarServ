@@ -35,7 +35,7 @@ Experimental.prototype.updateMotherCells = function(gameServer) {
         mother.update(gameServer);
         mother.checkEat(gameServer);
     }
-}
+};
 
 Experimental.prototype.spawnMotherCell = function(gameServer) {
     // Checks if there are enough mother cells on the map
@@ -138,7 +138,7 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     this.cellType = 2; // Copies virus cell
     this.color = {r: 205, g: 85, b: 100};
     this.spiked = 1;
-}
+};
 
 MotherCell.prototype = new Cell(); // Base
 
@@ -162,7 +162,7 @@ MotherCell.prototype.update = function(gameServer) {
         this.mass--;
         i++;
     }
-}
+};
 
 MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = this.mass * .9;
@@ -206,12 +206,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             this.mass += check.mass;
         }
     }
-}
+};
 
 MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
     return (n < 0) ? -n: n;
-}
+};
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position

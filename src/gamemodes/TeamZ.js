@@ -385,7 +385,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
     
     // this is almost same to the legacy function
     GameServer.prototype.getCellsInRange = function (cell) {
-        var list = new Array();
+        var list = [];
         
         if (this.gameMode.state != GameState.IN_PROGRESS)
             return list;
@@ -778,7 +778,7 @@ TeamZ.prototype.onTick = function (gameServer) {
                 else {
                     // turn player to zombie
                     this.turnToZombie(client);
-                    continue;
+
                 }
             }
             else {
@@ -992,7 +992,7 @@ TeamZ.prototype.updateLB = function (gameServer) {
                 if (localLB.length == 0) {
                     // Initial player
                     localLB.push(player);
-                    continue;
+
                 } else if (localLB.length < 6) {
                     this.leaderboardAddSort(player, localLB);
                 } else {

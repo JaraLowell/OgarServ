@@ -150,4 +150,4 @@ Log.prototype.formatTime = function() {
     min = (min < 10 ? "0" : "") + min;
 
     return hour + ":" + min;
-}
+};

@@ -115,7 +115,7 @@ function decode (str) {
     // {a:{y:1},"a.b":{x:2}} --> {a:{y:1,b:{x:2}}}
     // use a filter to return the keys that have to be deleted.
     Object.keys(out).filter(function (k, _, __) {
-        if (!out[k] || typeof out[k] !== "object" || Array.isArray(out[k])) return false
+        if (!out[k] || typeof out[k] !== "object" || Array.isArray(out[k])) return false;
         // see if the parent section is also an object.
         // if so, add it to that, and mark this one for deletion
         var parts = dotSplit(k),

@@ -35,7 +35,7 @@ Blackhole.prototype.updateMotherCells = function(gameServer) {
         mother.update(gameServer);
         mother.checkEat(gameServer);
     }
-}
+};
 
 Blackhole.prototype.spawnMotherCell = function(gameServer) {
     // Checks if there are enough mother cells on the map
@@ -112,7 +112,7 @@ function MotherCell() {
     this.cellType = 2; // Copies virus cell
     this.color = {r: 10, g: 10, b: 10};
     this.spiked = 1;
-}
+};
 
 MotherCell.prototype = new Cell(); // Base
 
@@ -136,7 +136,7 @@ MotherCell.prototype.update = function(gameServer) {
         this.mass--;
         i++;
     }
-}
+};
 
 MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = 500000;
@@ -158,12 +158,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             }
         }
     }
-}
+};
 
 MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
     return (n < 0) ? -n: n;
-}
+};
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position
