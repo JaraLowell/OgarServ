@@ -111,6 +111,18 @@ Cell.prototype.collisionCheck = function (bottomY, topY, rightX, leftX) {
     return this.position.x >= leftX;
 };
 
+// This collision checking function is based on CIRCLE shape
+Cell.prototype.collisionCheck2 = function (objectSquareSize, objectPosition) {
+    // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
+    // (O1O2 + r)^2 <= R^2
+    // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
+
+    var dx = this.position.x - objectPosition.x;
+    var dy = this.position.y - objectPosition.y;
+
+    return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
+};
+
 Cell.prototype.visibleCheck = function (box, centerPos) {
     // Checks if this cell is visible to the player
     return this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
