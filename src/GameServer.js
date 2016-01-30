@@ -478,7 +478,9 @@ GameServer.prototype.mainLoop = function () {
                 console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
                 this.run = false;
                 this.nodesEjected = [];
+                this.movingNodes = [];
                 this.leaderboard = [];
+                this.gameMode.updateLB(this);
             }
         }
 
