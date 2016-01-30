@@ -1082,6 +1082,16 @@ GameServer.prototype.switchSpectator = function (player) {
     }
 };
 
+GameServer.prototype.formatTime = function () {
+    var hour = this.time.getHours();
+    hour = (hour < 10 ? "0" : "") + hour;
+
+    var min = this.time.getMinutes();
+    min = (min < 10 ? "0" : "") + min;
+
+    return hour + ":" + min;
+};
+
 GameServer.prototype.getPlayers = function () {
     for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client; i < this.clients.length; i++)
         client = this.clients[i].playerTracker, -1 == client.disconnect && ("_socket" in this.clients[i] ? client.spectate ? spectate++ : humans++ : bots++, players++);

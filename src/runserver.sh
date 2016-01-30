@@ -1,4 +1,6 @@
 #/bin/bash
+clear
+
 if ! [ -x "$(command -v jx)" ]; then
   echo JXcore not installed, installing it now...
   curl http://jxcore.com/xil.sh | bash
@@ -15,7 +17,7 @@ fi
 
 while true
 do
-  # Insert your invocation below mt:4 multicore 4x
+  # Insert your invocation
   jx --nouse-idle-notification --expose-gc index.js
   echo Server went off, waiting ten sec then restarting it...
   sleep 10
