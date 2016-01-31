@@ -438,13 +438,13 @@ GameServer.prototype.mainLoop = function () {
 
         this.tickMain++;
 
-        if (this.config.serverLiveStats && this.tickMain >= 20) {
+        if (this.config.serverLiveStats && (this.tickMain == 20 || this.tickMain >= 40)) {
             this.log.onWriteConsole(this);
         }
 
         if (this.run) {
             // Update cells/leaderboard loop
-            if (this.tickMain >= 20) { // 1 Second
+            if (this.tickMain >= 40) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 0);
 
                 // Update leaderboard with the gamemode's method
@@ -480,7 +480,7 @@ GameServer.prototype.mainLoop = function () {
         }
 
         // Reset
-        if (this.tickMain >= 20) {
+        if (this.tickMain >= 40) {
             this.tickMain = 0;
         }
         this.tick = 0;
@@ -561,6 +561,13 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
          *           this.clients[i].sendPacket(packet);
          *       }
          */
+        for (var i = 0; i < this.clients.length; i++) {
+            if (this.clients[i].remoteAddress == player.socket.remoteAddress && this.clients[i].remotePort != player.socket.remotePort) {
+                var packet = new Packet.BroadCast("*** You're logged in multiple times from your IP!, you might get lag due this ***");
+                player.socket.sendPacket(packet);
+                break;
+            }
+        }
         if (this.config.serverResetTime > 0) {
             var packet = new Packet.BroadCast("Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime!");
             player.socket.sendPacket(packet);
@@ -756,54 +763,39 @@ GameServer.prototype.splitCells = function (client) {
     }
 };
 
-// By Tiberiu02
-GameServer.prototype.canEjectMass = function (client) {
-    if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
-        client.lastEject = this.time;
-        return true;
-    } else
-        return false;
-};
-
 GameServer.prototype.ejectMass = function (client) {
-    if (!this.canEjectMass(client))
-        return;
+    if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
+        for (var i = 0; i < client.cells.length; i++) {
+            var cell = client.cells[i];
+            if ( (!cell) || (cell.mass < this.config.playerMinMassEject)) {
+                continue;
+            }
+            var deltaY = client.mouse.y - cell.position.y;
+            var deltaX = client.mouse.x - cell.position.x;
+            var angle = Math.atan2(deltaX, deltaY);
 
-    for (var i = 0; i < client.cells.length; i++) {
-        var cell = client.cells[i];
+            // Get starting position
+            var size = cell.getSize() + 5;
+            var startPos = {
+                x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ),
+                y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+            };
 
-        if (!cell) {
-            continue;
+            // Remove mass from parent cell
+            cell.mass -= this.config.ejectMassLoss;
+            // Randomize angle
+            angle += (Math.random() * .4) - .2;
+
+            // Create cell
+            var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
+            ejected.setAngle(angle);
+            ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+            ejected.setColor(cell.getColor());
+
+            this.addNode(ejected);
+            this.setAsMovingNode(ejected);
+            client.lastEject = this.time;
         }
-
-        if (cell.mass < this.config.playerMinMassEject) {
-            continue;
-        }
-
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
-        var angle = Math.atan2(deltaX, deltaY);
-
-        // Get starting position
-        var size = cell.getSize() + 5;
-        var startPos = {
-            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ),
-            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
-        };
-
-        // Remove mass from parent cell
-        cell.mass -= this.config.ejectMassLoss;
-        // Randomize angle
-        angle += (Math.random() * .4) - .2;
-
-        // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
-        ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
-        ejected.setColor(cell.getColor());
-
-        this.addNode(ejected);
-        this.setAsMovingNode(ejected);
     }
 };
 
