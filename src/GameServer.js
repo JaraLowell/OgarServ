@@ -1093,9 +1093,10 @@ GameServer.prototype.formatTime = function () {
 };
 
 GameServer.prototype.getPlayers = function () {
-    for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client; i < this.clients.length; i++)
-        client = this.clients[i].playerTracker, -1 == client.disconnect && ("_socket" in this.clients[i] ? client.spectate ? spectate++ : humans++ : bots++, players++);
-
+    for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client; i < this.clients.length; i++) {
+        client = this.clients[i].playerTracker;
+        if( client.cells.length > 0 || client.spectate ) -1 == client.disconnect && ("_socket" in this.clients[i] ? client.spectate ? spectate++ : humans++ : bots++, players++); else if (-1 == client.disconnect) players++;
+    }
     return {
         players: players,
         humans: humans,

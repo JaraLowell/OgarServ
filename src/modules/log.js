@@ -52,26 +52,25 @@ Log.prototype.setup = function (gameServer) {
         // Make log folder
         fs.mkdir('./logs');
     }
-    var fps;
+    var fps, peek = 0;
     
     if ( gameServer.config.serverLiveStats == 1 ) {
         this.onWriteConsole = function (gameServer) {
             var serv = gameServer.getPlayers();
-            var used = (process.memoryUsage().heapUsed / 1024 ).toFixed(0);
-            var total = (process.memoryUsage().heapTotal / 1024 ).toFixed(0);
-            var rss = (process.memoryUsage().rss / 1024 ).toFixed(0);
-            if (rss > peek) peek = rss;
-
+            var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
+            if (rss > peek) {
+            	  peek = rss;
+            }
             var fpstext = "Unknown";
             if ( typeof fps != "undefined" ) {
                 var diff = process.hrtime(fps);
                 fpstext = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(2) + "ms";
             }
 
-            var line1 = "\u001B[4mPlaying :   " + fillChar(serv.humans, ' ', 5, true) + " │ Connecting: " + fillChar((serv.players - (serv.humans + serv.spectate + serv.bots)), ' ', 5, true) + " │ Spectator:  " + fillChar(serv.spectate,
+            var line1 = "\u001B[4mPlaying :   " + fillChar(serv.humans, ' ', 5, true) + " │ Dead :      " + fillChar((serv.players - (serv.humans + serv.spectate + serv.bots)), ' ', 5, true) + " │ Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " │ Bot:        " + fillChar(serv.bots, ' ', 5, true) + " \u001B[24m";
             var line2 = "ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " │ cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true) + " ";
             var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " │ moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
-            var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + fillChar(fpstext,' ', 27, true) + " ";
+            var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + fillChar(fpstext,' ', 27, true) + "\u001B[36m ";
             var line5 = "uptime  : " + fillChar(seconds2time(process.uptime()), ' ', 27, true) + " │ memory :  " + fillChar(numberWithCommas(rss) + ' ▲' + numberWithCommas(peek), ' ', 27, true) + " \u001B[24m";
             process.stdout.write("\u001B[s\u001B[H\u001B[6r");
             process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
