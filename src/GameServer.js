@@ -1,4 +1,4 @@
-// Library imports
+﻿// Library imports
 // jxcore.tasks.setThreadCount(4);
 var WebSocket = require('ws');
 var request = require("request");
@@ -234,21 +234,11 @@ GameServer.prototype.start = function () {
                 if (!cell) {
                     continue;
                 }
-                cell.calcMove = function () {
-
-                }; // Clear function so that the cell cant move
+                cell.calcMove = function () { }; // Clear function so that the cell cant move
                 // this.server.removeNode(cell);
             }
             client.disconnect = this.server.config.playerDisconnectTime * 20;
-            this.socket.sendPacket = function () {
-
-            }; // Clear function so no packets are sent
-
-            // Run garbage collection utility (Memory cleanup Prodject)
-            try {
-                global.gc();
-            } catch (e) {
-            }
+            this.socket.sendPacket = function () { }; // Clear function so no packets are sent
         }
 
         ws.remoteAddress = ws._socket.remoteAddress;
@@ -498,10 +488,6 @@ GameServer.prototype.mainLoop = function () {
         // Send Master Server Ping
         if (this.time - this.master >= 1805000) {
             this.MasterPing();
-            try {
-                global.gc();
-            } catch (e) {
-            }
         }
     }
 };
@@ -576,7 +562,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
          *       }
          */
         if (this.config.serverResetTime > 0) {
-            var packet = new Packet.BroadCast("Remeber, This server auto restarts after " + this.config.serverResetTime + " hours uptime!");
+            var packet = new Packet.BroadCast("Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime!");
             player.socket.sendPacket(packet);
         }
 
@@ -1152,6 +1138,10 @@ GameServer.prototype.MasterPing = function () {
                 console.log("\u001B[31m[Tracker Error] " + error + "\u001B[0m");
             }
         });
+        // Run garbage collection utility (Memory cleanup Prodject)
+        try {
+            global.gc();
+        } catch (e) { }
     }
 };
 
