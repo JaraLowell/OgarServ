@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 
 function PlayerCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
@@ -60,7 +60,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     for (var i = 0; i < this.owner.cells.length; i++) {
         var cell = this.owner.cells[i];
 
-        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision)) {
+        if ((this.nodeId <= cell.nodeId) || (this.ignoreCollision) || (cell.ignoreCollision)) {
             continue;
         }
 
@@ -74,7 +74,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
             }
 
             // First collision check passed... now more precise checking
-            dist = this.getDist(this.position.x, this.position.y, cell.position.x, cell.position.y);
+            dist = this.getDist(x1, y1, cell.position.x, cell.position.y);
 
             // Calculations
             if (dist < collisionDist) { // Collided

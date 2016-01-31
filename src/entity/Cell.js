@@ -1,4 +1,4 @@
-function Cell(nodeId, owner, position, mass, gameServer) {
+﻿function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: 0, g: 255, b: 0};
@@ -6,8 +6,10 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.mass = mass; // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     this.spiked = 0; // If 1, then this cell has spikes around it
+
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
+
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
     this.moveDecay = .75;
@@ -108,7 +110,11 @@ Cell.prototype.collisionCheck = function (bottomY, topY, rightX, leftX) {
         return false;
     }
 
-    return this.position.x >= leftX;
+    if (this.position.x < leftX) {
+        return false;
+    }
+
+    return true;
 };
 
 // This collision checking function is based on CIRCLE shape
