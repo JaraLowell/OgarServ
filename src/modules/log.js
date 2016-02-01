@@ -85,37 +85,42 @@ Log.prototype.setup = function (gameServer) {
 
     switch (gameServer.config.serverLogLevel) {
         case 2:
-            ip_log = fs.createWriteStream('./logs/ip.log', {flags: 'w'});
+            if (gameServer.config.serverLogToFile) ip_log = fs.createWriteStream('./logs/ip.log', {flags: 'w'});
             var peek = 0;
 
             // Override
             this.onConnect = function (ip) {
-                ip_log.write("[" + gameServer.formatTime() + "] Connect: " + ip + EOL);
+                if (gameServer.config.serverLogToFile) ip_log.write("[" + gameServer.formatTime() + "] Connect: " + ip + EOL);
+                var yada = '';
+                if (gameServer.config.serverLiveStats == 0) {
+                    var serv = gameServer.getPlayers();
+                    yada = "(Play:" + serv.humans + " Spec: " + serv.spectate + ") ";
+                }
+                process.stdout.write("[" + gameServer.formatTime() + "] " + yada + "\u001B[32m" + util.format(ip) + "\u001B[0m" + EOL);
             };
-
             this.onDisconnect = function (ip) {
-                ip_log.write("[" + gameServer.formatTime() + "] Disconnect: " + ip + EOL);
+                if (gameServer.config.serverLogToFile) ip_log.write("[" + gameServer.formatTime() + "] Disconnect: " + ip + EOL);
+                process.stdout.write("[" + gameServer.formatTime() + "] \u001B[31m" + util.format(ip) + "\u001B[0m" + EOL);
             };
         case 1:
-            console_log = fs.createWriteStream('./logs/console.log', {flags: 'w'});
+            if (gameServer.config.serverLogToFile) console_log = fs.createWriteStream('./logs/console.log', {flags: 'w'});
             var LastMsg;
 
             console.log = function (d) {
                 if (d != LastMsg) {
                     LastMsg = d;
-
-                    var text = "[" + gameServer.formatTime() + "] " + util.format(d);
-
-                    // Remove Color Codes from log
-                    text = text.replace("\u001B[0m", "");  // Reset
-                    text = text.replace("\u001B[31m", ""); // Red
-                    text = text.replace("\u001B[32m", ""); // Green
-                    text = text.replace("\u001B[33m", ""); // Yellow
-                    text = text.replace("\u001B[34m", ""); // Blue
-                    text = text.replace("\u001B[35m", ""); // Purple
-                    text = text.replace("\u001B[36m", ""); // Cyan
-
-                    console_log.write(text + EOL);
+                    if (gameServer.config.serverLogToFile) {
+                        var text = "[" + gameServer.formatTime() + "] " + util.format(d);
+                        // Remove Color Codes from log
+                        text = text.replace("\u001B[0m", "");  // Reset
+                        text = text.replace("\u001B[31m", ""); // Red
+                        text = text.replace("\u001B[32m", ""); // Green
+                        text = text.replace("\u001B[33m", ""); // Yellow
+                        text = text.replace("\u001B[34m", ""); // Blue
+                        text = text.replace("\u001B[35m", ""); // Purple
+                        text = text.replace("\u001B[36m", ""); // Cyan
+                        console_log.write(text + EOL);
+                    }
                     process.stdout.write("[" + gameServer.formatTime() + "] " + util.format(d) + EOL);
                 }
             };

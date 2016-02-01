@@ -190,15 +190,12 @@ PacketHandler.prototype.handleMessage = function (message) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
 
-            hour = (hour < 10 ? "0" : "") + hour;
-            var min = date.getMinutes();
-            min = (min < 10 ? "0" : "") + min;
-            hour += ":" + min;
-
-            var fs = require('fs');
-            var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
-            wstream.write('[' + hour + '] ' + wname + ': ' + message + '\n');
-            wstream.end();
+            if (this.gameServer.config.serverLogToFile) {
+                var fs = require('fs');
+                var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
+                wstream.write('[' + gameServer.formatTime() + '] ' + wname + ': ' + message + '\n');
+                wstream.end();
+            }
 
             var packet = new Packet.Chat(this.socket.playerTracker, message);
             // Send to all clients (broadcast)

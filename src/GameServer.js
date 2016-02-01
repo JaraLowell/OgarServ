@@ -67,6 +67,7 @@ function GameServer() {
         serverStatsPort: 88,          // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,        // Amount of seconds per update for the server stats
         serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
+        serverLogToFile: 1,           // Log Info To File
         serverAutoPause: 1,           // Enable or Disable audo gameworld pause
         serverLiveStats: 1,           // Show Info in console (needs a 127characters wide console or ssh sesion)
         gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
@@ -216,21 +217,17 @@ GameServer.prototype.start = function () {
             return;
         }
 
-        var origin = ws.upgradeReq.headers.origin;
-
         function close(error, err) {
-            this.server.log.onDisconnect(this.socket.remoteAddress);
             var client = this.socket.playerTracker;
             if (client.name == "" || client.name == "Spectator") client.name = "Client";
+
             if (err == 1)
-                console.log("\u001B[31m" + client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort + " Error " + error + "\u001B[0m");
+                this.server.log.onDisconnect(client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort + " Error " + error);
             else
-                console.log("\u001B[31m" + client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort + "\u001B[0m");
+                this.server.log.onDisconnect(client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort);
 
-            var len = this.socket.playerTracker.cells.length;
-            for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[i];
-
+            for (var i = 0; i < client.cells.length; i++) {
+                var cell = client.cells[i];
                 if (!cell) {
                     continue;
                 }
@@ -241,14 +238,9 @@ GameServer.prototype.start = function () {
             this.socket.sendPacket = function () { }; // Clear function so no packets are sent
         }
 
+        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " [origin " + ws.upgradeReq.headers.origin + "]");
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
-        this.log.onConnect(ws.remoteAddress); // Log connections
-        var yada = '';
-        if (this.config.serverLiveStats == 0) {
-            yada = "(Play:" + serv.humans + " Spec: " + serv.spectate + ") ";
-        }
-        console.log(yada + "\u001B[32mClient connect: " + ws.remoteAddress + ":" + ws.remotePort + " [origin " + ws.upgradeReq.headers.origin + "]\u001B[0m");
 
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
@@ -258,9 +250,9 @@ GameServer.prototype.start = function () {
         ws.on('error', close.bind(bindObject, 1));
         ws.on('close', close.bind(bindObject, 0));
         this.clients.push(ws);
+
         this.MasterPing();
     }
-
     this.startStatsServer(this.config.serverStatsPort);
 };
 
@@ -569,10 +561,9 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
             }
         }
         if (this.config.serverResetTime > 0) {
-            var packet = new Packet.BroadCast("Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime!");
+            var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
             player.socket.sendPacket(packet);
         }
-
         console.log("\u001B[36m" + zname + " joined the game\u001B[0m");
     }
 
