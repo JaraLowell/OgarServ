@@ -52,8 +52,10 @@ EjectedMass.prototype.onAutoMove = function (gameServer) {
     }
 };
 
-EjectedMass.prototype.moveDone = function (gameServer) {
-    if (!this.onAutoMove(gameServer)) {
-        gameServer.nodesEjected.push(this);
-    }
+EjectedMass.prototype.moveDone = function(gameServer) {
+    this.onAutoMove(gameServer);
+};
+
+EjectedMass.prototype.onAdd = function(gameServer) {
+    gameServer.nodesEjected.push(this);
 };
