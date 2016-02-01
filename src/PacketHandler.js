@@ -47,7 +47,8 @@ PacketHandler.prototype.handleMessage = function (message) {
                 }
                 nick += String.fromCharCode(charCode);
             }
-            if ( nick == "" || nick == " " || nick == "Client" || nick == "Un Named" ) {
+            nick = nick.trim();
+            if ( nick == "" || nick == "Unregistered" || nick == "Un Named" ) {
             	  nick = "Cell" + this.socket.playerTracker.pID;
             }
             this.setNickname(nick);
