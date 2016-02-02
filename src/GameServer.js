@@ -1,12 +1,10 @@
 ﻿// Library imports
-// jxcore.tasks.setThreadCount(4);
 var WebSocket = require('ws');
 var url = require("url");
 var _ = require("underscore");
 var http = require('http');
 var fs = require("fs");
 var myos = require("os");
-
 var ini = require('./modules/ini.js');
 
 // Project imports
@@ -16,15 +14,6 @@ var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var Logger = require('./modules/log');
-
-// Simple Post implementation
-function postData (url_str, data, cb) {
-   var parsed_url = url.parse(url_str);
-   var options = _.extend(parsed_url, {method: "POST"});
-   var req = http.request(options, cb);
-   req.write(data);
-   req.end();
-}
 
 // GameServer implementation
 function GameServer() {
@@ -1086,12 +1075,22 @@ GameServer.prototype.getPlayers = function () {
 };
 
 GameServer.prototype.fbapi = function (token, ip) {
-    request('https://graph.facebook.com/me?fields=name&access_token=' + token, function (error, response, body) {
-        if (!error) {
-            var obj = JSON && JSON.parse(body) || $.parseJSON(bode);
-            console.log("\u001B[31m[UserInfo] \u001B[0m" + ip + " social ID: " + obj.id + " = " + obj.name);
-        }
-    });
+    // Example using request	
+    /* request('https://graph.facebook.com/me?fields=name&access_token=' + token, function (error, response, body) {
+     *     if (!error) {
+     *        var obj = JSON && JSON.parse(body) || $.parseJSON(bode);
+     *        console.log("\u001B[31m[UserInfo] \u001B[0m" + ip + " social ID: " + obj.id + " = " + obj.name);
+     *    }
+     * });
+     */
+};
+
+GameServer.prototype.postData = function(url_str, data, cb) {
+   var parsed_url = url.parse(url_str);
+   var options = _.extend(parsed_url, {method: "POST"});
+   var req = http.request(options, cb);
+   req.write(data);
+   req.end()
 };
 
 GameServer.prototype.MasterPing = function () {
@@ -1124,7 +1123,7 @@ GameServer.prototype.MasterPing = function () {
                    '&uptime=' + process.uptime() +
                    '&start_time=' + this.startTime.getTime();
 
-        var send = postData('http://ogar.mivabe.nl/master', data, function(res) {
+        var send = this.postData('http://ogar.mivabe.nl/master', data, function(res) {
             if ( res.statusCode != 200 ) {
                 console.log("\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
             }
