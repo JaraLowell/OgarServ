@@ -1,7 +1,8 @@
 ﻿// Library imports
 // jxcore.tasks.setThreadCount(4);
 var WebSocket = require('ws');
-var request = require("request");
+var url = require("url");
+var _ = require("underscore");
 var http = require('http');
 var fs = require("fs");
 var myos = require("os");
@@ -15,6 +16,15 @@ var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var Logger = require('./modules/log');
+
+// Simple Post implementation
+function postData (url_str, data, cb) {
+   var parsed_url = url.parse(url_str);
+   var options = _.extend(parsed_url, {method: "POST"});
+   var req = http.request(options, cb);
+   req.write(data);
+   req.end();
+}
 
 // GameServer implementation
 function GameServer() {
@@ -1098,31 +1108,29 @@ GameServer.prototype.MasterPing = function () {
         /* Sending Keepalive Ping to MySQL */
         if (this.sqlconfig.host != '' && serv.humans == 0) this.mysql.ping();
 
+        /* Sending Info */
         if (this.config.serverName != '') sName = this.config.serverName;
         if (this.config.serverVersion == 0) pversion = 'false';
 
-        request({
-            uri: "http://ogar.mivabe.nl/master",
-            method: "POST",
-            form: {
-                current_players: serv.players,
-                alive: serv.humans,
-                spectators: serv.spectate,
-                max_players: this.config.serverMaxConnections,
-                sport: this.config.serverPort,
-                gamemode: this.gameMode.name,
-                agario: pversion,
-                name: sName,
-                opp: myos.platform() + ' ' + myos.arch(),
-                uptime: process.uptime(),
-                start_time: this.startTime.getTime()
-            }
-        }, function (error, response, body) {
-            if (error) {
-                console.log("\u001B[31m[Tracker Error] " + error + "\u001B[0m");
+        var data = 'current_players=' + serv.players +
+                   '&alive=' + serv.humans +
+                   '&spectators=' + serv.spectate +
+                   '&max_players=' + this.config.serverMaxConnections +
+                   '&sport=' + this.config.serverPort +
+                   '&gamemode=' + this.gameMode.name +
+                   '&agario=' + pversion +
+                   '&name=' + sName +
+                   '&opp=' + myos.platform() + ' ' + myos.arch() +
+                   '&uptime=' + process.uptime() +
+                   '&start_time=' + this.startTime.getTime();
+
+        var send = postData('http://ogar.mivabe.nl/master', data, function(res) {
+            if ( res.statusCode != 200 ) {
+                console.log("\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
             }
         });
-        // Run garbage collection utility (Memory cleanup Prodject)
+
+        /* Run garbage collection utility (Memory cleanup Prodject) */
         try {
             global.gc();
         } catch (e) { }

@@ -10,7 +10,7 @@ fi
 
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  jx install request ws http fs sys mysql
+  jx install ws http fs sys mysql url underscore
   sleep 2
   clear
 fi
