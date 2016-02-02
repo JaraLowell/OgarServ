@@ -1,5 +1,5 @@
 ## Downloads
-See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.6.1)
+See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.6.2)
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-Java-yellow.svg)
