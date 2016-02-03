@@ -95,6 +95,7 @@ function GameServer() {
         playerStartMass: 10,          // Starting mass of the player cell.
         playerMaxMass: 22500,         // Maximum mass a player can have
         playerSpeed: 30,              // Player base speed
+        playerSplitSpeed: 130,        // Speed of the splitting cell.
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
@@ -741,7 +742,7 @@ GameServer.prototype.splitCells = function (client) {
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
         split.setAngle(angle);
-        var splitSpeed = 130; //150 * Math.max(Math.log10(newMass) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+        var splitSpeed = this.config.playerSplitSpeed * Math.max(Math.log10(newMass) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
         split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
         split.calcMergeTime(this.config.playerRecombineTime);
         split.ignoreCollision = true;
