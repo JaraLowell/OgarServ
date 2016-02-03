@@ -425,6 +425,22 @@ Commands.list = {
         gameServer.loadConfig();
         console.log("\u001B[36mServer: \u001B[0mReloaded the config file successfully");
     },
+    settings: function(gameServer) {
+        var collom = 0,
+            output = '';
+
+        for (var setting in gameServer.config) {
+            if ( collom == 0 ) {
+                output = fillChar(setting, ' ', 22, false) + ': ' + fillChar(gameServer.config[setting], ' ', 12, false);
+                collom = 1;
+            }
+            else if ( collom == 1 ) {
+                output += ' ' + fillChar(setting, ' ', 22, false) + ': ' + fillChar(gameServer.config[setting], ' ', 12, false);
+                console.log( output );
+                collom = 0;
+            }
+        }
+    },
     status: function (gameServer, split) {
         var serv = gameServer.getPlayers();
         console.log("Connected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
