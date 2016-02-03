@@ -104,7 +104,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             switch (service) {
                 case 1:
                     // Recieved facebook access token
-                    this.gameServer.fbapi(message, this.socket.remoteAddress);
+                    // fbapi(message, this.socket.remoteAddress);
                     break;
                 case 2:
                     // recieved google+ access token
@@ -194,7 +194,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             if (this.gameServer.config.serverLogToFile) {
                 var fs = require('fs');
                 var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
-                wstream.write('[' + gameServer.formatTime() + '] ' + wname + ': ' + message + '\n');
+                wstream.write('[' + this.gameServer.formatTime() + '] ' + wname + ': ' + message + '\n');
                 wstream.end();
             }
 
