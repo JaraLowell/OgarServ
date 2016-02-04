@@ -164,7 +164,7 @@ GameServer.prototype.start = function () {
 
         // Start Main Loop
         this.MasterPing();
-        setInterval(this.mainLoop.bind(this), 1);
+        setInterval(this.mainLoop.bind(this), 5);
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -456,7 +456,7 @@ GameServer.prototype.mainLoop = function () {
             if (!this.run && temp != 0) {
                 console.log("[Auto Pause] \u001B[32mGame World Resumed!\u001B[0m");
                 this.run = true;
-            } else if (this.run && temp == 0) {
+            } else if (this.run && temp == 0 && (this.time - this.startTime) > 30000) {
                 console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
                 this.run = false;
                 this.nodesEjected = [];
