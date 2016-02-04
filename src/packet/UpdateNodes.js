@@ -61,7 +61,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 14, node.color.r, true);
             view.setUint8(offset + 15, node.color.g, true);
             view.setUint8(offset + 16, node.color.b, true);
-            view.setUint8(offset + 17, node.spiked, true);
+            view.setUint8(offset + 17, node.spiked | (node.agitated << 4), true);
             offset += 18;
         } else {
             view.setUint32(offset, node.nodeId, true);
@@ -71,7 +71,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 10, node.color.r, true);
             view.setUint8(offset + 11, node.color.g, true);
             view.setUint8(offset + 12, node.color.b, true);
-            view.setUint8(offset + 13, node.spiked, true);
+            view.setUint8(offset + 13, node.spiked | (node.agitated << 4), true);
             offset += 14;
         }
 

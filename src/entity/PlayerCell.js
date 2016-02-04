@@ -13,7 +13,6 @@ module.exports = PlayerCell;
 PlayerCell.prototype = new Cell();
 
 // Main Functions
-
 PlayerCell.prototype.visibleCheck = function (box, centerPos) {
     // Use old fashioned checking method if cell is small
     if (this.mass < 100) {
@@ -33,7 +32,6 @@ PlayerCell.prototype.calcMergeTime = function (base) {
 };
 
 // Movement
-
 PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
@@ -56,8 +54,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     var xd = 0;
     var yd = 0;
 
-    
-	// Collision check for other cells
+	 // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length; i++) {
         var cell = this.owner.cells[i];
 
@@ -91,7 +88,6 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
             }
         }
     }
-
 
     var xSave = this.position.x;
     var ySave = this.position.y;
