@@ -13,7 +13,7 @@
     this.gameServer = gameServer;
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
-    this.moveDecay = .75;
+    this.moveDecay = 0.75;
     this.angle = 0; // Angle of movement
 }
 

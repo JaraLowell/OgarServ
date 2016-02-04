@@ -9,11 +9,9 @@ function StickyCell() {
     this.agitated = 1; // Drawing purposes
     this.acquired = undefined;
     this.radius = this.getSize();
-    this.color = {
-        r: 192 + Math.floor(24*Math.random()),
-        g: 64 + Math.floor(48*Math.random()),
-        b: 0
-    };
+    this.color = {r: 190 + Math.floor(30*Math.random()),
+                  g: 70 + Math.floor(30*Math.random()),
+                  b: 85 + Math.floor(30*Math.random())};
     //this.setMoveEngineData(1, Infinity, 1);
 }
 
@@ -40,9 +38,9 @@ StickyCell.prototype.update = function(gameServer) {
         this.position.y += (dMag * Math.sin(theta)) >> 0;
 
         // Gradually degrade in color
-        this.color.r *= 0.999;
-        this.color.g *= 0.999;
-        this.color.b *= 0.999;
+        if (this.color.r > 160) this.color.r *= 0.999;
+        if (this.color.g > 40)  this.color.g *= 0.999;
+        if (this.color.b > 55)  this.color.b *= 0.999;
     }
 
     // Look for victims

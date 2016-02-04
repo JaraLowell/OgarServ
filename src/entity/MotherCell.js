@@ -8,8 +8,7 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     this.cellType = 2; // Copies virus cell
     this.color = {r: 190 + Math.floor(30*Math.random()),
                   g: 70 + Math.floor(30*Math.random()),
-                  b: 85 + Math.floor(30*Math.random())
-    };
+                  b: 85 + Math.floor(30*Math.random())};
     this.spiked = 1;
 }
 
@@ -17,12 +16,12 @@ module.exports = MotherCell;
 MotherCell.prototype = new Cell(); // Base
 
 MotherCell.prototype.getEatingRange = function() {
-    return this.getSize() * .5;
+    return this.getSize() * 0.5;
 };
 
 MotherCell.prototype.update = function(gameServer) {
     // Add mass
-    this.mass += .25;
+    this.mass += 0.25;
     
     // Spawn food
     var maxFood = 10; // Max food spawned per tick
@@ -40,7 +39,7 @@ MotherCell.prototype.update = function(gameServer) {
 }
 
 MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.mass * .9;
+    var safeMass = this.mass * 0.9;
     var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
     
     // Loop for potential prey

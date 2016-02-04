@@ -36,12 +36,12 @@ MovingVirus.prototype.feed = function(feeder, gameServer) {
 
     // Remove the feeder
     gameServer.removeNode(feeder);
-}
+};
 
 MovingVirus.prototype.onAdd = function(gameServer) {
     gameServer.gameMode.movingVirusCount++;
     gameServer.nodesVirus.push(this);
-}
+};
 
 MovingVirus.prototype.onRemove = function(gameServer) {
     gameServer.gameMode.movingVirusCount--;
@@ -53,4 +53,4 @@ MovingVirus.prototype.onRemove = function(gameServer) {
         console.log("[Warning] Tried to remove a non existing virus!");
     }
 
-}
+};
