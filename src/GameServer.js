@@ -54,7 +54,7 @@ function GameServer() {
     };
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
-        serverPort: 44411,            // Server port
+        serverPort: 4411,             // Server port
         serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
         serverResetTime: 24,          // Time in hours to reset (0 is off)
@@ -86,6 +86,7 @@ function GameServer() {
         virusMinAmount: 10,           // Minimum amount of viruses on the map.
         virusMaxAmount: 50,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,          // Starting virus size (In mass)
+        mothercellMaxMass: 5000,      // Max mass the mothercell can get to. (0 for unlimited)
         virusFeedAmount: 7,           // Amount of times you need to feed a virus to shoot it
         ejectMass: 12,                // Mass of ejected cells
         ejectMassLoss: 16,            // Mass lost when ejecting cells
@@ -112,14 +113,15 @@ function GameServer() {
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
         chatMaxMessageLength: 70,     // Maximum message length
         chatToConsole: 1,             // Log Chat To Console
-        chatIntervalTime: 10000       // Set the delay between messages and commands (in millisecond)
+        chatIntervalTime: 10000,      // Set the delay between messages and commands (in millisecond)
+        experimentalIgnoreMax: 0      // Ignore the foodMaxAmount when the mothercells shoot. (Set to 1 to turn it on)
     };
     // Parse config
     this.loadConfig();
 
     // Load Bot system in config has it enabled. -1 is disabled
     if (this.config.serverBots != -1) {
-        console.log("[     ] * \u001B[33mLoading AI Bot System...\u001B[0m");
+        console.log("[XX:XX] * \u001B[33mLoading AI Bot System...\u001B[0m");
         var BotLoader = require('./ai/BotLoader');
         this.bots = new BotLoader(this);
     }
@@ -800,18 +802,21 @@ GameServer.prototype.ejectMass = function (client) {
 };
 
 GameServer.prototype.newCellVirused = function (client, parent, angle, mass, speed) {
-    // Starting position
+    // Before everything, calculate radius of the spawning cell.
+    var size = Math.ceil(Math.sqrt(100 * mass));
+    
+    // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
-        x: parent.position.x,
-        y: parent.position.y
+        x: parent.position.x + (size / 100) * Math.sin(angle),
+        y: parent.position.y + (size / 100) * Math.cos(angle)
     };
-
     // Create cell
-    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
+    newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(speed, 15);
+    // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
+    newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.ignoreCollision = true;  // Turn off collision
+    newCell.ignoreCollision = true; // Remove collision checks
 
     // Add to moving cells list
     this.addNode(newCell);
