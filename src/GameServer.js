@@ -238,7 +238,7 @@ GameServer.prototype.start = function () {
             this.socket.sendPacket = function () { }; // Clear function so no packets are sent
         }
 
-        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " [origin " + ws.upgradeReq.headers.origin + "]");
+        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " [origin " + ws.upgradeReq.headers.origin + ws.upgradeReq.url + "]");
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
 

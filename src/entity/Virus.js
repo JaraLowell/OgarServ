@@ -37,13 +37,13 @@ Virus.prototype.getEatingRange = function () {
 Virus.prototype.onConsume = function (consumer, gameServer) {
     var client = consumer.owner;
 
+    // Cell consumes mass before splitting
+    consumer.addMass(this.mass);
+
     var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits, maxSplits);
     var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
-
-    // Cell consumes mass before splitting
-    consumer.addMass(this.mass);
 
     // Cell cannot split any further
     if (numSplits <= 0) {
