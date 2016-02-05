@@ -6,6 +6,7 @@ function Virus() {
     this.cellType = 2;
     this.spiked = 1;
     this.fed = 0;
+    this.isMotherCell = false; // Not to confuse bots
 }
 
 module.exports = Virus;
@@ -13,7 +14,7 @@ Virus.prototype = new Cell();
 
 Virus.prototype.calcMove = null; // Only for player controlled movement
 
-Virus.prototype.feed = function (feeder, gameServer) {
+Virus.prototype.feed = function(feeder, gameServer) {
     this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
     this.mass += feeder.mass;
     this.fed++; // Increase feed count
@@ -30,11 +31,11 @@ Virus.prototype.feed = function (feeder, gameServer) {
 
 // Main Functions
 
-Virus.prototype.getEatingRange = function () {
+Virus.prototype.getEatingRange = function() {
     return this.getSize() * .4; // 0 for ejected cells
 };
 
-Virus.prototype.onConsume = function (consumer, gameServer) {
+Virus.prototype.onConsume = function(consumer, gameServer) {
     var client = consumer.owner;
 
     // Cell consumes mass before splitting
@@ -43,61 +44,59 @@ Virus.prototype.onConsume = function (consumer, gameServer) {
     var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits, maxSplits);
-    var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
+    var splitMass = Math.min(consumer.mass / (numSplits + 1), 24); // Maximum size of new splits
 
     // Cell cannot split any further
     if (numSplits <= 0) {
         return;
     }
+    
+    var mass = consumer.mass; // Mass of the consumer
+    var bigSplits = []; // Big splits
 
-    // Big cells will split into cells larger than 36 mass (1/4 of their mass)
-    var bigSplits = 0;
-    var endMass = consumer.mass - (numSplits * splitMass);
-    if ((endMass > 300) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
+    // Big cells will split into cells larger than 24 mass
+    // won't do the regular way unless it can split more than 4 times
+    if (numSplits == 1) bigSplits = [mass / 2];
+    else if (numSplits == 2) bigSplits = [mass / 4, mass / 4];
+    else if (numSplits == 3) bigSplits = [mass / 4, mass / 4, mass / 7];
+    else if (numSplits == 4) bigSplits = [mass / 5, mass / 7, mass / 8, mass / 10];
+    else {
+        var endMass = mass - numSplits * splitMass;
+        var m = endMass, i = 0;
+        if (m > 100) { // Threshold
+            // While can split into an even smaller cell (1000 => 500, 250, etc)
+            while (m / 3.33333333 > 24) {
+                m /= 3.33333333;
+                bigSplits.push(m >> 0);
+                i++;
+            }
+        }
     }
-    if ((endMass > 1200) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
+    numSplits -= bigSplits.length;
+    
+    for (var k = 0; k < bigSplits.length; k++) {
+        angle = Math.random() * 6.28; // Random directions
+        consumer.mass -= bigSplits[k];
+        gameServer.newCellVirused(client, consumer, angle, bigSplits[k]);
     }
-    if ((endMass > 3000) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-
-    // Calculate endmass and virus splitspeed
-    endMass = consumer.mass - (numSplits * splitMass);
-    for (var k = 0; k < bigSplits; k++) {
-        endMass *= 0.75;
-    }
-    var endSize = Math.ceil(Math.sqrt(100 * endMass));
-    var virusSplitSpeed = (endSize + Math.min(200 / endSize, 1) * 500) / 3.6;
-
+    
     // Splitting
     var angle = 0; // Starting angle
     for (var k = 0; k < numSplits; k++) {
         angle += 6 / numSplits; // Get directions of splitting cells
-        gameServer.newCellVirused(client, consumer, angle, splitMass, virusSplitSpeed);
         consumer.mass -= splitMass;
+        gameServer.newCellVirused(client, consumer, angle, splitMass);
     }
-
-    for (var k = 0; k < bigSplits; k++) {
-        angle = Math.random() * 6.28; // Random directions
-        splitMass = consumer.mass / 4;
-        gameServer.newCellVirused(client, consumer, angle, splitMass, virusSplitSpeed);
-        consumer.mass -= splitMass;
-    }
-
+    
     // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
 
-Virus.prototype.onAdd = function (gameServer) {
+Virus.prototype.onAdd = function(gameServer) {
     gameServer.nodesVirus.push(this);
 };
 
-Virus.prototype.onRemove = function (gameServer) {
+Virus.prototype.onRemove = function(gameServer) {
     var index = gameServer.nodesVirus.indexOf(this);
     if (index != -1) {
         gameServer.nodesVirus.splice(index, 1);
@@ -105,4 +104,3 @@ Virus.prototype.onRemove = function (gameServer) {
         console.log("[Warning] Tried to remove a non existing virus!");
     }
 };
-
