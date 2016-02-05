@@ -29,6 +29,7 @@ function GameServer() {
 
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
+    this.welcome = 0;
     this.leaderboard = [];
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
@@ -449,6 +450,21 @@ GameServer.prototype.mainLoop = function () {
             // Update cells/leaderboard loop
             if (this.tickMain >= 40) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 0);
+
+                // No players... lets play with leaderboard
+                if (info.humans == 0) {
+                    var newLB = [];
+                    newLB[0] = "\u256D \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u256E";
+                    newLB[1] = "\u250A     W E L C O M E      \u250A";
+                    newLB[2] = "\u250A              " + this.formatTime() + "              \u250A";
+                    newLB[3] = "\u2570 \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u256F";
+                    this.customLB(newLB,this);
+                    this.welcome = 1;
+                } else if (info.humans != 0 && this.welcome == 1) {
+                    this.gameMode.packetLB = Gamemode.get(this.gameMode.ID).packetLB;
+                    this.gameMode.updateLB = Gamemode.get(this.gameMode.ID).updateLB;
+                    this.welcome = 0;
+                }
 
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
@@ -1092,6 +1108,14 @@ GameServer.prototype.getPlayers = function () {
     };
 };
 
+GameServer.prototype.customLB = function(newLB,gameServer) {
+    gameServer.gameMode.packetLB = 48;
+    gameServer.gameMode.specByLeaderboard = false;
+    gameServer.gameMode.updateLB = function(gameServer) {
+        gameServer.leaderboard = newLB
+    };
+};
+
 GameServer.prototype.fbapi = function (token, ip) {
     // Example using request	
     /* request('https://graph.facebook.com/me?fields=name&access_token=' + token, function (error, response, body) {
@@ -1104,9 +1128,9 @@ GameServer.prototype.fbapi = function (token, ip) {
 };
 
 GameServer.prototype.postData = function(url_str, data, cb) {
-   var parsed_url = url.parse(url_str);
-   var options = _.extend(parsed_url, {method: "POST"});
-   var req = http.request(options, cb);
+   var parsed_url = url.parse(url_str),
+       options = _.extend(parsed_url, {method: "POST"}),
+       req = http.request(options, cb);
    req.write(data);
    req.end()
 };

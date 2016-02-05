@@ -166,8 +166,7 @@ PacketHandler.prototype.handleMessage = function (message) {
                 }
             }
 
-            var date = new Date(),
-                hour = date.getHours();
+            var date = new Date();
 
             if (( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime) {
                 var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime)) / 1000) % 60);
