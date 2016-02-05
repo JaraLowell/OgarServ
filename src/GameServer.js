@@ -742,7 +742,7 @@ GameServer.prototype.splitCells = function (client) {
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
         split.setAngle(angle);
-        var splitSpeed = this.config.playerSplitSpeed * Math.max(Math.log(newMass, 10) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+        var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
         split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
         split.calcMergeTime(this.config.playerRecombineTime);
         split.ignoreCollision = true;
