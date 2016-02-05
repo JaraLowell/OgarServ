@@ -43,6 +43,7 @@ function PlayerTracker(gameServer, socket) {
         // Find center
         this.centerPos.x = (gameServer.config.borderLeft - gameServer.config.borderRight) / 2;
         this.centerPos.y = (gameServer.config.borderTop - gameServer.config.borderBottom) / 2;
+        this.mouse = this.centerPos;
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
@@ -312,7 +313,6 @@ PlayerTracker.prototype.getSpectateNodes = function () {
         var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
         var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
         var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
-
         this.centerPos.x += speed * Math.sin(angle);
         this.centerPos.y += speed * Math.cos(angle);
 
@@ -321,7 +321,6 @@ PlayerTracker.prototype.getSpectateNodes = function () {
 
         // Now that we've updated center pos, get nearby cells
         // We're going to use config's view base times 2.5
-
         var mult = 2.5; // To simplify multiplier, in case this needs editing later on
         this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
         this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
@@ -334,20 +333,18 @@ PlayerTracker.prototype.getSpectateNodes = function () {
         var newVisible = [];
         for (var i = 0; i < this.gameServer.nodes.length; i++) {
             node = this.gameServer.nodes[i];
-
             if (!node) {
                 continue;
             }
-
             if (node.visibleCheck(this.viewBox, this.centerPos)) {
                 // Cell is in range of viewBox
                 newVisible.push(node);
             }
         }
-        //var specZoom = Math.sqrt(100 * 150);
-        //specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-        this.sendPosPacket(specZoom);
+
+        var specZoom = Math.sqrt(100 * 150);
+        specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+        this.socket.sendPacket(new Packet.UpdatePosition(this.centerPos.x, this.centerPos.y, specZoom));
         return newVisible;
     }
 };
@@ -366,11 +363,6 @@ PlayerTracker.prototype.checkBorderPass = function () {
     if (this.centerPos.y > this.gameServer.config.borderBottom) {
         this.centerPos.y = this.gameServer.config.borderBottom;
     }
-};
-
-PlayerTracker.prototype.sendCustomPosPacket = function (x, y, specZoom) {
-    // TODO: Send packet elsewhere so it is sent more often
-    this.socket.sendPacket(new Packet.UpdatePosition(x, y, specZoom));
 };
 
 PlayerTracker.prototype.getAngle = function(x1, y1, x2, y2) {
