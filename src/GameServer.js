@@ -165,6 +165,10 @@ GameServer.prototype.start = function () {
         // Start Main Loop
         this.MasterPing();
         setInterval(this.mainLoop.bind(this), 5);
+        if (global.gc) {
+            // Run GC if install every 15 min        	
+            setInterval(this.cleanup.bind(this), 900000);
+        }
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -409,6 +413,11 @@ GameServer.prototype.cellUpdateTick = function () {
     this.updateCells();
 };
 
+GameServer.prototype.cleanup = function () {
+    /* Run garbage collection utility (Memory cleanup Prodject) */
+    global.gc();
+};
+
 GameServer.prototype.mainLoop = function () {
     // Timer
     var local = new Date();
@@ -564,7 +573,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
             var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
             player.socket.sendPacket(packet);
         }
-        console.log("\u001B[36m" + zname + " joined the game\u001B[0m");
+        console.log("\u001B[33m" + zname + " joined the game\u001B[0m");
     }
 
     this.addNode(cell);
@@ -1132,11 +1141,6 @@ GameServer.prototype.MasterPing = function () {
                 console.log("\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
             }
         });
-
-        /* Run garbage collection utility (Memory cleanup Prodject) */
-        try {
-            global.gc();
-        } catch (e) { }
     }
 };
 
