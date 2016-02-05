@@ -164,8 +164,11 @@ MotherCell.prototype.update = function(gameServer) {
     var maxFood = 10; // Max food spawned per tick
     var i = 0; // Food spawn counter
     while ((this.mass > gameServer.gameMode.motherCellMass) && (i < maxFood)) {
-        // Only spawn if food cap hasn been reached
-        if (gameServer.currentFood < gameServer.config.foodMaxAmount) {
+        if (gameServer.config.experimentalIgnoreMax == 0) {
+            if (gameServer.currentFood < gameServer.config.foodMaxAmount) {
+                this.spawnFood(gameServer);
+            }
+        } else {
             this.spawnFood(gameServer);
         }
 
@@ -198,7 +201,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             if (r > dist) {
                 // Eats the cell
                 gameServer.removeNode(check);
-                this.mass += check.mass;
+                if (gameServer.config.mothercellMaxMass == 0) {
+                    this.mass += check.mass;
+                } else {
+                    var maxMass = gameServer.config.mothercellMaxMass;
+                    this.mass = this.mass+check.mass>maxMass?maxMass:this.mass+check.mass;
+                }
             }
         }
     }
@@ -220,7 +228,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             if (r > dist) {
                 // Eat the cell
                 gameServer.removeNode(check);
-                this.mass += check.mass;
+                if (gameServer.config.mothercellMaxMass == 0) {
+                    this.mass += check.mass;
+                } else {
+                    var maxMass = gameServer.config.mothercellMaxMass;
+                    this.mass = this.mass+check.mass>maxMass?maxMass:this.mass+check.mass;
+                }
             }
         }
     }

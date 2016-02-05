@@ -22,6 +22,7 @@ function GameServer() {
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
+
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
@@ -54,7 +55,7 @@ function GameServer() {
     };
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
-        serverPort: 44411,            // Server port
+        serverPort: 4411,             // Server port
         serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
         serverResetTime: 24,          // Time in hours to reset (0 is off)
@@ -87,6 +88,7 @@ function GameServer() {
         virusMaxAmount: 50,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,          // Starting virus size (In mass)
         virusFeedAmount: 7,           // Amount of times you need to feed a virus to shoot it
+        mothercellMaxMass: 5000,      // Max mass the mothercell can get to. (0 for unlimited)
         ejectMass: 12,                // Mass of ejected cells
         ejectMassLoss: 16,            // Mass lost when ejecting cells
         ejectMassCooldown: 200,       // Time until a player can eject mass again
@@ -112,14 +114,15 @@ function GameServer() {
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
         chatMaxMessageLength: 70,     // Maximum message length
         chatToConsole: 1,             // Log Chat To Console
-        chatIntervalTime: 10000       // Set the delay between messages and commands (in millisecond)
+        chatIntervalTime: 10000,      // Set the delay between messages and commands (in millisecond)
+        experimentalIgnoreMax: 0      // Ignore the foodMaxAmount when the mothercells shoot. (Set to 1 to turn it on)
     };
     // Parse config
     this.loadConfig();
 
     // Load Bot system in config has it enabled. -1 is disabled
     if (this.config.serverBots != -1) {
-        console.log("[     ] * \u001B[33mLoading AI Bot System...\u001B[0m");
+        console.log("[00:00] * \u001B[33mLoading AI Bot System...\u001B[0m");
         var BotLoader = require('./ai/BotLoader');
         this.bots = new BotLoader(this);
     }
@@ -165,10 +168,6 @@ GameServer.prototype.start = function () {
         // Start Main Loop
         this.MasterPing();
         setInterval(this.mainLoop.bind(this), 5);
-        if (global.gc) {
-            // Run GC if install every 15 min        	
-            setInterval(this.cleanup.bind(this), 900000);
-        }
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -413,11 +412,6 @@ GameServer.prototype.cellUpdateTick = function () {
     this.updateCells();
 };
 
-GameServer.prototype.cleanup = function () {
-    /* Run garbage collection utility (Memory cleanup Prodject) */
-    global.gc();
-};
-
 GameServer.prototype.mainLoop = function () {
     // Timer
     var local = new Date();
@@ -573,7 +567,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
             var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
             player.socket.sendPacket(packet);
         }
-        console.log("\u001B[33m" + zname + " joined the game\u001B[0m");
+        console.log("\u001B[36m" + zname + " joined the game\u001B[0m");
     }
 
     this.addNode(cell);
@@ -800,18 +794,21 @@ GameServer.prototype.ejectMass = function (client) {
 };
 
 GameServer.prototype.newCellVirused = function (client, parent, angle, mass, speed) {
-    // Starting position
+    // Before everything, calculate radius of the spawning cell.
+    var size = Math.ceil(Math.sqrt(100 * mass));
+    
+    // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
-        x: parent.position.x,
-        y: parent.position.y
+        x: parent.position.x + (size / 100) * Math.sin(angle),
+        y: parent.position.y + (size / 100) * Math.cos(angle)
     };
-
     // Create cell
-    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
+    newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(speed, 15);
+    // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
+    newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.ignoreCollision = true;  // Turn off collision
+    newCell.ignoreCollision = true; // Remove collision checks
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -1141,6 +1138,11 @@ GameServer.prototype.MasterPing = function () {
                 console.log("\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
             }
         });
+
+        /* Run garbage collection utility (Memory cleanup Prodject) */
+        try {
+            global.gc();
+        } catch (e) { }
     }
 };
 
