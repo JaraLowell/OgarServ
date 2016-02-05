@@ -556,9 +556,9 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
 
     if ('_socket' in player.socket) {
-        var zname = player.name;
-        if (zname === "") zname = "Un Named";
-        /*
+        /* var zname = player.name;
+         * if (zname === "") zname = "Un Named";
+         *
          *       var packet = new Packet.BroadCast(zname + " joined the game!");
          *       for (var i = 0; i < this.clients.length; i++) {
          *           this.clients[i].sendPacket(packet);
@@ -575,7 +575,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
             var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
             player.socket.sendPacket(packet);
         }
-        console.log("\u001B[33m" + zname + " joined the game\u001B[0m");
+        console.log("\u001B[33m" + player.name + " joined the game\u001B[0m");
     }
 
     this.addNode(cell);
@@ -786,7 +786,7 @@ GameServer.prototype.ejectMass = function (client) {
             // Remove mass from parent cell
             cell.mass -= this.config.ejectMassLoss;
             // Randomize angle
-            angle += (Math.random() * .4) - .2;
+            angle += (Math.random() * 0.4) - 0.2;
 
             // Create cell
             var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);

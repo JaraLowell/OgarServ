@@ -38,8 +38,7 @@ Mode.prototype.onPlayerSpawn = function (gameServer, player) {
 Mode.prototype.pressQ = function (gameServer, player) {
     // Called when the Q key is pressed
     if (player.spectate) {
-        // gameServer.switchSpectator(player);
-        player.freeRoam =! player.freeRoam;
+        gameServer.switchSpectator(player);
     }
 };
 
@@ -50,7 +49,10 @@ Mode.prototype.pressW = function (gameServer, player) {
 
 Mode.prototype.pressSpace = function (gameServer, player) {
     // Called when the Space bar is pressed
-    gameServer.splitCells(player);
+    if (player.spectate) {
+        player.freeRoam =! player.freeRoam;
+    } else
+        gameServer.splitCells(player);
 };
 
 Mode.prototype.onCellAdd = function (cell) {

@@ -122,25 +122,23 @@ PlayerTracker.prototype.update = function () {
         var nonVisibleNodes = []; // Nodes that are not visible
         if (this.tickViewBox <= 0) {
             var newVisible = this.calcViewBox();
-            try { // Add a try block in any case
 
-                // Compare and destroy nodes that are not seen
-                for (var i = 0; i < this.visibleNodes.length; i++) {
-                    var index = newVisible.indexOf(this.visibleNodes[i]);
-                    if (index == -1) {
-                        // Not seen by the client anymore
-                       nonVisibleNodes.push(this.visibleNodes[i]);
-                    }
+            // Compare and destroy nodes that are not seen
+            for (var i = 0; i < this.visibleNodes.length; i++) {
+                var index = newVisible.indexOf(this.visibleNodes[i]);
+                if (index == -1) {
+                    // Not seen by the client anymore
+                    nonVisibleNodes.push(this.visibleNodes[i]);
                 }
+            }
 
-                // Add nodes to client's screen if client has not seen it already
-                for (var i = 0; i < newVisible.length; i++) {
-                    var index = this.visibleNodes.indexOf(newVisible[i]);
-                    if (index == -1) {
-                        updateNodes.push(newVisible[i]);
-                    }
+            // Add nodes to client's screen if client has not seen it already
+            for (var i = 0; i < newVisible.length; i++) {
+                var index = this.visibleNodes.indexOf(newVisible[i]);
+                if (index == -1) {
+                    updateNodes.push(newVisible[i]);
                 }
-            } finally {} // Catch doesn't work for some reason
+            }
 
             this.visibleNodes = newVisible;
             // Reset Ticks
@@ -277,41 +275,39 @@ PlayerTracker.prototype.calcViewBox = function () {
     return newVisible;
 };
 
-PlayerTracker.prototype.getSpectateNodes = function() {
+PlayerTracker.prototype.getSpectateNodes = function () {
     var specPlayer;
 
     if (!this.freeRoam) {
-        // TODO: Sort out switch between playerTracker.playerTracker.x and playerTracker.x problem.
-        specPlayer = this.gameServer.largestClient;
-        // Detect specByLeaderboard as player trackers are complicated
-        if (!this.gameServer.gameMode.specByLeaderboard && specPlayer) {
-            // Get spectated player's location and calculate zoom amount
-            var specZoom = Math.sqrt(100 * specPlayer.playerTracker.score);
-            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-            
-            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
-            this.centerPos.x = specPlayer.playerTracker.centerPos.x;
-            this.centerPos.y = specPlayer.playerTracker.centerPos.y;
-            
-            this.sendCustomPosPacket(specPlayer.playerTracker.centerPos.x, specPlayer.playerTracker.centerPos.y, specZoom);
-            return specPlayer.playerTracker.visibleNodes.slice(0, specPlayer.playerTracker.visibleNodes.length);
-            
-        } else if (this.gameServer.gameMode.specByLeaderboard && specPlayer) {
+        if (this.gameServer.getMode().specByLeaderboard) {
+            this.spectatedPlayer = Math.min(this.gameServer.leaderboard.length - 1, this.spectatedPlayer);
+            specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.leaderboard[this.spectatedPlayer];
+        } else {
+            this.spectatedPlayer = Math.min(this.gameServer.clients.length - 1, this.spectatedPlayer);
+            specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.clients[this.spectatedPlayer].playerTracker;
+        }
+
+        if (specPlayer) {
+            // If selected player has died/disconnected, switch spectator and try again next tick
+            if (specPlayer.cells.length == 0) {
+                this.gameServer.switchSpectator(this);
+                return [];
+            }
+
             // Get spectated player's location and calculate zoom amount
             var specZoom = Math.sqrt(100 * specPlayer.score);
             specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-            
-            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
-            this.centerPos.x = specPlayer.centerPos.x;
-            this.centerPos.y = specPlayer.centerPos.y;
-            
-            this.sendCustomPosPacket(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom);
+            // TODO: Send packet elsewhere so it is send more often
+            this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
+            // TODO: Recalculate visible nodes for spectator to match specZoom
             return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
+        } else {
+            return []; // Nothing
         }
     } else {
         // User is in free roam
         // To mimic agar.io, get distance from center to mouse and apply a part of the distance
-        specPlayer = null;
+        specPlayer = -1;
 
         var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
         var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
@@ -348,14 +344,15 @@ PlayerTracker.prototype.getSpectateNodes = function() {
                 newVisible.push(node);
             }
         }
-        var specZoom = Math.sqrt(100 * 150);
-        specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
-        this.socket.sendPacket(new Packet.UpdatePosition(this.centerPos.x, this.centerPos.y, specZoom));
+        //var specZoom = Math.sqrt(100 * 150);
+        //specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
+        this.sendPosPacket(specZoom);
         return newVisible;
     }
 };
 
-PlayerTracker.prototype.checkBorderPass = function() {
+PlayerTracker.prototype.checkBorderPass = function () {
     // A check while in free-roam mode to avoid player going into nothingness
     if (this.centerPos.x < this.gameServer.config.borderLeft) {
         this.centerPos.x = this.gameServer.config.borderLeft;
@@ -371,7 +368,7 @@ PlayerTracker.prototype.checkBorderPass = function() {
     }
 };
 
-PlayerTracker.prototype.sendCustomPosPacket = function(x, y, specZoom) {
+PlayerTracker.prototype.sendCustomPosPacket = function (x, y, specZoom) {
     // TODO: Send packet elsewhere so it is sent more often
     this.socket.sendPacket(new Packet.UpdatePosition(x, y, specZoom));
 };
