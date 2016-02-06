@@ -14,6 +14,7 @@ function PlayerTracker(gameServer, socket) {
     this.score = 0;  // Leaderboard
     this.hscore = 0; // High score
     this.cscore = 0; // Max Cells
+    this.writeInfo = 12;
     this.remoteAddress = "undefined";
     this.mouse = {x: 0, y: 0};
     this.tickLeaderboard = 0; //
@@ -173,9 +174,24 @@ PlayerTracker.prototype.update = function () {
         if (this.tickLeaderboard <= 0) {
             this.socket.sendPacket(this.gameServer.lb_packet);
             this.tickLeaderboard = 20; // 20 ticks = 1 second
+            if (this.gameServer.sqlconfig.host != '') {
+                this.writeInfo--;
+            }
         } else {
             this.tickLeaderboard--;
         }
+    }
+
+    // Handle MySQL (about every 12 seconds)
+    if (this.writeInfo <= 0) {
+        var ip = "BOT";
+        if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') {
+            ip = this.socket.remoteAddress;
+        }
+        if( ip != "BOT" && this.hscore > 100 ) {
+            this.gameServer.mysql.writeScore(this.name, ip, this.hscore, this.gameServer.sqlconfig.table);
+        }
+        this.writeInfo = 12;
     }
 
     // Handles disconnections
