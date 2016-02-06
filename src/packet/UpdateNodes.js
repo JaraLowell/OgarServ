@@ -7,6 +7,26 @@ function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, serverVersion) {
 
 module.exports = UpdateNodes;
 
+/* Package Setup (ID 16)
+ * --------------------
+ * 4 | setUint32 | ID
+ * 4 | setInt32  | Pos-X
+ * 4 | setInt32  | Pos-Y
+ * 2 | setUint16 | Size
+ * 1 | setUint8  | Color-R
+ * 1 | setUint8  | Color-G
+ * 1 | setUint8  | Color-B
+ * 1 | setUint8  | Flags (1:isVirus, 2:skip4, 4:read fa, 8:skip16?, 16:isAgitated)
+
+ * 4 | setUint32 | if flags % 4 then size uri pacgage
+ * ? | setUint8  | Skin uri starting with a :
+
+ * ? | setUint16 | Name
+ * 4 | setUint32 | End
+ * 4 | setUint32 | number of blobs being removed
+ * 4 | setUint32 | id player_id to remove
+ */
+
 UpdateNodes.prototype.build = function () {
     // Calculate nodes sub packet size before making the data view
     var nodesLength = 0;
@@ -16,11 +36,27 @@ UpdateNodes.prototype.build = function () {
         if (typeof node == "undefined") {
             continue;
         }
+
+        var name = node.getName(),
+            skipskin = 0, //4 if we skip it?
+            skinname = '';
+
+        if (name) {
+            if (name.substr(0, 1) == "<") {
+                var n = name.indexOf(">");
+                if (n != -1) {
+                    skinname = ':' + name.substr(1, n - 1) + '.png';
+                    name = name.substr(n + 1);
+                }
+            }
+        }
+
         if (this.serverVersion == 1)
-            nodesLength = nodesLength + 20 + (node.getName().length * 2);
+            nodesLength = nodesLength + 20 + (name.length * 2) + skinname.length + skipskin;
         else
-            nodesLength = nodesLength + 16 + (node.getName().length * 2);
+            nodesLength = nodesLength + 16 + (name.length * 2) + skinname.length + skipskin;
     }
+
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
     var view = new DataView(buf);
@@ -53,6 +89,23 @@ UpdateNodes.prototype.build = function () {
         if (typeof node == "undefined") {
             continue;
         }
+
+        var name = node.getName(),
+            skinname = '',
+            skinuri = 0;
+
+        if (name) {
+            if (name.substr(0, 1) == "<") {
+                // Premium Skin
+                var n = name.indexOf(">");
+                if (n != -1) {
+                    skinuri = 1;
+                    skinname = ':' + name.substr(1, n - 1) + '.png';
+                    name = name.substr(n + 1);
+                }
+            }
+        }
+
         if (this.serverVersion == 1) {
             view.setUint32(offset, node.nodeId, true);
             view.setInt32(offset + 4, node.position.x, true);
@@ -61,7 +114,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 14, node.color.r, true);
             view.setUint8(offset + 15, node.color.g, true);
             view.setUint8(offset + 16, node.color.b, true);
-            view.setUint8(offset + 17, node.spiked | (node.agitated << 4), true);
+            view.setUint8(offset + 17, node.spiked | (skinuri << 2) | (node.agitated << 4), true);
             offset += 18;
         } else {
             view.setUint32(offset, node.nodeId, true);
@@ -71,11 +124,24 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 10, node.color.r, true);
             view.setUint8(offset + 11, node.color.g, true);
             view.setUint8(offset + 12, node.color.b, true);
-            view.setUint8(offset + 13, node.spiked | (node.agitated << 4), true);
+            view.setUint8(offset + 13, node.spiked | (skinuri << 2) | (node.agitated << 4), true);
             offset += 14;
         }
 
-        var name = node.getName();
+        // Skip name,  flag is | 1 << 1
+        // view.setUint32(offset, skinname.length, true);
+        // offset += 4
+
+        if (skinuri) {
+            for (var j = 0; j < skinname.length; j++) {
+                var c = skinname.charCodeAt(j);
+                if (c) {
+                    view.setUint8(offset, c, true);
+                }
+                offset += 1;
+            }
+        }
+
         if (name) {
             for (var j = 0; j < name.length; j++) {
                 var c = name.charCodeAt(j);
