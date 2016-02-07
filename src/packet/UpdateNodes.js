@@ -10,19 +10,17 @@ module.exports = UpdateNodes;
 /* Package Setup (ID 16)
  * --------------------
  * 4 | setUint32 | ID
- * 4 | setInt32  | Pos-X
- * 4 | setInt32  | Pos-Y
- * 2 | setUint16 | Size
- * 1 | setUint8  | Color-R
- * 1 | setUint8  | Color-G
- * 1 | setUint8  | Color-B
- * 1 | setUint8  | Flags (1:isVirus, 2:skip4, 4:read fa, 8:skip16?, 16:isAgitated)
-
- * 4 | setUint32 | if flags % 4 then size uri pacgage
- * ? | setUint8  | Skin uri starting with a :
-
- * ? | setUint16 | Name
- * 4 | setUint32 | End
+ * 4 | setInt32  | pos-X
+ * 4 | setInt32  | pos-Y
+ * 2 | setUint16 | size
+ * 1 | setUint8  | color-R
+ * 1 | setUint8  | color-G
+ * 1 | setUint8  | color-B
+ * 1 | setUint8  | flags (1:isVirus, 2:skip-fa, 4:read-fa, 16:isAgitated)
+ * 4 | setUint32 | length of fa
+ * ? | setUint8  | fa starting with a %
+ * ? | setUint16 | name
+ * 4 | setUint32 | end
  * 4 | setUint32 | number of blobs being removed
  * 4 | setUint32 | id player_id to remove
  */
@@ -38,14 +36,14 @@ UpdateNodes.prototype.build = function () {
         }
 
         var name = node.getName(),
-            skipskin = 0, //4 if we skip it?
+            skipskin = 1, //4 if we skip it?
             skinname = '';
 
         if (name) {
             if (name.substr(0, 1) == "<") {
                 var n = name.indexOf(">");
                 if (n != -1) {
-                    skinname = ':' + name.substr(1, n - 1) + '.png';
+                    skinname = '%' + name.substr(1, n - 1);
                     name = name.substr(n + 1);
                 }
             }
@@ -56,7 +54,6 @@ UpdateNodes.prototype.build = function () {
         else
             nodesLength = nodesLength + 16 + (name.length * 2) + skinname.length + skipskin;
     }
-
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
     var view = new DataView(buf);
@@ -100,7 +97,7 @@ UpdateNodes.prototype.build = function () {
                 var n = name.indexOf(">");
                 if (n != -1) {
                     skinuri = 1;
-                    skinname = ':' + name.substr(1, n - 1) + '.png';
+                    skinname = '%' + name.substr(1, n - 1);
                     name = name.substr(n + 1);
                 }
             }
@@ -140,6 +137,8 @@ UpdateNodes.prototype.build = function () {
                 }
                 offset += 1;
             }
+            view.setUint8(offset, 0, true); // End of String
+            offset += 1;
         }
 
         if (name) {
@@ -150,10 +149,9 @@ UpdateNodes.prototype.build = function () {
                 }
                 offset += 2;
             }
+            view.setUint16(offset, 0, true); // End of string
+            offset += 2;
         }
-
-        view.setUint16(offset, 0, true); // End of string
-        offset += 2;
     }
 
     var len = this.nonVisibleNodes.length + this.destroyQueue.length;
