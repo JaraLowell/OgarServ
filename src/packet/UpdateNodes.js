@@ -35,24 +35,14 @@ UpdateNodes.prototype.build = function () {
             continue;
         }
 
-        var name = node.getName(),
-            skipskin = 1, //4 if we skip it?
-            skinname = '';
-
-        if (name) {
-            if (name.substr(0, 1) == "<") {
-                var n = name.indexOf(">");
-                if (n != -1) {
-                    skinname = '%' + name.substr(1, n - 1);
-                    name = name.substr(n + 1);
-                }
-            }
-        }
+        var skin = node.getPremium(),
+            bits = 0;
+        if (skin) bits = 1;
 
         if (this.serverVersion == 1)
-            nodesLength = nodesLength + 20 + (name.length * 2) + skinname.length + skipskin;
+            nodesLength = nodesLength + 20 + (node.getName().length * 2) + skin.length + bits;
         else
-            nodesLength = nodesLength + 16 + (name.length * 2) + skinname.length + skipskin;
+            nodesLength = nodesLength + 16 + (node.getName().length * 2) + skin.length + bits;
     }
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
@@ -88,19 +78,11 @@ UpdateNodes.prototype.build = function () {
         }
 
         var name = node.getName(),
-            skinname = '',
-            skinuri = 0;
+            skin = node.getPremium(),
+            bits = 0;
 
-        if (name) {
-            if (name.substr(0, 1) == "<") {
-                // Premium Skin
-                var n = name.indexOf(">");
-                if (n != -1) {
-                    skinuri = 1;
-                    skinname = '%' + name.substr(1, n - 1);
-                    name = name.substr(n + 1);
-                }
-            }
+        if (skin) {
+            bits = 1;
         }
 
         if (this.serverVersion == 1) {
@@ -111,7 +93,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 14, node.color.r, true);
             view.setUint8(offset + 15, node.color.g, true);
             view.setUint8(offset + 16, node.color.b, true);
-            view.setUint8(offset + 17, node.spiked | (skinuri << 2) | (node.agitated << 4), true);
+            view.setUint8(offset + 17, node.spiked | (bits << 2) | (node.agitated << 4), true);
             offset += 18;
         } else {
             view.setUint32(offset, node.nodeId, true);
@@ -121,7 +103,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 10, node.color.r, true);
             view.setUint8(offset + 11, node.color.g, true);
             view.setUint8(offset + 12, node.color.b, true);
-            view.setUint8(offset + 13, node.spiked | (skinuri << 2) | (node.agitated << 4), true);
+            view.setUint8(offset + 13, node.spiked | (bits << 2) | (node.agitated << 4), true);
             offset += 14;
         }
 
@@ -129,15 +111,15 @@ UpdateNodes.prototype.build = function () {
         // view.setUint32(offset, skinname.length, true);
         // offset += 4
 
-        if (skinuri) {
-            for (var j = 0; j < skinname.length; j++) {
-                var c = skinname.charCodeAt(j);
+        if (bits) {
+            for (var j = 0; j < skin.length; j++) {
+                var c = skin.charCodeAt(j);
                 if (c) {
                     view.setUint8(offset, c, true);
                 }
                 offset += 1;
             }
-            view.setUint8(offset, 0, true); // End of String
+            view.setUint8(offset, 0, true);
             offset += 1;
         }
 
@@ -149,15 +131,14 @@ UpdateNodes.prototype.build = function () {
                 }
                 offset += 2;
             }
-            view.setUint16(offset, 0, true); // End of string
-            offset += 2;
         }
+
+        view.setUint16(offset, 0, true); // End of string
+        offset += 2;
     }
 
     var len = this.nonVisibleNodes.length + this.destroyQueue.length;
-    view.setUint32(offset, 0, true); // End
     view.setUint32(offset + 4, len, true); // # of non-visible nodes to destroy
-
     offset += 8;
 
     // Destroy queue + nonvisible nodes

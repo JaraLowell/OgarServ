@@ -28,6 +28,14 @@ Cell.prototype.getName = function () {
     }
 };
 
+Cell.prototype.getPremium = function () {
+    if (this.owner) {
+        return this.owner.premium;
+    } else {
+        return "";
+    }
+};
+
 Cell.prototype.setColor = function (color) {
     this.color.r = color.r;
     this.color.b = color.b;

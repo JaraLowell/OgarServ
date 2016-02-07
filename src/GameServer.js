@@ -122,7 +122,7 @@ function GameServer() {
 
     // Load Bot system in config has it enabled. -1 is disabled
     if (this.config.serverBots != -1) {
-        console.log("[XX:XX] * \u001B[33mLoading AI Bot System...\u001B[0m");
+        console.log("[" + this.formatTime() + "] * \u001B[33mLoading AI Bot System...\u001B[0m");
         var BotLoader = require('./ai/BotLoader');
         this.bots = new BotLoader(this);
     }

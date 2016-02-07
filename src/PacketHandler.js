@@ -38,8 +38,10 @@ PacketHandler.prototype.handleMessage = function (message) {
     switch (packetId) {
         case 0:
             // Set Nickname
-            var nick = "";
-            var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
+            var nick = '',
+                maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
+                skinname = '';
+
             for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
@@ -47,11 +49,21 @@ PacketHandler.prototype.handleMessage = function (message) {
                 }
                 nick += String.fromCharCode(charCode);
             }
-            nick = nick.trim();
-            if ( nick == "" || nick == "Unregistered" || nick == "Un Named" ) {
-            	  nick = "Cell" + this.socket.playerTracker.pID;
+
+            if (nick.substr(0, 1) == "<") {
+                var n = nick.indexOf(">");
+                if (n != -1) {
+                    skinname = '%' + nick.substr(1, n - 1);
+                    nick = nick.substr(n + 1);
+                }
             }
-            this.setNickname(nick);
+            
+            if ( nick == "" || nick == "Unregistered" || nick == "Un Named" ) {
+                nick = "Cell" + this.socket.playerTracker.pID;
+            }
+
+            nick = nick.trim();
+            this.setNickname(nick, skinname);
             break;
         case 1:
             // Spectate mode
