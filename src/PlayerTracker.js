@@ -285,12 +285,9 @@ PlayerTracker.prototype.calcViewBox = function () {
     var newVisible = [];
     for (var node, i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
-
         if (!node) {
             continue;
-        }
-
-        if (node.visibleCheck(this.viewBox, this.centerPos)) {
+        } else if (node.visibleCheck(this.viewBox, this.centerPos)) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }
@@ -334,7 +331,8 @@ PlayerTracker.prototype.getSpectateNodes = function () {
 
         var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
         var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-        var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
+        var speed = Math.min(dist / 10, 390); // Not to break laws of universe by going faster than light speed
+
         this.centerPos.x += speed * Math.sin(angle);
         this.centerPos.y += speed * Math.cos(angle);
 
@@ -342,8 +340,9 @@ PlayerTracker.prototype.getSpectateNodes = function () {
         this.checkBorderPass();
 
         // Now that we've updated center pos, get nearby cells
-        // We're going to use config's view base times 2.5
-        var mult = 2.5; // To simplify multiplier, in case this needs editing later on
+        // We're going to use config's view base times 3.5
+
+        var mult = 3.5; // To simplify multiplier, in case this needs editing later on
         this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
         this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
         this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
@@ -357,15 +356,14 @@ PlayerTracker.prototype.getSpectateNodes = function () {
             node = this.gameServer.nodes[i];
             if (!node) {
                 continue;
-            }
-            if (node.visibleCheck(this.viewBox, this.centerPos)) {
+            } else if (node.cellType == 1) {
+                continue;
+            } else if (node.visibleCheck(this.viewBox, this.centerPos)) {
                 // Cell is in range of viewBox
                 newVisible.push(node);
             }
         }
-
-        var specZoom = Math.sqrt(100 * 150);
-        specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+        var specZoom = Math.pow(Math.min(40.5 / 750, 1.0), 0.4) * 0.6; // Constant zoom
         this.socket.sendPacket(new Packet.UpdatePosition(this.centerPos.x, this.centerPos.y, specZoom));
         return newVisible;
     }
