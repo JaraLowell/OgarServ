@@ -34,10 +34,13 @@ UpdateNodes.prototype.build = function () {
             continue;
         }
 
+        var extrabyte = 0;
+        if (node.getSkin()) extrabyte = 1;
+
         if (this.serverVersion == 1) {
-            nodesLength = nodesLength + 21 + (node.getName().length * 2) + node.getSkin().length;
+            nodesLength = nodesLength + 20 + extrabyte + (node.getName().length * 2) + node.getSkin().length;
         } else {
-            nodesLength = nodesLength + 17 + (node.getName().length * 2) + node.getSkin().length;
+            nodesLength = nodesLength + 16 + extrabyte + (node.getName().length * 2) + node.getSkin().length;
         }
     }
 
