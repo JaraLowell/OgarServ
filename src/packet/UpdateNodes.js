@@ -30,19 +30,15 @@ UpdateNodes.prototype.build = function () {
     var nodesLength = 0;
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-
         if (typeof node == "undefined") {
             continue;
         }
 
-        var skin = node.getPremium(),
-            bits = 0;
-        if (skin) bits = 1;
-
-        if (this.serverVersion == 1)
-            nodesLength = nodesLength + 20 + (node.getName().length * 2) + skin.length + bits;
-        else
-            nodesLength = nodesLength + 16 + (node.getName().length * 2) + skin.length + bits;
+        if (this.serverVersion == 1) {
+            nodesLength = nodesLength + 21 + (node.getName().length * 2) + node.getSkin().length;
+        } else {
+            nodesLength = nodesLength + 17 + (node.getName().length * 2) + node.getSkin().length;
+        }
     }
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
@@ -77,12 +73,14 @@ UpdateNodes.prototype.build = function () {
             continue;
         }
 
-        var name = node.getName(),
-            skin = node.getPremium(),
-            bits = 0;
+        var skin = node.getSkin(),
+            name = node.getName(),
+            bits = 0,
+            agitated = node.agitated;
 
         if (skin) {
             bits = 1;
+            agitated = 0;
         }
 
         if (this.serverVersion == 1) {
@@ -93,7 +91,7 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 14, node.color.r, true);
             view.setUint8(offset + 15, node.color.g, true);
             view.setUint8(offset + 16, node.color.b, true);
-            view.setUint8(offset + 17, node.spiked | (bits << 2) | (node.agitated << 4), true);
+            view.setUint8(offset + 17, (node.spiked | (bits << 2) | (agitated << 4)), true);
             offset += 18;
         } else {
             view.setUint32(offset, node.nodeId, true);
@@ -103,13 +101,9 @@ UpdateNodes.prototype.build = function () {
             view.setUint8(offset + 10, node.color.r, true);
             view.setUint8(offset + 11, node.color.g, true);
             view.setUint8(offset + 12, node.color.b, true);
-            view.setUint8(offset + 13, node.spiked | (bits << 2) | (node.agitated << 4), true);
+            view.setUint8(offset + 13, (node.spiked | (bits << 2) | (agitated << 4)), true);
             offset += 14;
         }
-
-        // Skip name,  flag is | 1 << 1
-        // view.setUint32(offset, skinname.length, true);
-        // offset += 4
 
         if (bits) {
             for (var j = 0; j < skin.length; j++) {
@@ -117,10 +111,10 @@ UpdateNodes.prototype.build = function () {
                 if (c) {
                     view.setUint8(offset, c, true);
                 }
-                offset += 1;
+                offset++;
             }
             view.setUint8(offset, 0, true);
-            offset += 1;
+            offset++;
         }
 
         if (name) {
@@ -132,7 +126,6 @@ UpdateNodes.prototype.build = function () {
                 offset += 2;
             }
         }
-
         view.setUint16(offset, 0, true); // End of string
         offset += 2;
     }
@@ -165,4 +158,3 @@ UpdateNodes.prototype.build = function () {
 
     return buf;
 };
-

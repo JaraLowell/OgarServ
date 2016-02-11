@@ -28,9 +28,9 @@ Cell.prototype.getName = function () {
     }
 };
 
-Cell.prototype.getPremium = function () {
+Cell.prototype.getSkin = function () {
     if (this.owner) {
-        return this.owner.premium;
+        return this.owner.skin;
     } else {
         return "";
     }

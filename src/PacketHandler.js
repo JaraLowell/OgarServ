@@ -40,7 +40,6 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Set Nickname
             var nick = '',
                 maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
-                skinname = '';
 
             for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
@@ -50,20 +49,16 @@ PacketHandler.prototype.handleMessage = function (message) {
                 nick += String.fromCharCode(charCode);
             }
 
-            if (nick.substr(0, 1) == "<") {
-                var n = nick.indexOf(">");
-                if (n != -1) {
-                    skinname = '%' + nick.substr(1, n - 1);
-                    nick = nick.substr(n + 1);
-                }
-            }
-            
+            nick = nick.trim();
             if ( nick == "" || nick == "Unregistered" || nick == "Un Named" ) {
                 nick = "Cell" + this.socket.playerTracker.pID;
             }
 
-            nick = nick.trim();
-            this.setNickname(nick, skinname);
+            if ( nick.toLowerCase() == "nazi" || nick.toLowerCase() == "hitler" || nick.toLowerCase() == "isis" ) {
+                nick = "Virus" + this.socket.playerTracker.pID;
+            }
+
+            this.setNickname(nick);
             break;
         case 1:
             // Spectate mode
@@ -240,14 +235,46 @@ PacketHandler.prototype.handleMessage = function (message) {
     }
 };
 
-PacketHandler.prototype.setNickname = function (newNick) {
+PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // Set name first
-        client.setName(newNick);
+        var newSkin = "";
+        if (newNick != null && newNick.length != 0) {
+            if (newNick[0] == "<") {
+                var n = newNick.indexOf(">", 1);
+                if (n != -1) {
+                    newSkin = "%" + newNick.slice(1, n);
+                    newNick = newNick.slice(n+1);
+                }
+            } else if (newNick[0] == "|") {
+                var n = newNick.indexOf("|", 1);
+                if (n != -1) {
+                    newSkin = ":http://" + newNick.slice(1, n);
+                    newNick = newNick.slice(n+1);
+                }
+            }
+        }
+
+        // Remove spaces incase there where any inbetween skin and name
+        newNick = newNick.trim();
+
+        if (this.gameServer.gameMode.haveTeams) {
+            client.setName(" "+newNick+" "); //trick to disable skins in teammode
+        } else {
+            client.setName(newNick);
+        }
+
+        if (newSkin) {
+            this.socket.saveSkin = newSkin;
+        } else if (this.socket.saveSkin) {
+            newSkin = this.socket.saveSkin;
+        }
+
+        client.setSkin(newSkin);
 
         // If client has no cells... then spawn a player
-        this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);
+        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
 
         // Turn off spectate mode
         client.spectate = false;

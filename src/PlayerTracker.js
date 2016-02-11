@@ -5,7 +5,7 @@ function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
     this.name = "";
-    this.premium = '';
+    this.skin = '';
     this.gameServer = gameServer;
     this.socket = socket;
     this.nodeAdditionQueue = [];
@@ -56,17 +56,20 @@ function PlayerTracker(gameServer, socket) {
 module.exports = PlayerTracker;
 
 // Setters/Getters
-PlayerTracker.prototype.setName = function (name, premium) {
+PlayerTracker.prototype.setName = function (name) {
     this.name = name;
-    this.premium = premium;
 };
 
 PlayerTracker.prototype.getName = function () {
     return this.name;
 };
 
-PlayerTracker.prototype.getPremium = function () {
-    return this.premium;
+PlayerTracker.prototype.setSkin = function(skin) {
+    this.skin = skin;
+};
+
+PlayerTracker.prototype.getSkin = function () {
+    return this.skin;
 };
 
 PlayerTracker.prototype.getScore = function (reCalcScore) {
