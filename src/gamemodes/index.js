@@ -10,7 +10,9 @@ module.exports = {
     Zombie: require('./Zombie'),
     TeamZ: require('./TeamZ.js'),
     TeamX: require('./TeamX.js'),
-    Blackhole: require('./Blackhole')
+    Blackhole: require('./Blackhole'),
+    VirusOff: require('./VirusOff'),
+    Leap: require('./Leap')
 };
 
 var get = function (id) {
@@ -40,11 +42,17 @@ var get = function (id) {
         case 14: // Experimental Team
             mode = new module.exports.TeamX();
             break;
+        case 15: // VirusOff
+            mode = new module.exports.VirusOff();
+            break;
+        case 16: // Leap
+            mode = new module.exports.Leap();
+            break;
+        case 17: // Blackhole
+            mode = new module.exports.Blackhole();
+            break;
         case 20: // Rainbow
             mode = new module.exports.Rainbow();
-            break;
-        case 22: // Blackhole
-            mode = new module.exports.Blackhole();
             break;
         default: // FFA is default
             mode = new module.exports.FFA();
