@@ -7,7 +7,7 @@ var VirusFeed = require('../entity/Virus').prototype.feed;
 function Blackhole() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
 
-    this.ID = 22;
+    this.ID = 17;
     this.name = "Blackhole";
     this.specByLeaderboard = true;
 
