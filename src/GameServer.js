@@ -1017,8 +1017,6 @@ GameServer.prototype.updateCells = function () {
             var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
         }
 
-        console.log(massDecay);
-        
         if (!cell) {
             continue;
         }
