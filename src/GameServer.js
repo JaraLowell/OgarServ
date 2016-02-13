@@ -108,6 +108,7 @@ function GameServer() {
         playerMaxNickLength: 15,      // Maximum nick length
         playerDisconnectTime: 60,     // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         playerFastDecay: 0,           // Double the decay if cell is over 5000 mass. (1 is on - 0 is off.)
+        FastDecayMultiplier: 5,       // Amount to multiply decayRate if playerFastDecay is on.
         tourneyMaxPlayers: 12,        // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10,          // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30,           // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
@@ -1011,7 +1012,7 @@ GameServer.prototype.updateCells = function () {
             if (cell.mass < 5000) {
                 var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
             } else {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * 5; // might need a better formula
+                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * this.config.FastDecayMultiplier; // might need a better formula
             }
         } else {
             var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
