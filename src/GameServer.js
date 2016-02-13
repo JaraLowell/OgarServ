@@ -837,8 +837,8 @@ GameServer.prototype.newCellVirused = function (client, parent, angle, mass, spe
     
     // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
-        x: parent.position.x + (size / 100) * Math.sin(angle),
-        y: parent.position.y + (size / 100) * Math.cos(angle)
+        x: parent.position.x + (size / 85) * Math.sin(angle),
+        y: parent.position.y + (size / 85) * Math.cos(angle)
     };
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
