@@ -107,8 +107,7 @@ function GameServer() {
         playerMinMassDecay: 9,        // Minimum mass for decay to occur
         playerMaxNickLength: 15,      // Maximum nick length
         playerDisconnectTime: 60,     // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        playerFastDecay: 0,           // Double the decay if cell is over 5000 mass. (1 is on - 0 is off.)
-        FastDecayMultiplier: 5,       // Amount to multiply decayRate if playerFastDecay is on.
+        FastDecayMultiplier: 5,       // How much to multiply decayRate by when cell is over 5000 mass. (1 is off - 5 is best)
         tourneyMaxPlayers: 12,        // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10,          // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30,           // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
@@ -1008,14 +1007,10 @@ GameServer.prototype.updateCells = function () {
         var cell = this.nodesPlayer[i];
 
         // Have fast decay over 5k mass
-        if (this.config.playerFastDecay == 1) {
-            if (cell.mass < 5000) {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
-            } else {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * this.config.FastDecayMultiplier; // might need a better formula
-            }
+        if (cell.mass < 5000) {
+            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
         } else {
-            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
+            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * this.config.FastDecayMultiplier; // might need a better formula
         }
 
         if (!cell) {
