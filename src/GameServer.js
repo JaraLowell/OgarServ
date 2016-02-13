@@ -55,6 +55,7 @@ function GameServer() {
     };
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
+        serverMaxConnPerIp: 9,        // Max Connections from one IP.
         serverPort: 4411,             // Server port
         serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
@@ -213,6 +214,18 @@ GameServer.prototype.start = function () {
     });
 
     function connectionEstablished(ws) {
+        if (this.config.serverMaxConnPerIp) {
+            for (var cons = 1, i = 0; i < this.clients.length; i++) {
+                if (this.clients[i].remoteAddress == ws._socket.remoteAddress) {
+                    cons++;
+                }
+            }
+            if (cons > this.config.serverMaxConnPerIp ) {
+                ws.close();
+                return;
+            }
+        }
+
         var serv = this.getPlayers();
         if (serv.players >= this.config.serverMaxConnections) { // Server full
             console.log("\u001B[33mClient tried to connect, but server player limit has been reached!\u001B[0m");
@@ -245,7 +258,7 @@ GameServer.prototype.start = function () {
             this.socket.sendPacket = function () { }; // Clear function so no packets are sent
         }
 
-        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " [origin " + ws.upgradeReq.headers.origin + ws.upgradeReq.url + "]");
+        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " (" + cons + ") [origin " + ws.upgradeReq.headers.origin + ws.upgradeReq.url + "]");
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
 
