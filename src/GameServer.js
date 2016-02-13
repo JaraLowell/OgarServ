@@ -1011,7 +1011,7 @@ GameServer.prototype.updateCells = function () {
             if (cell.mass < 5000) {
                 var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
             } else {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * 2; // might need a better formula
+                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * 5; // might need a better formula
             }
         } else {
             var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
