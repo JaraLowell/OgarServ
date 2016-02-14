@@ -1003,19 +1003,9 @@ GameServer.prototype.updateCells = function () {
     }
 
     // Loop through all player cells
+    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
-
-        // Have fast decay over 5k mass
-        if (this.config.playerFastDecay == 1) {
-            if (cell.mass < 5000) {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
-            } else {
-                var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * 5; // might need a better formula
-            }
-        } else {
-            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
-        }
 
         if (!cell) {
             continue;
@@ -1028,7 +1018,12 @@ GameServer.prototype.updateCells = function () {
 
         // Mass decay
         if (cell.mass >= this.config.playerMinMassDecay) {
-            cell.mass *= massDecay;
+            if (mass < 5000) {
+                cell.mass *= massDecay;
+            } else {
+                // Faster decay when bigger then 5k
+                cell.mass *= (massDecay * this.config.FastDecayMultiplier);
+            }
         }
     }
 };
