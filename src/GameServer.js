@@ -107,7 +107,7 @@ function GameServer() {
         playerMinMassDecay: 9,        // Minimum mass for decay to occur
         playerMaxNickLength: 15,      // Maximum nick length
         playerDisconnectTime: 60,     // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        FastDecayMultiplier: 5,       // How much to multiply decayRate by when cell is over 5000 mass. (1 is off - 5 is best)
+        playerFastDecay: 1,           // Double the decay if cell is over 5000 mass. (1 is off, 5 is decay 5x faster)
         tourneyMaxPlayers: 12,        // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10,          // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30,           // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
@@ -1003,15 +1003,9 @@ GameServer.prototype.updateCells = function () {
     }
 
     // Loop through all player cells
+    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
-
-        // Have fast decay over 5k mass
-        if (cell.mass < 5000) {
-            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod); // Normal decay
-        } else {
-            var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod) * this.config.FastDecayMultiplier; // might need a better formula
-        }
 
         if (!cell) {
             continue;
@@ -1024,7 +1018,12 @@ GameServer.prototype.updateCells = function () {
 
         // Mass decay
         if (cell.mass >= this.config.playerMinMassDecay) {
-            cell.mass *= massDecay;
+            if (mass < 5000) {
+                cell.mass *= massDecay;
+            } else {
+                // Faster decay when bigger then 5k
+                cell.mass *= (massDecay * this.config.FastDecayMultiplier);
+            }
         }
     }
 };
