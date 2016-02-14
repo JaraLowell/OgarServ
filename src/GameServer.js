@@ -1018,7 +1018,7 @@ GameServer.prototype.updateCells = function () {
 
         // Mass decay
         if (cell.mass >= this.config.playerMinMassDecay) {
-            if (mass < 5000) {
+            if (cell.mass < 5000) {
                 cell.mass *= massDecay;
             } else {
                 // Faster decay when bigger then 5k
