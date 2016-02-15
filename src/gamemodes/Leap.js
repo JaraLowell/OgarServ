@@ -43,7 +43,7 @@ Leap.prototype.pressSpace = function(gameServer,player) {
         };
         // Speed & Mass
         var splitSpeed = cell.getSpeed() * 12;
-        var newMass = (cell.mass / 10) * 9;
+        var newMass = cell.mass * 0.97;
         cell.mass = newMass;
         // Let's go
         var split = new Entity.PlayerCell(gameServer.getNextNodeId(), player, startPos, newMass);
