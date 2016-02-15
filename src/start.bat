@@ -7,7 +7,7 @@ rem *** exemple: C:\JXCore\JX install..... etc
 
 :loop
    cls
-   node install ws http fs sys mysql url underscore
-   node install -g n
+   npm install ws http fs sys mysql url underscore
+   npm install -g n
    node index.js
    goto loop
