@@ -38,24 +38,14 @@ PacketHandler.prototype.handleMessage = function (message) {
     switch (packetId) {
         case 0:
             // Set Nickname
-            var nick = '',
-                maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
+            var nick = '';
 
-            for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
+            for (var i = 1; i < view.byteLength; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
                     break;
                 }
                 nick += String.fromCharCode(charCode);
-            }
-
-            nick = nick.trim();
-            if ( nick == "" || nick == "Unregistered" || nick == "Un Named" ) {
-                nick = "Cell" + this.socket.playerTracker.pID;
-            }
-
-            if ( nick.toLowerCase() == "nazi" || nick.toLowerCase() == "hitler" || nick.toLowerCase() == "isis" ) {
-                nick = "Virus" + this.socket.playerTracker.pID;
             }
 
             this.setNickname(nick);
@@ -258,6 +248,19 @@ PacketHandler.prototype.setNickname = function(newNick) {
 
         // Remove spaces incase there where any inbetween skin and name
         newNick = newNick.trim();
+
+        if (newNick.length > (this.gameServer.config.playerMaxNickLength + 1)) {
+            newNick = newNick.slice(0, (this.gameServer.config.playerMaxNickLength + 1));
+        }
+
+        // No name or weird name, lets call it Cell + pid Number
+        if (newNick == "" || newNick == "Unregistered" || newNick == "Un Named") {
+            newNick = "Cell" + client.pID;
+        }
+        // Banned name, lets call it Virus + pid number
+        if ( newNick.toLowerCase() == "nazi" || newNick.toLowerCase() == "hitler" || newNick.toLowerCase() == "isis" ) {
+            newNick = "Virus" + client.pID;
+        }
 
         if (this.gameServer.gameMode.haveTeams) {
             client.setName(" "+newNick+" "); //trick to disable skins in teammode
