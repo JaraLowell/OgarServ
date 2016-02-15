@@ -1022,7 +1022,7 @@ GameServer.prototype.updateCells = function () {
                 cell.mass *= massDecay;
             } else {
                 // Faster decay when bigger then 5k
-                cell.mass *= massDecay - ( this.config.FastDecayMultiplier / 250);
+                cell.mass *= massDecay - ( this.config.FastDecayMultiplier / 500);
             }
         }
     }
