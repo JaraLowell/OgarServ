@@ -28,7 +28,7 @@ process.argv.forEach(function (val) {
 // Setting up GC if available
 if (global.gc) {
     // Run GC if install every 15 min
-    console.log("        * \u001B[33mGarbage collection cleanup available, setting up 15 min interval
+    console.log("        * \u001B[33mGarbage collection cleanup available, setting up 15 min interval cleanup.\u001B[0m");
     setInterval(function(){
         global.gc();
     }, 900000);
