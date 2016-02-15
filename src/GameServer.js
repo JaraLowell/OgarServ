@@ -170,10 +170,6 @@ GameServer.prototype.start = function () {
         // Start Main Loop
         this.MasterPing();
         setInterval(this.mainLoop.bind(this), 5);
-        if (global.gc) {
-            // Run GC if install every 15 min        	
-            setInterval(this.cleanup.bind(this), 900000);
-        }
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -428,11 +424,6 @@ GameServer.prototype.gamemodeTick = function () {
 GameServer.prototype.cellUpdateTick = function () {
     // Update cells
     this.updateCells();
-};
-
-GameServer.prototype.cleanup = function () {
-    /* Run garbage collection utility (Memory cleanup Prodject) */
-    global.gc();
 };
 
 GameServer.prototype.mainLoop = function () {

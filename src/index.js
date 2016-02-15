@@ -25,6 +25,15 @@ process.argv.forEach(function (val) {
     }
 });
 
+// Setting up GC if available
+if (global.gc) {
+    // Run GC if install every 15 min
+    console.log("        * \u001B[33mGarbage collection cleanup available, setting up 15 min interval
+    setInterval(function(){
+        global.gc();
+    }, 900000);
+}
+
 // Run Ogar
 var gameServer = new GameServer();
 gameServer.start();
