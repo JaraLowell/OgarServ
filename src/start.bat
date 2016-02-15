@@ -9,5 +9,5 @@ rem *** exemple: C:\JXCore\JX install..... etc
    cls
    npm install ws http fs sys mysql url underscore
    npm install -g n
-   node index.js
+   node --nouse-idle-notification --expose-gc index.js
    goto loop
