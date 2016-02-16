@@ -354,7 +354,7 @@ PlayerTracker.prototype.getSpectateNodes = function () {
         this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
 
         // Use calcViewBox's way of looking for nodes
-        var newVisible = [];
+        var newVisible = [], specZoom = 750;
         for (var i = 0; i < this.gameServer.nodes.length; i++) {
             node = this.gameServer.nodes[i];
             if (!node) {
@@ -364,9 +364,10 @@ PlayerTracker.prototype.getSpectateNodes = function () {
             } else if (node.visibleCheck(this.viewBox, this.centerPos)) {
                 // Cell is in range of viewBox
                 newVisible.push(node);
+                if(node.size > specZoom) specZoom = node.size;
             }
         }
-        var specZoom = Math.pow(Math.min(40.5 / 750, 1.0), 0.4) * 0.6; // Constant zoom
+        specZoom = Math.pow(Math.min(40.5 / (specZoom * 3.14), 1.0), 0.4) * 0.6; // Constant zoom
         this.socket.sendPacket(new Packet.UpdatePosition(this.centerPos.x, this.centerPos.y, specZoom));
         return newVisible;
     }
