@@ -650,6 +650,8 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
 
 GameServer.prototype.updateMoveEngine = function () {
     // Move player cells
+    
+    /* Removing this for a test, as i think this do noting yet adds lag
     var len = this.nodesPlayer.length;
 
     // Sort cells to move the cells close to the mouse first
@@ -669,9 +671,10 @@ GameServer.prototype.updateMoveEngine = function () {
             }
         }
     }
+    */
 
-    for (var i = 0; i < len; i++) {
-        var cell = this.nodesPlayer[srt[i]];
+    for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
+        var cell = this.nodesPlayer[i];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell) { //  || (cell.ignoreCollision)) {
@@ -705,8 +708,7 @@ GameServer.prototype.updateMoveEngine = function () {
     }
 
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
-    len = this.movingNodes.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0, llen = this.movingNodes.length; i < llen; i++) {
         var check = this.movingNodes[i];
 
         // Recycle unused nodes
