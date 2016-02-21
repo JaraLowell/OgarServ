@@ -14,13 +14,13 @@ BroadCast.prototype.build = function () {
     view.setUint8(3, 0);
     view.setUint8(4, 0);
     var offset = 5;
-    for (var j = 0; j < nick.length; j++) {
+    for (var j = 0, llen = nick.length; j < llen; j++) {
         view.setUint16(offset, nick.charCodeAt(j), true);
         offset += 2;
     }
     view.setUint16(offset, 0, true);
     offset += 2;
-    for (var j = 0; j < this.message.length; j++) {
+    for (var j = 0, llen = this.message.length; j < llen; j++) {
         view.setUint16(offset, this.message.charCodeAt(j), true);
         offset += 2;
     }

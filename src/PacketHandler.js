@@ -39,7 +39,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Set Nickname
             var nick = '';
 
-            for (var i = 1; i < view.byteLength; i += 2) {
+            for (var i = 1, llen = view.byteLength; i < llen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
                     break;
@@ -87,14 +87,14 @@ PacketHandler.prototype.handleMessage = function (message) {
             break;
         case 80:
             // Cookie Code from Agar.io
-            for (var message = '', i = 1; i < view.byteLength; i++) {
+            for (var message = '', i = 1, llen = view.byteLength; i < llen; i++) {
                 message += String.fromCharCode(view.getUint8(i, !0));
             }
             break;
         case 82:
             // User login access token
             var service = view.getUint8(1, !0);
-            for (var message = '', i = 2; i < view.byteLength; i++) {
+            for (var message = '', i = 2, llen = view.byteLength; i < llen; i++) {
                 message += String.fromCharCode(view.getUint8(i, !0));
             }
             switch (service) {
@@ -131,7 +131,7 @@ PacketHandler.prototype.handleMessage = function (message) {
                 offset += 16;
             }
 
-            for (var i = offset; i < view.byteLength && i <= maxLen; i += 2) {
+            for (var i = offset, llen = view.byteLength; i < llen && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
                     break;

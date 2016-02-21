@@ -59,7 +59,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     var yd = 0;
 
 	 // Collision check for other cells
-    for (var i = 0; i < this.owner.cells.length; i++) {
+    for (var i = 0, llen = this.owner.cells.length; i < llen; i++) {
         var cell = this.owner.cells[i];
 
         if ((this.nodeId == cell.nodeId) || (this.ignoreCollision) || (cell.ignoreCollision)) {

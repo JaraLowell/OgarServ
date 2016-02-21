@@ -212,7 +212,7 @@ GameServer.prototype.start = function () {
 
     function connectionEstablished(ws) {
         if (this.config.serverMaxConnPerIp) {
-            for (var cons = 1, i = 0; i < this.clients.length; i++) {
+            for (var cons = 1, i = 0, llen = this.clients.length; i < llen; i++) {
                 if (this.clients[i].remoteAddress == ws._socket.remoteAddress) {
                     cons++;
                 }
@@ -243,7 +243,7 @@ GameServer.prototype.start = function () {
             else
                 this.server.log.onDisconnect(client.name + " Disconnect: " + this.socket.remoteAddress + ":" + this.socket.remotePort);
 
-            for (var i = 0; i < client.cells.length; i++) {
+            for (var i = 0, llen = client.cells.length; i < llen; i++) {
                 var cell = client.cells[i];
                 if (!cell) {
                     continue;
@@ -359,7 +359,7 @@ GameServer.prototype.addNode = function (node) {
     node.onAdd(this);
 
     // Add to visible nodes
-    for (var client, i = 0; i < this.clients.length; i++) {
+    for (var client, i = 0, llen = this.clients.length; i < llen; i++) {
         client = this.clients[i].playerTracker;
         if (!client) {
             continue;
@@ -390,7 +390,7 @@ GameServer.prototype.removeNode = function (node) {
     node.onRemove(this);
 
     // Animation when eating
-    for (var client, i = 0; i < this.clients.length; i++) {
+    for (var client, i = 0, llen = this.clients.length; i < llen; i++) {
         client = this.clients[i].playerTracker;
         if (!client) {
             continue;
@@ -537,7 +537,7 @@ GameServer.prototype.exitserver = function () {
 };
 
 GameServer.prototype.updateClients = function () {
-    for (var i = 0; i < this.clients.length; i++) {
+    for (var i = 0, llen = this.clients.length; i < llen; i++) {
         if (typeof this.clients[i] == "undefined") {
             continue;
         }
@@ -547,7 +547,7 @@ GameServer.prototype.updateClients = function () {
 
 GameServer.prototype.startingFood = function () {
     // Spawns the starting amount of food cells
-    for (var i = 0; i < this.config.foodStartAmount; i++) {
+    for (var i = 0, llen = this.config.foodStartAmount; i < llen; i++) {
         this.spawnFood();
     }
 };
@@ -613,7 +613,7 @@ GameServer.prototype.virusCheck = function () {
         var virusSquareSize = ( ( this.config.virusStartMass  ) * 110) >> 0;
 
         // Check for players
-        for (var i = 0; i < this.nodesPlayer.length; i++) {
+        for (var i = 0, llen = this.nodesPlayer.length; i < llen; i++) {
             var check = this.nodesPlayer[i];
 
             if (check.mass < this.config.virusStartMass) {
@@ -628,7 +628,7 @@ GameServer.prototype.virusCheck = function () {
         }
 
         // Check for other virus
-        for (var i = 0; i < this.nodesVirus.length; i++) {
+        for (var i = 0, llen = this.nodesVirus.length; i < llen; i++) {
             var check = this.nodesVirus[i];
             var squareR = check.getSquareSize();
             var dx = check.position.x - pos.x;
@@ -684,7 +684,7 @@ GameServer.prototype.updateMoveEngine = function () {
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
-        for (var j = 0; j < list.length; j++) {
+        for (var j = 0, llen = list.length; j < llen; j++) {
             var check = list[j];
 
             // if we're deleting from this.nodesPlayer, fix outer loop variables; we need to update its length, and maybe 'i' too
@@ -788,7 +788,7 @@ GameServer.prototype.splitCells = function (client) {
 
 GameServer.prototype.ejectMass = function (client) {
     if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
-        for (var i = 0; i < client.cells.length; i++) {
+        for (var i = 0, llen = client.cells.length; i < llen; i++) {
             var cell = client.cells[i];
             if ( (!cell) || (cell.mass < this.config.playerMinMassEject)) {
                 continue;
@@ -968,8 +968,7 @@ GameServer.prototype.getNearestVirus = function (cell) {
     var rightX = cell.position.x + r;
 
     // Loop through all viruses on the map. There is probably a more efficient way of doing this but whatever
-    var len = this.nodesVirus.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0, llen = this.nodesVirus.length; i < llen; i++) {
         var check = this.nodesVirus[i];
 
         if (typeof check === 'undefined') {
@@ -995,7 +994,7 @@ GameServer.prototype.updateCells = function () {
 
     // Loop through all player cells
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
-    for (var i = 0; i < this.nodesPlayer.length; i++) {
+    for (var i = 0, llen = this.nodesPlayer.length; i < llen; i++) {
         var cell = this.nodesPlayer[i];
 
         if (!cell) {
@@ -1106,7 +1105,7 @@ GameServer.prototype.formatTime = function () {
 };
 
 GameServer.prototype.getPlayers = function () {
-    for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client; i < this.clients.length; i++) {
+    for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client, llen = this.clients.length; i < llen; i++) {
         client = this.clients[i].playerTracker;
         if( client.cells.length > 0 || client.spectate ) -1 == client.disconnect && ("_socket" in this.clients[i] ? client.spectate ? spectate++ : humans++ : bots++, players++); else if (-1 == client.disconnect) players++;
     }
