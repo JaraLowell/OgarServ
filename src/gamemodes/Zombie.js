@@ -38,7 +38,7 @@ Zombie.prototype.makeZombie = function (player) {
     // turns a player into a zombie
     player.team = 0;
     player.color = this.zombieColor;
-    for (var i = 0; i < player.cells.length; i++) {
+    for (var i = 0, llen = player.cells.length; i < llen; i++) {
         // remove cell from players array
         var index = this.players.indexOf(player.cells[i]);
         if (index != -1) {
@@ -97,7 +97,7 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
     var r = cell.getSize();
 
     // Find team
-    for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
+    for (var i = 0, llen = cell.owner.visibleNodes.length; i < llen; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
 
@@ -143,7 +143,7 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
 Zombie.prototype.updateLB = function (gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
-    for (var i = 0; i < gameServer.clients.length; i++) {
+    for (var i = 0, llen = gameServer.clients.length; i < llen; i++) {
         if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].playerTracker.team == 0) {
             continue;
         }
@@ -171,4 +171,3 @@ Zombie.prototype.updateLB = function (gameServer) {
 
     this.rankOne = lb[0];
 };
-

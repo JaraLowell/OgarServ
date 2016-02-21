@@ -4,7 +4,7 @@ var Entity = require('../entity');
 function VO() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
     
-    this.ID = 3;
+    this.ID = 15;
     this.name = "Virus Off";
     this.decayMod = 1.0; // Modifier for decay rate (Multiplier)
     this.packetLB = 49; // Packet id for leaderboard packet (48 = Text List, 49 = List, 50 = Pie chart)
@@ -37,7 +37,7 @@ VO.prototype.pressQ = function(gameServer,player) {
 };
 
 VO.prototype.pressW = function(gameServer,player) {
-    for (var i = 0; i < client.cells.length; i++) {
+    for (var i = 0, llen = client.cells.length; i < llen; i++) {
         var cell = client.cells[i];
 
         if (!cell) {
