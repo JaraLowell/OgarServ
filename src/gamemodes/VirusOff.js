@@ -3,7 +3,7 @@ var Entity = require('../entity');
 
 function VO() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
-	
+    
     this.ID = 3;
     this.name = "Virus Off";
     this.decayMod = 1.0; // Modifier for decay rate (Multiplier)
@@ -37,16 +37,14 @@ VO.prototype.pressQ = function(gameServer,player) {
 };
 
 VO.prototype.pressW = function(gameServer,player) {
-    // Called when the W key is pressed
-    var client = player;
-for (var i = 0; i < client.cells.length; i++) {
-    var cell = client.cells[i];
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
 
         if (!cell) {
             continue;
         }
 
-        if (cell.mass < 32) {
+        if (cell.mass < gameServer.config.playerMinMassEject) {
             continue;
         }
 
@@ -57,22 +55,23 @@ for (var i = 0; i < client.cells.length; i++) {
         // Get starting position
         var size = cell.getSize() + 5;
         var startPos = {
-            x: cell.position.x + ( (size + 15) * Math.sin(angle) ),
-            y: cell.position.y + ( (size + 15) * Math.cos(angle) )
+            x: cell.position.x + ( (size + gameServer.config.ejectMass) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + gameServer.config.ejectMass) * Math.cos(angle) )
         };
 
         // Remove mass from parent cell
-        cell.mass -= 30
+        cell.mass -= gameServer.config.ejectMassLoss;
         // Randomize angle
         angle += (Math.random() * .4) - .2;
 
         // Create cell
-        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 15);
+        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, gameServer.config.ejectMass);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(160, 20);
+        ejected.setMoveEngineData(gameServer.config.ejectSpeed, 20);
+        ejected.setColor(cell.getColor());
 
-        //Shoot Virus
-	    gameServer.ejectVirus(ejected)
+        gameServer.addNode(ejected);
+        gameServer.setAsMovingNode(ejected);
     }
 };
 
