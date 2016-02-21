@@ -1,5 +1,4 @@
 var Packet = require('./packet');
-var Commands = require('./modules/CommandList');
 var LastMsg;
 var SpamBlock;
 
@@ -144,35 +143,17 @@ PacketHandler.prototype.handleMessage = function (message) {
             if (wname == "") wname = "Spectator";
 
             if (this.gameServer.config.serverAdminPass != '') {
-                var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
-                if (message.substr(0, passkey.length) == passkey) {
-                    var cmd = message.substr(passkey.length, message.length);
-                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd);
-                    var split = cmd.split(" "),
-                        first = split[0].toLowerCase(),
-                        execute = this.gameServer.commands[first];
-                    if (typeof execute != 'undefined') {
-                        execute(this.gameServer, split);
-                    } else {
-                        console.log("Invalid Command!");
-                    }
-                    break;
-                } else if (message.substr(0, 6) == "/rcon ") {
-                    console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!");
-                    break;
-                }
+                if ( this.rcon(message, wname) == true ) break;
             }
 
-            var date = new Date();
-
-            if (( date - this.socket.playerTracker.cTime ) < this.gameServer.config.chatIntervalTime) {
-                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (date - this.socket.playerTracker.cTime)) / 1000) % 60);
+            if ((this.gameServer.time - this.socket.playerTracker.cTime) < this.gameServer.config.chatIntervalTime) {
+                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (this.gameServer.time - this.socket.playerTracker.cTime)) / 1000) % 60);
                 var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
                 this.socket.sendPacket(packet);
                 break;
             }
 
-            this.socket.playerTracker.cTime = date;
+            this.socket.playerTracker.cTime = this.gameServer.time;
 
             if (message == LastMsg) {
                 ++SpamBlock;
@@ -200,6 +181,9 @@ PacketHandler.prototype.handleMessage = function (message) {
                 this.gameServer.clients[i].sendPacket(packet);
             }
             break;
+        case 102:
+            // Some score stuff it seems send by Agar.io
+            break;
         case 254:
             // Handshake setUint32(1, 5, !0)
             break;
@@ -224,6 +208,27 @@ PacketHandler.prototype.handleMessage = function (message) {
             break;
     }
 };
+
+PacketHandler.prototype.rcon = function(message, wname) {
+    var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
+    if (message.substr(0, passkey.length) == passkey) {
+        var cmd = message.substr(passkey.length, message.length);
+        console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd);
+        var split = cmd.split(" "),
+            first = split[0].toLowerCase(),
+            execute = this.gameServer.commands[first];
+        if (typeof execute != 'undefined') {
+            execute(this.gameServer, split);
+        } else {
+            console.log("Invalid Command!");
+        }
+        return true;
+    } else if (message.substr(0, 6) == "/rcon ") {
+        console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!");
+        return true;
+    }
+    return false;
+}
 
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
