@@ -29,14 +29,14 @@ Chat.prototype.build = function () {
     view.setUint8(4, color.b);
     var offset = 5;
     // Send name
-    for (var j = 0; j < nick.length; j++) {
+    for (var j = 0, llen = nick.length; j < llen; j++) {
         view.setUint16(offset, nick.charCodeAt(j), true);
         offset += 2;
     }
     view.setUint16(offset, 0, true);
     offset += 2;
     // send message
-    for (var j = 0; j < this.message.length; j++) {
+    for (var j = 0, llen = this.message.length; j < llen; j++) {
         view.setUint16(offset, this.message.charCodeAt(j), true);
         offset += 2;
     }

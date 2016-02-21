@@ -75,7 +75,7 @@ PlayerTracker.prototype.getSkin = function () {
 PlayerTracker.prototype.getScore = function (reCalcScore) {
     if (reCalcScore) {
         var s = 0;
-        for (var i = 0; i < this.cells.length; i++) {
+        for (var i = 0, llen = this.cells.length; i < llen; i++) {
             s += this.cells[i].mass;
             this.score = s;
             if (s > this.hscore) this.hscore = s;
@@ -165,7 +165,7 @@ PlayerTracker.prototype.update = function () {
         }
 
         // Update moving nodes
-        for (var i = 0; i < this.visibleNodes.length; i++) {
+        for (var i = 0, llen = this.visibleNodes.length; i < llen; i++) {
             var node = this.visibleNodes[i];
             if (node.sendUpdate()) {
                 // Sends an update if cell is moving
@@ -231,9 +231,8 @@ PlayerTracker.prototype.update = function () {
 // Viewing box
 PlayerTracker.prototype.updateSightRange = function () { // For view distance
     var totalSize = 1.0;
-    var len = this.cells.length;
 
-    for (var i = 0; i < len; i++) {
+    for (var i = 0, len = this.cells.length; i < len; i++) {
         if (!this.cells[i]) {
             continue;
         }
@@ -286,7 +285,7 @@ PlayerTracker.prototype.calcViewBox = function () {
     this.viewBox.height = this.sightRangeY;
 
     var newVisible = [];
-    for (var node, i = 0; i < this.gameServer.nodes.length; i++) {
+    for (var node, i = 0, llen = this.gameServer.nodes.length; i < llen; i++) {
         node = this.gameServer.nodes[i];
         if (!node) {
             continue;
@@ -354,7 +353,7 @@ PlayerTracker.prototype.getSpectateNodes = function () {
         this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
 
         // Use calcViewBox's way of looking for nodes
-        var newVisible = [];
+        var newVisible = [], specZoom = 750;
         for (var i = 0; i < this.gameServer.nodes.length; i++) {
             node = this.gameServer.nodes[i];
             if (!node) {
@@ -364,9 +363,10 @@ PlayerTracker.prototype.getSpectateNodes = function () {
             } else if (node.visibleCheck(this.viewBox, this.centerPos)) {
                 // Cell is in range of viewBox
                 newVisible.push(node);
+                if(node.size > specZoom) specZoom = node.size;
             }
         }
-        var specZoom = Math.pow(Math.min(40.5 / 750, 1.0), 0.4) * 0.6; // Constant zoom
+        specZoom = Math.pow(Math.min(40.5 / (specZoom * 3.14), 1.0), 0.4) * 0.6; // Constant zoom
         this.socket.sendPacket(new Packet.UpdatePosition(this.centerPos.x, this.centerPos.y, specZoom));
         return newVisible;
     }

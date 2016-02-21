@@ -166,7 +166,7 @@ Cell.prototype.calcMovePhys = function (config, gameServer) {
             this.position.x = x1;
             this.position.y = y1;
             var list = this.owner.gameServer.getCellsInRange(this);
-            for (var j = 0; j < list.length; j++) {
+            for (var j = 0, llen = list.length; j < llen; j++) {
                 var check = list[j];
                 check.onConsume(this, this.owner.gameServer);
                 check.setKiller(this);
@@ -187,7 +187,7 @@ Cell.prototype.calcMovePhys = function (config, gameServer) {
             totTravel = Math.min(totTravel + maxTravel, speed);
             var x1 = this.position.x + (totTravel * sin) + xd;
             var y1 = this.position.y + (totTravel * cos) + yd;
-            for (var i = 0; i < gameServer.nodesEjected.length; i++) {
+            for (var i = 0, llen = gameServer.nodesEjected.length; i < llen; i++) {
                 var cell = gameServer.nodesEjected[i];
                 if (this.nodeId == cell.nodeId) {
                     continue;

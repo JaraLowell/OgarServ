@@ -10,11 +10,12 @@ UpdateLeaderboard.prototype.build = function () {
     var lb = this.leaderboard;
     var bufferSize = 5;
     var validElements = 0;
+    var lbElemtns = lb.length;
 
     switch (this.packetLB) {
         case 48: // Custom Text List
             // Get size of packet
-            for (var i = 0; i < lb.length; i++) {
+            for (var i = 0; i < lbElemtns; i++) {
                 if (typeof lb[i] == "undefined") {
                     continue;
                 }
@@ -36,7 +37,7 @@ UpdateLeaderboard.prototype.build = function () {
             var offset = 5;
 
             // Loop through strings
-            for (var i = 0; i < lb.length; i++) {
+            for (var i = 0; i < lbElemtns; i++) {
                 if (typeof lb[i] == "undefined") {
                     continue;
                 }
@@ -58,7 +59,7 @@ UpdateLeaderboard.prototype.build = function () {
             break;
         case 49: // FFA-type Packet (List)
             // Get size of packet
-            for (var i = 0; i < lb.length; i++) {
+            for (var i = 0; i < lbElemtns; i++) {
                 if (typeof lb[i] == "undefined") {
                     continue;
                 }
@@ -79,7 +80,7 @@ UpdateLeaderboard.prototype.build = function () {
             view.setUint32(1, validElements, true); // Number of elements
 
             var offset = 5;
-            for (var i = 0; i < lb.length; i++) {
+            for (var i = 0; i < lbElemtns; i++) {
                 if (typeof lb[i] == "undefined") {
                     continue;
                 }
@@ -108,7 +109,7 @@ UpdateLeaderboard.prototype.build = function () {
             }
             return buf;
         case 50: // Teams-type Packet (Pie Chart)
-            validElements = lb.length;
+            validElements = lbElemtns;
             bufferSize += (validElements * 4);
 
             var buf = new ArrayBuffer(bufferSize);
@@ -128,4 +129,3 @@ UpdateLeaderboard.prototype.build = function () {
             break;
     }
 };
-

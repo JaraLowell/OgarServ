@@ -76,6 +76,7 @@ Commands.list = {
         console.log("\u001B[36mpause      \u001B[0m: pause game , freeze all cells");
         console.log("\u001B[36mreload     \u001B[0m: reload config");
         console.log("\u001B[36msay        \u001B[0m: chat from console");
+        console.log("\u001B[36mskin       \u001B[0m: change cell(s) skin by client ID");
         console.log("\u001B[36msplit      \u001B[0m: force a player to split");
         console.log("\u001B[36mstatus     \u001B[0m: get server status");
         console.log("\u001B[36mtp         \u001B[0m: teleport player to specified location");
@@ -440,6 +441,31 @@ Commands.list = {
                 collom = 0;
             }
         }
+    },
+    skin: function (gameServer, split) {
+        // Validation checks
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
+            return;
+        }
+        var skin = split[2];
+        if (typeof skin == 'undefined') {
+            console.log("\u001B[36mServer: \u001B[0mPlease type a valid skin");
+            return;
+        }
+        // Change name
+        for (var i = 0; i < gameServer.clients.length; i++) {
+            var client = gameServer.clients[i].playerTracker;
+
+            if (client.pID == id) {
+                console.log("\u001B[36mServer: \u001B[0mChanging " + client.name + " skin to " + skin);
+                client.skin = skin;
+                return;
+            }
+        }
+        // Error
+        console.log("\u001B[36mServer: \u001B[0mPlayer " + id + " was not found");
     },
     status: function (gameServer, split) {
         var serv = gameServer.getPlayers();

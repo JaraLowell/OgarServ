@@ -8,7 +8,7 @@ function SetBorder(left, right, top, bottom) {
 module.exports = SetBorder;
 
 SetBorder.prototype.build = function () {
-    var version = "OgarServ 1.6.3 by Jara Lowell";
+    var version = "OgarServ 1.6.4 by Jara Lowell";
     var buf = new ArrayBuffer(39 + 2 * version.length);
     var view = new DataView(buf);
 
@@ -20,11 +20,10 @@ SetBorder.prototype.build = function () {
     var offset = 33;
     view.setUint32(offset, 1, true);
     offset += 4;
-    for (var j = 0; j < version.length; j++) {
+    for (var j = 0, llen = version.length; j < llen; j++) {
         view.setUint16(offset, version.charCodeAt(j), true);
         offset += 2;
     }
     view.setUint16(offset, 0, true);
     return buf;
 };
-

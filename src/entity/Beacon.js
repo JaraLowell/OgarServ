@@ -62,7 +62,7 @@ Beacon.prototype.feed = function(feeder, gameServer) {
         if(largest) {
             color = largest.color;
             // Do something to each of their cells:
-            for(var i = 0; i < largest.cells.length; i++) {
+            for(var i = 0, llen = largest.cells.length; i < llen; i++) {
                 var cell = largest.cells[i];
                 while(cell.mass > 10) {
                     cell.mass -= gameServer.config.ejectMassLoss;

@@ -28,7 +28,7 @@ module.exports = UpdateNodes;
 UpdateNodes.prototype.build = function () {
     // Calculate nodes sub packet size before making the data view
     var nodesLength = 0;
-    for (var i = 0; i < this.nodes.length; i++) {
+    for (var i = 0, llen = this.nodes.length; i < llen; i++) {
         var node = this.nodes[i];
         if (typeof node == "undefined") {
             continue;
@@ -51,7 +51,7 @@ UpdateNodes.prototype.build = function () {
     view.setUint16(1, this.destroyQueue.length, true); // Nodes to be destroyed
 
     var offset = 3;
-    for (var i = 0; i < this.destroyQueue.length; i++) {
+    for (var i = 0, llen = this.destroyQueue.length; i < llen; i++) {
         var node = this.destroyQueue[i];
 
         if (!node) {
@@ -69,7 +69,7 @@ UpdateNodes.prototype.build = function () {
         offset += 8;
     }
 
-    for (var i = 0; i < this.nodes.length; i++) {
+    for (var i = 0, llen = this.nodes.length; i < llen; i++) {
         var node = this.nodes[i];
 
         if (typeof node == "undefined") {
@@ -138,7 +138,7 @@ UpdateNodes.prototype.build = function () {
     offset += 8;
 
     // Destroy queue + nonvisible nodes
-    for (var i = 0; i < this.destroyQueue.length; i++) {
+    for (var i = 0, llen = this.destroyQueue.length; i < llen; i++) {
         var node = this.destroyQueue[i];
 
         if (!node) {
@@ -148,7 +148,7 @@ UpdateNodes.prototype.build = function () {
         view.setUint32(offset, node.nodeId, true);
         offset += 4;
     }
-    for (var i = 0; i < this.nonVisibleNodes.length; i++) {
+    for (var i = 0, llen = this.nonVisibleNodes.length; i < llen; i++) {
         var node = this.nonVisibleNodes[i];
 
         if (!node) {
@@ -158,6 +158,5 @@ UpdateNodes.prototype.build = function () {
         view.setUint32(offset, node.nodeId, true);
         offset += 4;
     }
-
     return buf;
 };

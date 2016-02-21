@@ -71,7 +71,7 @@ FFA.prototype.onPlayerSpawn = function (gameServer, player) {
 FFA.prototype.updateLB = function (gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
-    for (var i = 0; i < gameServer.clients.length; i++) {
+    for (var i = 0, llen = gameServer.clients.length; i < llen; i++) {
         if (typeof gameServer.clients[i] == "undefined") {
             continue;
         }

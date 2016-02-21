@@ -70,7 +70,7 @@ Experimental2.prototype.spawnMotherCell = function(gameServer) {
         var pos =  gameServer.getRandomPosition();
 
         // Check for players
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
+        for (var i = 0, llen = gameServer.nodesPlayer.length; i < llen; i++) {
             var check = gameServer.nodesPlayer[i];
 
             var r = check.getSize(); // Radius of checking player cell
@@ -115,7 +115,7 @@ Experimental2.prototype.spawnMovingVirus = function(gameServer) {
         var pos =  gameServer.getRandomPosition();
 
         // Check for players
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
+        for (var i = 0, llen = gameServer.nodesPlayer.length; i < llen; i++) {
             var check = gameServer.nodesPlayer[i];
 
             var r = check.getSize(); // Radius of checking player cell
@@ -165,7 +165,7 @@ Experimental2.prototype.spawnStickyCell = function(gameServer) {
         var pos =  gameServer.getRandomPosition();
 
         // Check for players
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
+        for (var i = 0, llen = gameServer.nodesPlayer.length; i < llen; i++) {
             var check = gameServer.nodesPlayer[i];
 
             var r = check.getSize(); // Radius of checking player cell
