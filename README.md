@@ -1,8 +1,6 @@
 ## Downloads
 See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.6.2)
 
-###I know it only bin 2 days, but needed to push this out; Lowering memory a lot as wel as fixing the shaky cells issue. This one needs new modules and one module less! `"node install ws http fs sys mysql url underscore"`  or `"jx install ws http fs sys mysql url underscore"` we no longer now use request!
-
 ## Project Info
 ![Language](https://img.shields.io/badge/language-Java-yellow.svg)
 [![License](https://img.shields.io/badge/license-GPLv3-663399.svg)](https://github.com/JaraLowell/OgarServ/blob/OgarServer/LICENSE)
