@@ -650,34 +650,22 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
 
 GameServer.prototype.updateMoveEngine = function () {
     // Move player cells
-    
-    /* Removing this for a test, as i think this do noting yet adds lag
-    var len = this.nodesPlayer.length;
-
-    // Sort cells to move the cells close to the mouse first
-    var srt = [];
-    for (var i = 0; i < len; i++) {
-        srt[i] = i;
-    }
-
-    for (var i = 0; i < len; i++) {
-        for (var j = i + 1; j < len; j++) {
-            var clientI = this.nodesPlayer[srt[i]].owner;
-            var clientJ = this.nodesPlayer[srt[j]].owner;
-            if (this.getDist(this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y) > this.getDist(this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y)) {
-                var aux = srt[i];
-                srt[i] = srt[j];
-                srt[j] = aux;
-            }
-        }
-    }
-    */
-
     for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
         var cell = this.nodesPlayer[i];
 
+        // Recycle unused nodes
+        while (typeof cell == "undefined") {
+            // Remove moving cells that are undefined
+            this.nodesPlayer.splice(i, 1);
+            cell = this.nodesPlayer[i];
+
+            cell.onAutoMove(this);
+            cell.calcMovePhys(this.config);
+            continue;
+        }
+
         // Do not move cells that have already been eaten or have collision turned off
-        if (!cell) { //  || (cell.ignoreCollision)) {
+        if (!cell) {
             continue;
         }
 
@@ -744,47 +732,45 @@ GameServer.prototype.setAsMovingNode = function (node) {
 
 GameServer.prototype.splitCells = function (client) {
     var len = client.cells.length;
-    for (var i = 0; i < len; i++) {
-        if (client.cells.length >= this.config.playerMaxCells) {
-            // Player cell limit
-            continue;
+    if (len < this.config.playerMaxCells) {
+        for (var i = 0; i < len; i++) {
+            var cell = client.cells[i];
+
+            if (!cell) {
+                continue;
+            }
+
+            if (cell.mass < this.config.playerMinMassSplit) {
+                continue;
+            }
+
+            // Get angle
+            var deltaY = client.mouse.y - cell.position.y;
+            var deltaX = client.mouse.x - cell.position.x;
+            var angle = Math.atan2(deltaX, deltaY);
+
+            // Get starting position
+            var startPos = {
+                x: cell.position.x,
+                y: cell.position.y
+            };
+            // Calculate mass and speed of splitting cell
+            var newMass = cell.mass / 2;
+            cell.mass = newMass;
+
+            // Create cell
+            var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
+            split.setAngle(angle);
+            var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+            split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
+            split.calcMergeTime(this.config.playerRecombineTime);
+            split.ignoreCollision = true;
+            split.restoreCollisionTicks = 10; //vanilla agar.io = 10
+
+            // Add to moving cells list
+            this.setAsMovingNode(split);
+            this.addNode(split);
         }
-
-        var cell = client.cells[i];
-        if (!cell) {
-            continue;
-        }
-
-        if (cell.mass < this.config.playerMinMassSplit) {
-            continue;
-        }
-
-        // Get angle
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
-        var angle = Math.atan2(deltaX, deltaY);
-
-        // Get starting position
-        var startPos = {
-        	  x: cell.position.x, 
-        	  y: cell.position.y
-        };
-        // Calculate mass and speed of splitting cell
-        var newMass = cell.mass / 2;
-        cell.mass = newMass;
-
-        // Create cell
-        var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
-        split.setAngle(angle);
-        var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
-        split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
-        split.calcMergeTime(this.config.playerRecombineTime);
-        split.ignoreCollision = true;
-        split.restoreCollisionTicks = 10; //vanilla agar.io = 10
-
-        // Add to moving cells list
-        this.setAsMovingNode(split);
-        this.addNode(split);
     }
 };
 

@@ -306,7 +306,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     // To mimic agar.io, get distance from center to mouse and apply a part of the distance
     var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
     var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-    var speed = Math.min(dist / 10, 390); // Not to break laws of universe by going faster than light speed
+    var speed = Math.min(dist / 24, 124); // Not to break laws of universe by going faster than light speed
 
     this.centerPos.x += speed * Math.sin(angle);
     this.centerPos.y += speed * Math.cos(angle);
@@ -326,7 +326,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
 
     // Use calcViewBox's way of looking for nodes
-    var newVisible = [], specZoom = 750;
+    var newVisible = [], specZoom = 250;
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
         if (!node) {
