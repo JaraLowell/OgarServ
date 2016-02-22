@@ -135,7 +135,7 @@ PlayerTracker.prototype.update = function () {
             var newVisible = this.calcViewBox();
 
             // Compare and destroy nodes that are not seen
-            for (var i = 0; i < this.visibleNodes.length; i++) {
+            for (var i = 0, d = this.visibleNodes.length; i < d; i++) {
                 var index = newVisible.indexOf(this.visibleNodes[i]);
                 if (index == -1) {
                     // Not seen by the client anymore
@@ -144,7 +144,7 @@ PlayerTracker.prototype.update = function () {
             }
 
             // Add nodes to client's screen if client has not seen it already
-            for (var i = 0; i < newVisible.length; i++) {
+            for (var i = 0, d = newVisible.length; i < d; i++) {
                 var index = this.visibleNodes.indexOf(newVisible[i]);
                 if (index == -1) {
                     updateNodes.push(newVisible[i]);
@@ -157,7 +157,7 @@ PlayerTracker.prototype.update = function () {
         } else {
             this.tickViewBox--;
             // Add nodes to screen
-            for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
+            for (var i = 0, d = this.nodeAdditionQueue.length; i < d; i++) {
                 var node = this.nodeAdditionQueue[i];
                 this.visibleNodes.push(node);
                 updateNodes.push(node);

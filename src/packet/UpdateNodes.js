@@ -109,7 +109,7 @@ UpdateNodes.prototype.build = function () {
         }
 
         if (bits) {
-            for (var j = 0; j < skin.length; j++) {
+            for (var j = 0,klen = skin.length; j < klen; j++) {
                 var c = skin.charCodeAt(j);
                 if (c) {
                     view.setUint8(offset, c, true);
@@ -121,7 +121,7 @@ UpdateNodes.prototype.build = function () {
         }
 
         if (name) {
-            for (var j = 0; j < name.length; j++) {
+            for (var j = 0, klen = name.length; j < klen; j++) {
                 var c = name.charCodeAt(j);
                 if (c) {
                     view.setUint16(offset, c, true);
