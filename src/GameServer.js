@@ -1061,7 +1061,7 @@ GameServer.prototype.loadConfig = function () {
 GameServer.prototype.switchSpectator = function (player) {
     var zname = player.name;
     if (zname === "") zname = "Client";
-    console.log("\u001B[35m" + zname + " joined spectators\u001B[0m");
+    if(!player.spectatedPlayer) console.log("\u001B[35m" + zname + " joined spectators\u001B[0m");
 
     if (this.gameMode.specByLeaderboard) {
         player.spectatedPlayer++;
