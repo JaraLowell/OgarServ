@@ -315,9 +315,9 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    // We're going to use config's view base times 3.5
+    // We're going to use config's view base times 4.5
 
-    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
+    var mult = 4.5; // To simplify multiplier, in case this needs editing later on
     this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
     this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
     this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;

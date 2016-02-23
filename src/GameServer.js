@@ -654,7 +654,7 @@ GameServer.prototype.updateMoveEngine = function () {
         var cell = this.nodesPlayer[i];
 
         // Recycle unused nodes
-        while (typeof cell == "undefined") {
+        if (typeof cell == "undefined") {
             // Remove moving cells that are undefined
             this.nodesPlayer.splice(i, 1);
             cell = this.nodesPlayer[i];
