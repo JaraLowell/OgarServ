@@ -16,7 +16,6 @@ function HungerGames() {
         {x: 1600, y: 6200}, {x: 3200, y: 6200}, {x: 4800, y: 6200}  // Bottom
     ];
     this.contenderSpawnPoints;
-    this.borderDec = 100; // Border shrinks by this size everytime someone dies
 }
 
 module.exports = HungerGames;
@@ -51,10 +50,6 @@ HungerGames.prototype.spawnVirus = function (gameServer, pos) {
 
 HungerGames.prototype.onPlayerDeath = function (gameServer) {
     var config = gameServer.config;
-    config.borderLeft += this.borderDec;
-    config.borderRight -= this.borderDec;
-    config.borderTop += this.borderDec;
-    config.borderBottom -= this.borderDec;
 
     // Remove all cells
     var len = gameServer.nodes.length;
