@@ -734,16 +734,17 @@ GameServer.prototype.splitCells = function (client) {
     var len = client.cells.length;
     if (len < this.config.playerMaxCells) {
         for (var i = 0; i < len; i++) {
-            var cell = client.cells[i];
+            if (client.cells.length >= this.config.playerMaxCells) {
+                continue;
+            }
 
+            var cell = client.cells[i];
             if (!cell) {
                 continue;
             }
-
             if (cell.mass < this.config.playerMinMassSplit) {
                 continue;
             }
-
             // Get angle
             var deltaY = client.mouse.y - cell.position.y;
             var deltaX = client.mouse.x - cell.position.x;
