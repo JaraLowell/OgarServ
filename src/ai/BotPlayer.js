@@ -50,7 +50,7 @@ BotPlayer.prototype.updateSightRange = function () { // For view distance
 
 BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
     // Remove nodes from visible nodes if possible
-    for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
+    for (var i = 0, llen = this.nodeDestroyQueue.length; i < llen; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
@@ -119,7 +119,7 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                     var dist = this.getDist(cell, check) - (r + check.getSize());
                     if (dist < 300) {
                         this.predators.push(check);
-                        if ((this.cells.length == 1) && (dist < 0)) {
+                        if ((this.cells.length < this.gameServer.config.playerMaxCells) && (dist < 0.25)) {
                             this.juke = true;
                         }
                     }
@@ -135,9 +135,15 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 if (!check.isMotherCell) this.virus.push(check); // Only real viruses! No mother cells;
                 break;
             case 3: // Ejected mass
-                if (cell.mass > 16) {
+                if (cell.mass > check.mass) {
                     this.food.push(check);
                 }
+                break;
+            case 4: // Sticky Cell
+                this.predators.push(check);
+                break;
+            case 5: // Beacon Cell
+                this.virus.push(check);
                 break;
             default:
                 break;
@@ -271,7 +277,7 @@ BotPlayer.prototype.decide = function (cell) {
 
             var massReq = 1.25 * (this.target.mass * 2 ) * this.cells.length; // Mass required to splitkill the target
 
-            if ((cell.mass > massReq) && (this.cells.length < 3)) { // Will not split into more than 4 cells
+            if ((cell.mass > massReq) && (this.cells.length < this.gameServer.config.playerMaxCells)) { // Will not split into more than 6 cells
                 var splitDist = (4 * (cell.getSpeed() * 6)) + (cell.getSize() * 1.75); // Distance needed to splitkill
                 var distToTarget = this.getAccDist(cell, this.target); // Distance between the target and this cell
 
@@ -391,16 +397,15 @@ BotPlayer.prototype.getRandom = function (list) {
 BotPlayer.prototype.combineVectors = function (list) {
     var pos = {x: 0, y: 0};
     var check;
-    for (var i = 0; i < list.length; i++) {
+    for (var i = 0, llen = list.length; i < llen; i++) {
         check = list[i];
         pos.x += check.position.x;
         pos.y += check.position.y;
     }
 
     // Get avg
-    pos.x = pos.x / list.length;
-    pos.y = pos.y / list.length;
-
+    pos.x = pos.x / llen;
+    pos.y = pos.y / llen;
     return pos;
 };
 
@@ -419,7 +424,7 @@ BotPlayer.prototype.checkPath = function (cell, check) {
 // Gets the biggest cell from the array
 BotPlayer.prototype.getBiggest = function (list) {
     var biggest = list[0];
-    for (var i = 1; i < list.length; i++) {
+    for (var i = 1, llen = list.length; i < llen; i++) {
         var check = list[i];
         if (check.mass > biggest.mass) {
             biggest = check;
@@ -430,7 +435,7 @@ BotPlayer.prototype.getBiggest = function (list) {
 
 BotPlayer.prototype.findNearbyVirus = function (cell, checkDist, list) {
     var r = cell.getSize() + 100; // Gets radius + virus radius
-    for (var i = 0; i < list.length; i++) {
+    for (var i = 0, llen = list.length; i < llen; i++) {
         var check = list[i];
         var dist = this.getDist(cell, check) - r;
         if (checkDist > dist) {
@@ -482,10 +487,5 @@ BotPlayer.prototype.getAngle = function (c1, c2) {
 };
 
 BotPlayer.prototype.reverseAngle = function (angle) {
-    if (angle > Math.PI) {
-        angle -= Math.PI;
-    } else {
-        angle += Math.PI;
-    }
-    return angle;
+    return angle > 3.14159 ? angle -= 3.14159 : angle += 3.14159;
 };

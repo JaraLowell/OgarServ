@@ -596,7 +596,11 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
             var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
             player.socket.sendPacket(packet);
         }
-        console.log("\u001B[33m" + player.name + " joined the game\u001B[0m");
+        var info = "";
+        if (player.skin) {
+            info = " (" + player.skin.slice(1) + ")";
+        }
+        console.log("\u001B[33m" + player.name + info + " joined the game\u001B[0m");
     }
 
     this.addNode(cell);
@@ -732,7 +736,7 @@ GameServer.prototype.splitCells = function (client) {
     if (len < this.config.playerMaxCells) {
         for (var i = 0; i < len; i++) {
             if (client.cells.length >= this.config.playerMaxCells) {
-                continue;
+                break;
             }
 
             var cell = client.cells[i];
@@ -1043,10 +1047,6 @@ GameServer.prototype.loadConfig = function () {
 };
 
 GameServer.prototype.switchSpectator = function (player) {
-    var zname = player.name;
-    if (zname === "") zname = "Client";
-    if(!player.spectatedPlayer) console.log("\u001B[35m" + zname + " joined spectators\u001B[0m");
-
     if (this.gameMode.specByLeaderboard) {
         player.spectatedPlayer++;
         if (player.spectatedPlayer == this.leaderboard.length) {
