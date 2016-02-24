@@ -436,9 +436,9 @@ GameServer.prototype.mainLoop = function () {
     if (this.tick >= 50) {
         // Loop main functions
         if (this.run) {
-            setTimeout(this.cellTick(), 0);
-            setTimeout(this.spawnTick(), 0);
-            setTimeout(this.gamemodeTick(), 0);
+            setTimeout(this.cellTick.bind(this), 0);
+            setTimeout(this.spawnTick.bind(this), 0);
+            setTimeout(this.gamemodeTick.bind(this), 0);
         }
 
         // Update the client's maps
