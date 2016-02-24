@@ -28,7 +28,8 @@ BotPlayer.prototype.getLowestCell = function () {
 
     // Starting cell
     var lowest = this.cells[0];
-    for (var i = 1; i < this.cells.length; i++) {
+    var i = this.cells.length;
+    while (i--) {
         if (lowest.mass > this.cells[i].mass) {
             lowest = this.cells[i];
         }
@@ -119,11 +120,12 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                     var dist = this.getDist(cell, check) - (r + check.getSize());
                     if (dist < 300) {
                         this.predators.push(check);
-                        if ((this.cells.length < this.gameServer.config.playerMaxCells) && (dist < 0.25)) {
+                        if ((this.cells.length < this.gameServer.config.playerMaxCells) && (dist < r + check.getSize())) { // was == 1
                             this.juke = true;
                         }
                     }
                     this.threats.push(check);
+                    break;
                 } else {
                     this.threats.push(check);
                 }
@@ -140,7 +142,7 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 }
                 break;
             case 4: // Sticky Cell
-                this.predators.push(check);
+                this.threats.push(check);
                 break;
             case 5: // Beacon Cell
                 this.virus.push(check);
@@ -160,9 +162,7 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
 
     // Action
     this.decide(cell);
-
     this.nodeDestroyQueue = []; // Empty
-
 };
 
 // Custom
@@ -356,12 +356,12 @@ BotPlayer.prototype.decide = function (cell) {
                 r++;
             }
         }
-        // Merge 
+        // Merge
         if (r >= 2) {
             this.mouse.x = this.centerPos.x;
             this.mouse.y = this.centerPos.y;
-            this.gameState = 0;
         }
+        this.gameState = 0;
     }
 };
 
