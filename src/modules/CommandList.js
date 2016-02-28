@@ -252,11 +252,7 @@ Commands.list = {
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                 }
-                if (client.socket.remoteAddress) {
-                    gameServer.nospawn[client.socket.remoteAddress] = true;
-                } else {
-                    client.socket.close();
-                }
+                client.socket.close();
                 console.log("\u001B[36mServer: \u001B[0mKicked " + id);
                 break;
             }
