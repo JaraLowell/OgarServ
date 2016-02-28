@@ -997,6 +997,12 @@ GameServer.prototype.updateCells = function () {
             continue;
         }
 
+        if (cell.mass < 1) {
+            // Cell has 0 Mass? Seriously... Buh bye~        	
+            this.removeNode(cell);
+            continue;
+        }
+
         // Recombining
         if (cell.recombineTicks > 0) {
             cell.recombineTicks--;
