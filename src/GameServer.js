@@ -56,6 +56,7 @@ function GameServer() {
     this.config = {                   // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,     // Maximum amount of connections to the server.
         serverMaxConnPerIp: 9,        // Max Connections from one IP.
+        serverKickSpectator: 0,       // Kicks Spectators after x time
         serverPort: 4411,             // Server port
         serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
@@ -168,8 +169,8 @@ GameServer.prototype.start = function () {
         this.startingFood();
 
         // Start Main Loop
-        this.MasterPing();
-        setInterval(this.mainLoop.bind(this), 5);
+        setTimeout(this.MasterPing(), 0);
+        setInterval(this.mainLoop.bind(this), 3);
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -262,6 +263,14 @@ GameServer.prototype.start = function () {
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
+
+        if(this.config.serverKickSpectator > 0) {
+            setTimeout(function () {
+                if(ws.playerTracker.spectate && ws.playerTracker.name == "") {
+                    ws.close();
+                }
+            }.bind(this), this.config.serverKickSpectator * 1000);
+        }
 
         var bindObject = {server: this, socket: ws};
         ws.on('error', close.bind(bindObject, 1));
@@ -444,18 +453,16 @@ GameServer.prototype.mainLoop = function () {
         // Update the client's maps
         this.updateClients();
         var info = this.getPlayers();
-
         this.tickMain++;
 
-        if (this.config.serverLiveStats && (this.tickMain == 20 || this.tickMain >= 40)) {
+        if (this.config.serverLiveStats && this.tickMain >= 20) {
             this.log.onWriteConsole(this);
         }
 
         if (this.run) {
             // Update cells/leaderboard loop
-            if (this.tickMain >= 40) { // 1 Second
+            if (this.tickMain >= 20) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 0);
-
                 // No players... lets play with leaderboard
                 if (info.humans == 0) {
                     var newLB = [];
@@ -470,7 +477,6 @@ GameServer.prototype.mainLoop = function () {
                     this.gameMode.updateLB = Gamemode.get(this.gameMode.ID).updateLB;
                     this.welcome = 0;
                 }
-
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
@@ -504,14 +510,14 @@ GameServer.prototype.mainLoop = function () {
         }
 
         // Reset
-        if (this.tickMain >= 40) {
+        if (this.tickMain >= 20) {
             this.tickMain = 0;
         }
         this.tick = 0;
 
         // Send Master Server Ping
         if (this.time - this.master >= 1805000) {
-            this.MasterPing();
+            setTimeout(this.MasterPing(), 0);
         }
     }
 };
