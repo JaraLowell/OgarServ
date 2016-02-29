@@ -15,6 +15,7 @@
     this.moveEngineSpeed = 0;
     this.moveDecay = 0.75;
     this.angle = 0; // Angle of movement
+    this.collisionRestoreTicks = 0;
 }
 
 module.exports = Cell;
@@ -38,8 +39,8 @@ Cell.prototype.getSkin = function () {
 
 Cell.prototype.setColor = function (color) {
     this.color.r = color.r;
-    this.color.b = color.b;
     this.color.g = color.g;
+    this.color.b = color.b;
 };
 
 Cell.prototype.getColor = function () {

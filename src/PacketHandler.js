@@ -30,6 +30,7 @@ PacketHandler.prototype.handleMessage = function (message) {
         return;
     }
 
+    this.socket.playerTracker.pin += message.length;
     var buffer = stobuf(message);
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);
@@ -177,7 +178,7 @@ PacketHandler.prototype.handleMessage = function (message) {
 
             var packet = new Packet.Chat(this.socket.playerTracker, message);
             // Send to all clients (broadcast)
-            for (var i = 0; i < this.gameServer.clients.length; i++) {
+            for (var i = 0, llen = this.gameServer.clients.length; i < llen; i++) {
                 this.gameServer.clients[i].sendPacket(packet);
             }
             break;

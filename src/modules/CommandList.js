@@ -202,9 +202,6 @@ Commands.list = {
             }
         }
     },
-    exit: function (gameServer, split) {
-        gameServer.exitserver();
-    },
     food: function (gameServer, split) {
         var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
         var mass = parseInt(split[3]);
@@ -329,6 +326,32 @@ Commands.list = {
                     client.cells[j].calcMergeTime(-10000);
                 }
                 console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to merge cells");
+                break;
+            }
+        }
+    },
+    split: function (gameServer, split) {
+        // Validation checks
+        var id = parseInt(split[1]);
+        var count = parseInt(split[2]);
+        if (isNaN(id)) {
+            console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
+            return;
+        }
+        if (isNaN(count)) {
+            //Split into 16 cells
+            count = 4;
+        }
+
+        // Split!
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                //Split
+                for (var i = 0; i < count; i++) {
+                    gameServer.splitCells(client);
+                }
+                console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to split cells");
                 break;
             }
         }
@@ -481,32 +504,6 @@ Commands.list = {
         console.log("Server has been running for " + seconds2time(process.uptime()));
         console.log("Current game mode: " + gameServer.gameMode.name);
     },
-    split: function (gameServer, split) {
-        // Validation checks
-        var id = parseInt(split[1]);
-        var count = parseInt(split[2]);
-        if (isNaN(id)) {
-            console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
-            return;
-        }
-        if (isNaN(count)) {
-            //Split into 16 cells
-            count = 4;
-        }
-
-        // Split!
-        for (var i in gameServer.clients) {
-            if (gameServer.clients[i].playerTracker.pID == id) {
-                var client = gameServer.clients[i].playerTracker;
-                //Split
-                for (var i = 0; i < count; i++) {
-                    gameServer.splitCells(client);
-                }
-                console.log("\u001B[36mServer: \u001B[0mForced " + client.name + " to split cells");
-                break;
-            }
-        }
-    },
     tp: function (gameServer, split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
@@ -567,6 +564,9 @@ Commands.list = {
         var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
         gameServer.addNode(v);
         console.log("\u001B[36mServer: \u001B[0mSpawned 1 virus at (" + pos.x + " , " + pos.y + ")");
+    },
+    exit: function (gameServer, split) {
+        gameServer.exitserver();
     },
     say: function (gameServer, split) {
         var message = "";

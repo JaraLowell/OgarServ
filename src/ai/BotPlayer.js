@@ -37,6 +37,23 @@ BotPlayer.prototype.getLowestCell = function () {
     return lowest;
 };
 
+BotPlayer.prototype.getHighestCell = function() {
+    // Gets the cell with the highest mass
+    if (this.cells.length <= 0) {
+        return null; // Error!
+    }
+
+    // Starting cell
+    var highest = this.cells[0];
+    var i = this.cells.length;
+    while (i--) {
+        if (highest.mass > this.cells[i].mass) {
+            highest = this.cells[i];
+        }
+    }
+    return highest;
+};
+
 // Override
 BotPlayer.prototype.updateSightRange = function () { // For view distance
     var range = 1500; // Base sight range
@@ -142,7 +159,7 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 }
                 break;
             case 4: // Sticky Cell
-                this.threats.push(check);
+                this.virus.push(check);
                 break;
             case 5: // Beacon Cell
                 this.virus.push(check);
@@ -162,10 +179,24 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
 
     // Action
     this.decide(cell);
+
     this.nodeDestroyQueue = []; // Empty
+
 };
 
 // Custom
+BotPlayer.prototype.updatePrey = function(cell) {
+    // Recalculate prey
+    this.prey = [];
+    for (var i in this.visibleNodes) {
+        var check = this.visibleNodes[i];
+        if (check.cellType == 0 && cell.mass > (check.mass * 1.33) && check.mass > cell.mass / 5) {
+            // Prey
+            this.prey.push(check);
+        }
+    }
+};
+
 BotPlayer.prototype.clearLists = function () {
     this.predators = [];
     this.threats = [];
@@ -256,11 +287,6 @@ BotPlayer.prototype.decide = function (cell) {
 
             this.mouse = {x: x1, y: y1};
 
-            // Cheating
-            if (cell.mass < 250) {
-                cell.mass += 0;
-            }
-
             if (this.juke) {
                 // Juking
                 this.gameServer.splitCells(this);
@@ -268,13 +294,16 @@ BotPlayer.prototype.decide = function (cell) {
 
             break;
         case 3: // Target prey
-            if ((!this.target) || (cell.mass < (this.target.mass * 1.2)) || this.target.mass > 200 || (this.visibleNodes.indexOf(this.target) == -1)) {
+            // Recalculate prey based on bot's biggest cell
+            this.updatePrey(this.getHighestCell());
+
+            if ((!this.target) || (cell.mass < (this.target.mass * 1.33)) || this.target.mass > 200 || (this.visibleNodes.indexOf(this.target) == -1)) {
+                if (this.prey.length == 0) break; // Error!
                 this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 
             this.mouse = {x: this.target.position.x, y: this.target.position.y};
-
             var massReq = 1.25 * (this.target.mass * 2 ) * this.cells.length; // Mass required to splitkill the target
 
             if ((cell.mass > massReq) && (this.cells.length < this.gameServer.config.playerMaxCells)) { // Will not split into more than 6 cells

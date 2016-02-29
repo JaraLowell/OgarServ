@@ -97,18 +97,22 @@ function GameServer() {
         ejectSpeed: 160,              // Base speed of ejected cells
         ejectSpawnPlayer: 50,         // Chance for a player to spawn from ejected mass
         playerStartMass: 10,          // Starting mass of the player cell.
+        playerBotGrowEnabled: 1,      // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
         playerMaxMass: 22500,         // Maximum mass a player can have
         playerSpeed: 30,              // Player base speed
         playerSplitSpeed: 130,        // Speed of the splitting cell.
+        playerSmoothSplit: 1,         // Whether smooth splitting is used 1 is on
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
         playerRecombineTime: 30,      // Base amount of seconds before a cell is allowed to recombine
+        playerMassAbsorbed: 1.0,      // Fraction of player cell's mass gained upon eating
         playerMassDecayRate: 0.002,   // Amount of mass lost per second
         playerMinMassDecay: 9,        // Minimum mass for decay to occur
+        playerFastDecay: 4,           // Double the decay if cell is over 5000 mass. (1 is off, 5 is decay 5x faster)
         playerMaxNickLength: 15,      // Maximum nick length
         playerDisconnectTime: 60,     // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        playerFastDecay: 5,           // Double the decay if cell is over 5000 mass. (0 is off, 5 is decay 5x faster)
+        playerFastDecay: 1,           // Double the decay if cell is over 5000 mass. (1 is off, 5 is decay 5x faster)
         tourneyMaxPlayers: 12,        // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10,          // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30,           // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
@@ -264,12 +268,12 @@ GameServer.prototype.start = function () {
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
 
-        if(this.config.serverKickSpectator > 0) {
+        if(this.config.specKick > 0) {
             setTimeout(function () {
                 if(ws.playerTracker.spectate && ws.playerTracker.name == "") {
                     ws.close();
                 }
-            }.bind(this), this.config.serverKickSpectator * 1000);
+            }.bind(this), this.config.specKick * 1000);
         }
 
         var bindObject = {server: this, socket: ws};
@@ -277,7 +281,7 @@ GameServer.prototype.start = function () {
         ws.on('close', close.bind(bindObject, 0));
         this.clients.push(ws);
 
-        this.MasterPing();
+        setTimeout(this.MasterPing(), 0);
     }
     this.startStatsServer(this.config.serverStatsPort);
 };
@@ -545,6 +549,7 @@ GameServer.prototype.exitserver = function () {
 GameServer.prototype.updateClients = function () {
     for (var i = 0, llen = this.clients.length; i < llen; i++) {
         if (typeof this.clients[i] == "undefined") {
+            this.clients.splice(i, 1);
             continue;
         }
         this.clients[i].playerTracker.update();
@@ -591,7 +596,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
          *           this.clients[i].sendPacket(packet);
          *       }
          */
-        for (var i = 0; i < this.clients.length; i++) {
+        for (var i = 0, llen = this.clients.length; i < llen; i++) {
             if (this.clients[i].remoteAddress == player.socket.remoteAddress && this.clients[i].remotePort != player.socket.remotePort) {
                 var packet = new Packet.BroadCast("*** You're logged in multiple times from your IP!, you might get lag due this ***");
                 player.socket.sendPacket(packet);
@@ -749,9 +754,11 @@ GameServer.prototype.splitCells = function (client) {
             if (!cell) {
                 continue;
             }
+
             if (cell.mass < this.config.playerMinMassSplit) {
                 continue;
             }
+
             // Get angle
             var deltaY = client.mouse.y - cell.position.y;
             var deltaX = client.mouse.x - cell.position.x;
@@ -771,8 +778,11 @@ GameServer.prototype.splitCells = function (client) {
             split.setAngle(angle);
             var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
             split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
+            if (this.config.playerSmoothSplit == 1) {
+                cell.collisionRestoreTicks = 3;
+                split.collisionRestoreTicks = 6;
+            }
             split.calcMergeTime(this.config.playerRecombineTime);
-            split.ignoreCollision = true;
             split.restoreCollisionTicks = 10; //vanilla agar.io = 10
 
             // Add to moving cells list
@@ -821,7 +831,7 @@ GameServer.prototype.ejectMass = function (client) {
 GameServer.prototype.newCellVirused = function (client, parent, angle, mass, speed) {
     // Before everything, calculate radius of the spawning cell.
     var size = Math.ceil(Math.sqrt(100 * mass));
-    
+
     // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
         x: parent.position.x + (size / 85) * Math.sin(angle),
@@ -833,7 +843,6 @@ GameServer.prototype.newCellVirused = function (client, parent, angle, mass, spe
     // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
     newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.ignoreCollision = true; // Remove collision checks
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -879,7 +888,7 @@ GameServer.prototype.getCellsInRange = function (cell) {
         }
 
         // Can't eat cells that have collision turned off
-        if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
+        if ((cell.owner == check.owner) && (cell.collisionRestoreTicks != 0)) {
             continue;
         }
 
@@ -998,7 +1007,7 @@ GameServer.prototype.updateCells = function () {
         }
 
         if (cell.mass < 1) {
-            // Cell has 0 Mass? Seriously... Buh bye~        	
+            // Cell has 0 Mass? Seriously... Buh bye~
             this.removeNode(cell);
             continue;
         }
@@ -1006,6 +1015,11 @@ GameServer.prototype.updateCells = function () {
         // Recombining
         if (cell.recombineTicks > 0) {
             cell.recombineTicks--;
+        }
+
+        // Collision
+        if (cell.collisionRestoreTicks > 0) {
+            cell.collisionRestoreTicks--;
         }
 
         // Mass decay

@@ -4,6 +4,7 @@ var GameServer = require('./GameServer');
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
+    this.pin = 0;
     this.name = "";
     this.skin = '';
     this.gameServer = gameServer;
@@ -50,7 +51,7 @@ function PlayerTracker(gameServer, socket) {
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
-    }
+    };
 }
 
 module.exports = PlayerTracker;
@@ -77,9 +78,9 @@ PlayerTracker.prototype.getScore = function (reCalcScore) {
         var s = 0;
         for (var i = 0, llen = this.cells.length; i < llen; i++) {
             s += this.cells[i].mass;
-            this.score = s;
-            if (s > this.hscore) this.hscore = s;
         }
+        this.score = s;
+        if (s > this.hscore) this.hscore = s;
     }
     if (this.cells.length > this.cscore) this.cscore = this.cells.length;
     return this.score >> 0;
@@ -175,7 +176,6 @@ PlayerTracker.prototype.update = function () {
 
         // Send packet
         this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes, this.gameServer.config.serverVersion));
-
         this.nodeDestroyQueue = []; // Reset destroy queue
         this.nodeAdditionQueue = []; // Reset addition queue
 
@@ -317,7 +317,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    // We're going to use config's view base times 4.5
+    // We're going to use config's view base times 3.5
 
     var mult = 4.5; // To simplify multiplier, in case this needs editing later on
     this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;

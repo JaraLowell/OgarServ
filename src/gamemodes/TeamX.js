@@ -175,7 +175,7 @@ TeamX.prototype.onServerInit = function (gameServer) {
                 }
 
                 // Can't eat cells that have collision turned off
-                if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
+                if (cell.owner == check.owner) {
                     continue;
                 }
 

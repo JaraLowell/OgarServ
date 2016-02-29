@@ -427,7 +427,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             }
 
             // Can't eat cells that have collision turned off
-            if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
+            if (cell.owner == check.owner) {
                 continue;
             }
 
@@ -565,7 +565,6 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         newCell.setAngle(angle);
         newCell.setMoveEngineData(speed, 10);
         newCell.calcMergeTime(this.config.playerRecombineTime);
-        newCell.ignoreCollision = true;  // Turn off collision
 
         // boost speed if zombie eats brain
         if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
