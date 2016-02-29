@@ -268,12 +268,12 @@ GameServer.prototype.start = function () {
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
 
-        if(this.config.specKick > 0) {
+        if(this.config.serverKickSpectator > 0) {
             setTimeout(function () {
                 if(ws.playerTracker.spectate && ws.playerTracker.name == "") {
                     ws.close();
                 }
-            }.bind(this), this.config.specKick * 1000);
+            }.bind(this), this.config.serverKickSpectator * 1000);
         }
 
         var bindObject = {server: this, socket: ws};
