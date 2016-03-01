@@ -101,7 +101,6 @@ function GameServer() {
         playerMaxMass: 22500,         // Maximum mass a player can have
         playerSpeed: 30,              // Player base speed
         playerSplitSpeed: 130,        // Speed of the splitting cell.
-        playerSmoothSplit: 1,         // Whether smooth splitting is used 1 is on
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
@@ -778,11 +777,8 @@ GameServer.prototype.splitCells = function (client) {
             split.setAngle(angle);
             var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
             split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
-            if (this.config.playerSmoothSplit == 1) {
-                cell.collisionRestoreTicks = 3;
-                split.collisionRestoreTicks = 6;
-            }
             split.calcMergeTime(this.config.playerRecombineTime);
+            split.ignoreCollision = true;
             split.restoreCollisionTicks = 10; //vanilla agar.io = 10
 
             // Add to moving cells list
@@ -843,6 +839,7 @@ GameServer.prototype.newCellVirused = function (client, parent, angle, mass, spe
     // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
     newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
+    newCell.ignoreCollision = true; // Remove collision checks
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -888,7 +885,7 @@ GameServer.prototype.getCellsInRange = function (cell) {
         }
 
         // Can't eat cells that have collision turned off
-        if ((cell.owner == check.owner) && (cell.collisionRestoreTicks != 0)) {
+        if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
             continue;
         }
 
@@ -1015,11 +1012,6 @@ GameServer.prototype.updateCells = function () {
         // Recombining
         if (cell.recombineTicks > 0) {
             cell.recombineTicks--;
-        }
-
-        // Collision
-        if (cell.collisionRestoreTicks > 0) {
-            cell.collisionRestoreTicks--;
         }
 
         // Mass decay

@@ -15,7 +15,6 @@
     this.moveEngineSpeed = 0;
     this.moveDecay = 0.75;
     this.angle = 0; // Angle of movement
-    this.collisionRestoreTicks = 0;
 }
 
 module.exports = Cell;

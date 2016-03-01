@@ -4,7 +4,8 @@ function PlayerCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 0;
-    this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
+    this.recombineTicks = 0; // Ticks until the cell can recombine with other cells
+    this.ignoreCollision = false; // This is used by player cells so that they dont cause any problems when splitting
     this.restoreCollisionTicks = 0; // Ticks after which collision is restored on a moving cell
 }
 
@@ -61,7 +62,8 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     for (var i = 0, llen = this.owner.cells.length; i < llen; i++) {
         var cell = this.owner.cells[i];
 
-        if (this.nodeId == cell.nodeId) {
+        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision) || (cell.ignoreCollision)) {
+            // Don't collide with cell that has ignoreCollision on, when I have ignoreCollision on, or with yourself
             continue;
         }
 
@@ -69,9 +71,6 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
             // Cannot recombine - Collision with your own cells
             var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
             dist = this.getDist(x1, y1, cell.position.x, cell.position.y); // Distance between these two cells
-
-            collidedCells++;
-            if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
 
             // Calculations
             if (dist < collisionDist) { // Collided
@@ -97,8 +96,6 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     }
 
     gameServer.gameMode.onCellMove(x1, y1, this);
-
-    if (collidedCells == 0) this.collisionRestoreTicks = 0;
 
     // Check to ensure we're not passing the world border
     if (x1 < config.borderLeft + r / 2) {
@@ -178,7 +175,15 @@ PlayerCell.prototype.onRemove = function (gameServer) {
 };
 
 PlayerCell.prototype.moveDone = function (gameServer) {
+    this.ignoreCollision = false;
 };
 
 PlayerCell.prototype.onAutoMove = function (gameServer) {
+    // Restore collision
+    if (this.restoreCollisionTicks > 0) {
+        this.restoreCollisionTicks--;
+        if (this.restoreCollisionTicks <= 0) {
+            this.ignoreCollision = false;
+        }
+    }
 };
