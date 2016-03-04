@@ -11,4 +11,3 @@ module.exports = {
     ServerInfo: require('./ServerInfo.js'),
     ServerMsg: require('./ServerMsg.js')
 };
-

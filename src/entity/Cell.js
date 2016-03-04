@@ -1,4 +1,4 @@
-﻿function Cell(nodeId, owner, position, mass, gameServer) {
+function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: Math.floor(32*Math.random()),

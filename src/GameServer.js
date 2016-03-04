@@ -61,46 +61,49 @@ function GameServer() {
         serverVersion: 1,             // Protocol to use, 1 for new (v561.20 and up) and 0 for old 
         serverGamemode: 0,            // Gamemode, 0 = FFA, 1 = Teams
         serverResetTime: 24,          // Time in hours to reset (0 is off)
-        serverName: '',               // The name to display on the tracker (leave empty will show ip:port)
-        serverAdminPass: '',          // Remote console commands password
         serverBots: 0,                // Amount of player bots to spawn
-        serverViewBaseX: 1024,        // Base view distance of players. Warning: high values may cause lag
-        serverViewBaseY: 592,
+        serverViewBaseX: 1200,        // Base view distance of players. Warning: high values may cause lag
+        serverViewBaseY: 630,
         serverStatsPort: 88,          // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,        // Amount of seconds per update for the server stats
-        serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
-        serverLogToFile: 1,           // Log Info To File
         serverAutoPause: 1,           // Enable or Disable audo gameworld pause
         serverLiveStats: 1,           // Show Info in console (needs a 127characters wide console or ssh sesion)
-        gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
+        serverLogLevel: 2,            // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
+        serverLogToFile: 1,           // Log Info To File
+        serverName: '',               // The name to display on the tracker (leave empty will show ip:port)
+        serverAdminPass: '',          // Remote console commands password
+        chatMaxMessageLength: 70,     // Maximum message length
+        chatToConsole: 1,             // Log Chat To Console
+        chatIntervalTime: 10000,      // Set the delay between messages and commands (in millisecond)
         borderLeft: 0,                // Left border of map (Vanilla value: 0)
-        borderRight: 6000,            // Right border of map (Vanilla value: 11180.3398875)
+        borderRight: 12000,           // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0,                 // Top border of map (Vanilla value: 0)
-        borderBottom: 6000,           // Bottom border of map (Vanilla value: 11180.3398875)
-        spawnInterval: 20,            // The interval between each food cell spawn in ticks (1 tick = 50 ms)
-        foodSpawnAmount: 10,          // The amount of food to spawn per interval
-        foodStartAmount: 100,         // The starting amount of food in the map
-        foodMaxAmount: 500,           // Maximum food cells on the map
+        borderBottom: 12000,          // Bottom border of map (Vanilla value: 11180.3398875)
+        spawnInterval: 10,            // The interval between each food cell spawn in ticks (1 tick = 50 ms)
+        foodSpawnAmount: 100,         // The amount of food to spawn per interval
+        foodStartAmount: 1250,        // The starting amount of food in the map
+        foodMaxAmount: 1750,          // Maximum food cells on the map
         foodMass: 1,                  // Starting food size (In mass)
         foodMassGrow: 1,              // Enable or Disable food mass grow
         foodMassGrowPossiblity: 50,   // Chance for a food to has the ability to be self growing
         foodMassLimit: 5,             // Maximum mass for a food can grow
         foodMassTimeout: 120,         // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10,           // Minimum amount of viruses on the map.
-        virusMaxAmount: 50,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusMaxAmount: 20,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,          // Starting virus size (In mass)
-        mothercellMaxMass: 5000,      // Max mass the mothercell can get to. (0 for unlimited)
         virusFeedAmount: 7,           // Amount of times you need to feed a virus to shoot it
-        ejectMass: 12,                // Mass of ejected cells
-        ejectMassLoss: 16,            // Mass lost when ejecting cells
+        mothercellMaxMass: 5000,      // Max mass the mothercell can get to. (0 for unlimited)
+        ejectMass: 13,                // Mass of ejected cells
+        ejectMassLoss: 15,            // Mass lost when ejecting cells
         ejectMassCooldown: 200,       // Time until a player can eject mass again
-        ejectSpeed: 160,              // Base speed of ejected cells
+        ejectSpeed: 100,              // Base speed of ejected cells
         ejectSpawnPlayer: 50,         // Chance for a player to spawn from ejected mass
         playerStartMass: 10,          // Starting mass of the player cell.
         playerBotGrowEnabled: 1,      // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
         playerMaxMass: 22500,         // Maximum mass a player can have
         playerSpeed: 30,              // Player base speed
         playerSplitSpeed: 130,        // Speed of the splitting cell.
+        playerSmoothSplit: 0,         // Whether smooth splitting is used 1 is on
         playerMinMassEject: 32,       // Mass required to eject a cell
         playerMinMassSplit: 36,       // Mass required to split
         playerMaxCells: 16,           // Max cells the player is allowed to have
@@ -108,7 +111,6 @@ function GameServer() {
         playerMassAbsorbed: 1.0,      // Fraction of player cell's mass gained upon eating
         playerMassDecayRate: 0.002,   // Amount of mass lost per second
         playerMinMassDecay: 9,        // Minimum mass for decay to occur
-        playerFastDecay: 4,           // Double the decay if cell is over 5000 mass. (1 is off, 5 is decay 5x faster)
         playerMaxNickLength: 15,      // Maximum nick length
         playerDisconnectTime: 60,     // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         playerFastDecay: 1,           // Double the decay if cell is over 5000 mass. (1 is off, 5 is decay 5x faster)
@@ -118,10 +120,8 @@ function GameServer() {
         tourneyTimeLimit: 20,         // Time limit of the game, in minutes.
         tourneyAutoFill: 0,           // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
-        chatMaxMessageLength: 70,     // Maximum message length
-        chatToConsole: 1,             // Log Chat To Console
-        chatIntervalTime: 10000,      // Set the delay between messages and commands (in millisecond)
-        experimentalIgnoreMax: 0      // Ignore the foodMaxAmount when the mothercells shoot. (Set to 1 to turn it on)
+        experimentalIgnoreMax: 0,     // Ignore the foodMaxAmount when the mothercells shoot. (Set to 1 to turn it on)
+        gameLBlength: 10              // Number of names to display on Leaderboard (Vanilla value: 10)
     };
     // Parse config
     this.loadConfig();
@@ -526,23 +526,31 @@ GameServer.prototype.mainLoop = function () {
 };
 
 GameServer.prototype.exitserver = function () {
-    console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
-
-    // Close MySQL
-    if (this.sqlconfig.host != '') {
-        console.log("* \u001B[33mClosing mysql connection...\u001B[0m");
-        this.mysql.close();
+    var packet = new Packet.BroadCast("*** Automatic Server Restart in 30 seconds to clean connections and memory ***");
+    for (var i = 0, llen = this.clients.length; i < llen; i++) {
+        this.clients[i].sendPacket(packet);
     }
+    console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
 
-    // Store Ban File
-    if (this.banned.length > 0) {
-        console.log("* \u001B[33mSaving ban file...\u001B[0m");
-        fs.writeFileSync('./gameserver.ban', ini.stringify(this.banned));
-    }
+    var temp = setTimeout(function () {
+        console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
 
-    this.socketServer.close();
-    process.exit(1);
-    window.close();
+        // Close MySQL
+        if (this.sqlconfig.host != '') {
+            console.log("* \u001B[33mClosing mysql connection...\u001B[0m");
+            this.mysql.close();
+        }
+
+        // Store Ban File
+        if (this.banned.length > 0) {
+            console.log("* \u001B[33mSaving ban file...\u001B[0m");
+            fs.writeFileSync('./gameserver.ban', ini.stringify(this.banned));
+        }
+
+        this.socketServer.close();
+        process.exit(1);
+        window.close();
+    }.bind(this), 30000);
 };
 
 GameServer.prototype.updateClients = function () {
@@ -775,7 +783,13 @@ GameServer.prototype.splitCells = function (client) {
             // Create cell
             var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
             split.setAngle(angle);
-            var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+
+            // Polyfill for log10
+            Math.log10 = Math.log10 || function (x) { return Math.log(x) / Math.LN10; };
+
+            // var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+            var splitSpeed = this.config.playerSplitSpeed * Math.max(Math.log10(newMass) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+
             split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
             split.calcMergeTime(this.config.playerRecombineTime);
             split.ignoreCollision = true;

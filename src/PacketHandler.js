@@ -165,6 +165,8 @@ PacketHandler.prototype.handleMessage = function (message) {
             LastMsg = message;
             SpamBlock = 0;
 
+            message = this.WordScan(message);
+
             if (this.gameServer.config.chatToConsole == 1) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
@@ -210,6 +212,28 @@ PacketHandler.prototype.handleMessage = function (message) {
     }
 };
 
+PacketHandler.prototype.WordScan = function(line) {
+    // a few bad words...
+    line = line.replace(/isis/gi, "kiss");
+    line = line.replace(/hitler/gi, "coyote");
+    line = line.replace(/nazi/gi, "rat");
+    line = line.replace(/cock/gi, "broom");
+    line = line.replace(/fuck/gi, "meow");
+    line = line.replace(/dick/gi, "tree");
+    line = line.replace(/bitch/gi, "cat");
+    line = line.replace(/shit/gi, "mouse");
+    line = line.replace(/cunt/gi, "heat");
+    line = line.replace(/slut/gi, "love");
+    line = line.replace(/weed/gi, "flower");
+    line = line.replace(/gay/gi, "fly");
+    line = line.replace(/penis/gi, "daddy");
+    line = line.replace(/nigger/gi, "tigger");
+    line = line.replace(/porn/gi, "milk");
+    line = line.replace(/cocaine/gi, "candy");
+
+    return line;
+};
+
 PacketHandler.prototype.rcon = function(message, wname) {
     var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
     if (message.substr(0, passkey.length) == passkey) {
@@ -234,6 +258,7 @@ PacketHandler.prototype.rcon = function(message, wname) {
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
+        newNick = this.WordScan(newNick);
         // Set name first
         var newSkin = "";
         if (newNick != null && newNick.length != 0) {
@@ -262,10 +287,6 @@ PacketHandler.prototype.setNickname = function(newNick) {
         // No name or weird name, lets call it Cell + pid Number
         if (newNick == "" || newNick == "Unregistered" || newNick == "Un Named") {
             newNick = "Cell" + client.pID;
-        }
-        // Banned name, lets call it Virus + pid number
-        if ( newNick.toLowerCase() == "nazi" || newNick.toLowerCase() == "hitler" || newNick.toLowerCase() == "isis" ) {
-            newNick = "Virus" + client.pID;
         }
 
         if (this.gameServer.gameMode.haveTeams) {

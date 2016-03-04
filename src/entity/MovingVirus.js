@@ -1,4 +1,4 @@
-﻿var Virus = require('./Virus')
+var Virus = require('./Virus')
 
 function MovingVirus() {
     Virus.apply(this, Array.prototype.slice.call(arguments));

@@ -1,4 +1,4 @@
-﻿var Cell = require('./Cell');
+var Cell = require('./Cell');
 var EjectedMass = require('./EjectedMass');
 var MotherCell = require('./MotherCell');
 var MovingVirus = require('./MovingVirus');
@@ -127,11 +127,11 @@ Beacon.prototype.spawnEjected = function(gameServer, parentColor) {
 
     gameServer.addNode(f);
     gameServer.currentFood++;
-    
+
     // Move engine
     f.angle = angle;
     var dist = (Math.random() * 25) + 5; // Random distance
     f.setMoveEngineData(dist,15);
-    
+
     gameServer.setAsMovingNode(f);
 };

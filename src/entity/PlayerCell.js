@@ -55,8 +55,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
         x1 = this.position.x + ( speed * Math.sin(angle) ),
         y1 = this.position.y + ( speed * Math.cos(angle) ),
         xd = 0,
-        yd = 0,
-        collidedCells = 0;
+        yd = 0;
 
     // Collision check for other cells
     for (var i = 0, llen = this.owner.cells.length; i < llen; i++) {

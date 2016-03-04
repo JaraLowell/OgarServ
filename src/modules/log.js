@@ -53,7 +53,7 @@ Log.prototype.setup = function (gameServer) {
         fs.mkdir('./logs');
     }
     var fps, peek = 0;
-    
+
     if ( gameServer.config.serverLiveStats == 1 ) {
         this.onWriteConsole = function (gameServer) {
             var serv = gameServer.getPlayers();
@@ -71,7 +71,7 @@ Log.prototype.setup = function (gameServer) {
             var line2 = "ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " │ cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true) + " ";
             var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " │ moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
             var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + fillChar(fpstext,' ', 27, true) + "\u001B[36m ";
-            var line5 = "uptime  : " + fillChar(seconds2time(process.uptime()), ' ', 27, true) + " │ memory :  " + fillChar(numberWithCommas(rss) + ' ▲' + numberWithCommas(peek), ' ', 27, true) + " \u001B[24m";
+            var line5 = "uptime  : " + fillChar(seconds2time(process.uptime().toFixed(0)), ' ', 27, true) + " │ memory :  " + fillChar(numberWithCommas(rss) + ' ▲' + numberWithCommas(peek), ' ', 27, true) + " \u001B[24m";
             process.stdout.write("\u001B[s\u001B[H\u001B[6r");
             process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
             process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
