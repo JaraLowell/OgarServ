@@ -12,27 +12,31 @@ console.log(" | (_) / _` / _` | '_| \\__ \\/ -_) '_\\ V / -_) '_| ");
 console.log("  \\___/\\__, \\__,_|_|   |___/\\___|_|  \\_/\\___|_|   ");
 console.log("       |___/  \u001B[32mAn open source Agar.io server       \u001B[0m");
 
+console.log("");
+console.log("\u001B[33m Node.js v" + process.versions.node + " (" + process.platform + " " + process.arch + ")");
+console.log(" Chrome's V8 JavaScript engine v" + process.versions.v8);
+
 // Handle arguments
 process.argv.forEach(function (val) {
     if (val == "--noconsole") {
         showConsole = false;
     } else if (val == "--help") {
-        console.log("Proper Usage: jx index.js");
+        console.log(" Proper Usage: jx index.js");
         console.log("    --noconsole         Disables the console");
         console.log("    --help              Help menu.");
-        console.log("");
     }
 });
 
 // Run Ogar
 if (global.gc) {
     // Run GC if install every 15 min
-    console.log("        * \u001B[33mGarbage collection cleanup available, setting up 15 min interval cleanup.\u001B[0m");
+    console.log("\u001B[33m Garbage collection cleanup available, setting up 15 min interval cleanup.\u001B[0m");
     setInterval(function(){
         global.gc();
     }, 900000);
 }
 
+console.log("");
 var gameServer = new GameServer();
 gameServer.start();
 
