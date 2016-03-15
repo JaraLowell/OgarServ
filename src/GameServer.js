@@ -671,17 +671,37 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
 };
 
 GameServer.prototype.updateMoveEngine = function () {
-    // Move player cells
-    for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
-        var cell = this.nodesPlayer[i];
+   // Sort cells to move the cells close to the mouse first
+    var srt = [],
+        len = this.nodesPlayer.length;
 
+    for (var i = 0; i < len; i++) {
+        srt[i] = i;
+    }
+
+    for (var i = 0; i < len; i++) {
         // Recycle unused nodes
-        if (typeof cell == "undefined") {
-            // Remove moving cells that are undefined
+        if (typeof this.nodesPlayer[i] == "undefined") {
             this.nodesPlayer.splice(i, 1);
             len--;
             continue;
         }
+
+        var clientI = this.nodesPlayer[srt[i]].owner;
+        for (var j = i + 1; j < len; j++) {
+            var clientJ = this.nodesPlayer[srt[j]].owner;
+            if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y ) > 
+                this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y )) {
+                var aux = srt[i];
+                srt[i] = srt[j];
+                srt[j] = aux;
+            }
+        }
+    }
+
+    // Move player cells
+    for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
+        var cell = this.nodesPlayer[srt[i]];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell) {
@@ -689,7 +709,6 @@ GameServer.prototype.updateMoveEngine = function () {
         }
 
         var client = cell.owner;
-
         cell.calcMove(client.mouse.x, client.mouse.y, this);
 
         // Check if cells nearby
