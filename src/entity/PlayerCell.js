@@ -61,7 +61,7 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     for (var i = 0, llen = this.owner.cells.length; i < llen; i++) {
         var cell = this.owner.cells[i];
 
-        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision) || (cell.ignoreCollision)) {
+        if (this.nodeId == cell.nodeId || (this.ignoreCollision) || (cell.ignoreCollision)) {
             // Don't collide with cell that has ignoreCollision on, when I have ignoreCollision on, or with yourself
             continue;
         }
@@ -69,6 +69,12 @@ PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine - Collision with your own cells
             var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
+
+            // First simple collision check if passed... do the more precise checking
+            if (!this.simpleCollide(x1,y1,cell,collisionDist)) {
+                continue;
+            }
+
             dist = this.getDist(x1, y1, cell.position.x, cell.position.y); // Distance between these two cells
 
             // Calculations
