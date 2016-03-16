@@ -1,4 +1,4 @@
-﻿// Library imports
+// Library imports
 var WebSocket = require('ws');
 var url = require("url");
 var _ = require("underscore");
@@ -15,6 +15,9 @@ var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var Logger = require('./modules/log');
 
+// Polyfill for log10
+Math.log10 = Math.log10 || function (x) { return Math.log(x) / Math.LN10; };
+
 // GameServer implementation
 function GameServer() {
     // Startup 
@@ -29,7 +32,7 @@ function GameServer() {
 
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
-    this.welcome = 0;
+    this.pcount = 0;
     this.leaderboard = [];
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
@@ -44,7 +47,13 @@ function GameServer() {
     this.tickMain = 0;  // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
     this.master = 0;    // Used for Master Ping spam protection
-
+    this.sinfo = {
+        players: 0,
+        humans: 0,
+        spectate: 0,
+        bots: 0,
+        death: 0
+    }
     // Config
     this.sqlconfig = {
         host: '',
@@ -167,12 +176,17 @@ GameServer.prototype.start = function () {
     this.gameMode.onServerInit(this);
 
     // Start the server
-    this.socketServer = new WebSocket.Server({port: this.config.serverPort, perMessageDeflate: false}, function () {
+    this.socketServer = new WebSocket.Server({
+        port: this.config.serverPort,
+        disableHixie: true,
+        clientTracking: false,
+        perMessageDeflate: false
+    }, function () {
         // Spawn starting food
         this.startingFood();
 
         // Start Main Loop
-        setTimeout(this.MasterPing(), 0);
+        this.MasterPing();
         setInterval(this.mainLoop.bind(this), 3);
 
         // Done
@@ -227,8 +241,7 @@ GameServer.prototype.start = function () {
             }
         }
 
-        var serv = this.getPlayers();
-        if (serv.players >= this.config.serverMaxConnections) { // Server full
+        if (this.sinfo.players >= this.config.serverMaxConnections) { // Server full
             console.log("\u001B[33mClient tried to connect, but server player limit has been reached!\u001B[0m");
             ws.close();
             return;
@@ -280,7 +293,7 @@ GameServer.prototype.start = function () {
         ws.on('close', close.bind(bindObject, 0));
         this.clients.push(ws);
 
-        setTimeout(this.MasterPing(), 0);
+        this.MasterPing();
     }
     this.startStatsServer(this.config.serverStatsPort);
 };
@@ -345,15 +358,15 @@ GameServer.prototype.getRandomSpawn = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    var colorRGB = [0xFF, 0x07, ((Math.random() * (256 - 7)) >> 0) + 7];
+    var colorRGB = [0xFF, 0x07, ((Math.random() * (140 - 7)) >> 0) + 7];
     colorRGB.sort(function () {
         return 0.5 - Math.random()
     });
 
     return {
-        r: colorRGB[0],
-        b: colorRGB[1],
-        g: colorRGB[2]
+        r: colorRGB[0] + 100,
+        b: colorRGB[1] + 100,
+        g: colorRGB[2] + 100
     };
 };
 
@@ -407,7 +420,6 @@ GameServer.prototype.removeNode = function (node) {
         if (!client) {
             continue;
         }
-
         // Remove from client
         client.nodeDestroyQueue.push(node);
     }
@@ -455,7 +467,7 @@ GameServer.prototype.mainLoop = function () {
 
         // Update the client's maps
         this.updateClients();
-        var info = this.getPlayers();
+        this.getPlayers();
         this.tickMain++;
 
         if (this.config.serverLiveStats && this.tickMain >= 20) {
@@ -466,38 +478,26 @@ GameServer.prototype.mainLoop = function () {
             // Update cells/leaderboard loop
             if (this.tickMain >= 20) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 0);
-                // No players... lets play with leaderboard
-                if (info.humans == 0) {
-                    var newLB = [];
-                    newLB[0] = "\u256D \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u256E";
-                    newLB[1] = "\u250A     W E L C O M E      \u250A";
-                    newLB[2] = "\u250A              " + this.formatTime() + "              \u250A";
-                    newLB[3] = "\u2570 \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u254C \u256F";
-                    this.customLB(newLB,this);
-                    this.welcome = 1;
-                } else if (info.humans != 0 && this.welcome == 1) {
-                    this.gameMode.packetLB = Gamemode.get(this.gameMode.ID).packetLB;
-                    this.gameMode.updateLB = Gamemode.get(this.gameMode.ID).updateLB;
-                    this.welcome = 0;
-                }
+
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
                 this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
+                this.pcount++;
             }
             // Check Bot Min Players
-            if (( ( info.humans + info.bots ) < this.config.serverBots ) && ( this.config.serverBots > 0 )) {
+            if (((this.sinfo.humans + this.sinfo.bots) < this.config.serverBots) && (this.config.serverBots > 0)) {
                 this.bots.addBot();
             }
         }
 
         // Pause and Unpause on player connects
         if (this.config.serverAutoPause == 1) {
-            var temp = ( info.humans + info.spectate + ( info.players - info.bots ));
+            var temp = ( this.sinfo.players - this.sinfo.bots );
             if (!this.run && temp != 0) {
                 console.log("[Auto Pause] \u001B[32mGame World Resumed!\u001B[0m");
                 this.run = true;
-            } else if (this.run && temp == 0 && (this.time - this.startTime) > 30000) {
+            } else if (this.run && temp == 0 && (this.time - this.startTime) > 30000 && this.pcount > 60) {
                 console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
                 this.run = false;
                 this.nodesEjected = [];
@@ -520,7 +520,7 @@ GameServer.prototype.mainLoop = function () {
 
         // Send Master Server Ping
         if (this.time - this.master >= 1805000) {
-            setTimeout(this.MasterPing(), 0);
+            this.MasterPing();
         }
     }
 };
@@ -624,6 +624,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     this.addNode(cell);
 
     // Set initial mouse coords
+    player.freeMouse = true;
     player.mouse = {x: pos.x, y: pos.y};
 };
 
@@ -738,13 +739,9 @@ GameServer.prototype.updateMoveEngine = function () {
         var check = this.movingNodes[i];
 
         // Recycle unused nodes
-        while ((typeof check == "undefined") && (i < this.movingNodes.length)) {
-            // Remove moving cells that are undefined
+        if (typeof check == "undefined") {
             this.movingNodes.splice(i, 1);
-            check = this.movingNodes[i];
-        }
-
-        if (i >= this.movingNodes.length) {
+            llen--;
             continue;
         }
 
@@ -755,10 +752,10 @@ GameServer.prototype.updateMoveEngine = function () {
         } else {
             // Auto move is done
             check.moveDone(this);
-            // Remove cell from list
             var index = this.movingNodes.indexOf(check);
             if (index != -1) {
                 this.movingNodes.splice(index, 1);
+                llen--;
             }
         }
     }
@@ -803,11 +800,8 @@ GameServer.prototype.splitCells = function (client) {
             var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
             split.setAngle(angle);
 
-            // Polyfill for log10
-            Math.log10 = Math.log10 || function (x) { return Math.log(x) / Math.LN10; };
-
-            // var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
-            var splitSpeed = this.config.playerSplitSpeed * Math.max(Math.log10(newMass) - 2.2, 1); //for smaller cells use splitspeed 150, for bigger cells add some speed
+            // var splitSpeed = this.config.playerSplitSpeed * Math.max((Math.log(newMass)/2.3) - 2.2,
+            var splitSpeed = this.config.playerSplitSpeed * Math.max(Math.log10(newMass) - 2.2, 1); //
 
             split.setMoveEngineData(splitSpeed, 32, 0.85); //vanilla agar.io = 130, 32, 0.85
             split.calcMergeTime(this.config.playerRecombineTime);
@@ -869,7 +863,6 @@ GameServer.prototype.newCellVirused = function (client, parent, angle, mass, spe
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
     newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
     newCell.ignoreCollision = true; // Remove collision checks
@@ -903,17 +896,17 @@ GameServer.prototype.getCellsInRange = function (cell) {
     for (var i = 0; i < len; i++) {
         var check = cell.owner.visibleNodes[i];
 
-        if (typeof check === 'undefined') {
-            continue;
-        }
-
-        // if something already collided with this cell, don't check for other collisions
-        if (check.inRange) {
+        if (typeof check == 'undefined') {
             continue;
         }
 
         // Can't eat itself
         if (cell.nodeId == check.nodeId) {
+            continue;
+        }
+
+        // if something already collided with this cell, don't check for other collisions
+        if (check.inRange) {
             continue;
         }
 
@@ -947,7 +940,6 @@ GameServer.prototype.getCellsInRange = function (cell) {
                     if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
                         continue;
                     }
-
                     multiplier = 1.00;
                 }
 
@@ -1141,36 +1133,29 @@ GameServer.prototype.formatTime = function () {
     return hour + ":" + min;
 };
 
+GameServer.prototype.SendMessage = function (msg) {
+    console.log('\u001B[36mServer: \u001B[0m' + msg);
+    var packet = new Packet.BroadCast(msg);
+    for (var i = 0, llen = this.clients.length; i < llen; i++) {
+        if(!this.clients[i].remoteAddress) {
+            continue;
+        }
+        this.clients[i].sendPacket(packet);
+    }
+};
+
 GameServer.prototype.getPlayers = function () {
     for (var i = 0, humans = 0, bots = 0, players = 0, spectate = 0, client, llen = this.clients.length; i < llen; i++) {
         client = this.clients[i].playerTracker;
         if( client.cells.length > 0 || client.spectate ) -1 == client.disconnect && ("_socket" in this.clients[i] ? client.spectate ? spectate++ : humans++ : bots++, players++); else if (-1 == client.disconnect) players++;
     }
-    return {
-        players: players,
-        humans: humans,
-        spectate: spectate,
-        bots: bots
-    };
-};
+    this.sinfo.players = players;
+    this.sinfo.humans = humans;
+    this.sinfo.spectate = spectate;
+    this.sinfo.bots = bots;
+    this.sinfo.death = (players - (humans + spectate + bots));
 
-GameServer.prototype.customLB = function(newLB,gameServer) {
-    gameServer.gameMode.packetLB = 48;
-    gameServer.gameMode.specByLeaderboard = false;
-    gameServer.gameMode.updateLB = function(gameServer) {
-        gameServer.leaderboard = newLB
-    };
-};
-
-GameServer.prototype.fbapi = function (token, ip) {
-    // Example using request	
-    /* request('https://graph.facebook.com/me?fields=name&access_token=' + token, function (error, response, body) {
-     *     if (!error) {
-     *        var obj = JSON && JSON.parse(body) || $.parseJSON(bode);
-     *        console.log("\u001B[31m[UserInfo] \u001B[0m" + ip + " social ID: " + obj.id + " = " + obj.name);
-     *    }
-     * });
-     */
+    if((this.sinfo.death + spectate + humans) > 0) this.pcount = 0;
 };
 
 GameServer.prototype.postData = function(url_str, data, cb) {
@@ -1188,20 +1173,19 @@ GameServer.prototype.MasterPing = function () {
          * located at http://ogar.mivabe.nl/master
          */
         this.master = this.time;
-        var serv = this.getPlayers(),
-            sName = 'Unnamed Server',
+        var sName = 'Unnamed Server',
             pversion = 'true';
 
         /* Sending Keepalive Ping to MySQL */
-        if (this.sqlconfig.host != '' && serv.humans == 0) this.mysql.ping();
+        if (this.sqlconfig.host != '' && this.sinfo.humans == 0) this.mysql.ping();
 
         /* Sending Info */
         if (this.config.serverName != '') sName = this.config.serverName;
         if (this.config.serverVersion == 0) pversion = 'false';
 
-        var data = 'current_players=' + serv.players +
-                   '&alive=' + serv.humans +
-                   '&spectators=' + serv.spectate +
+        var data = 'current_players=' + this.sinfo.players +
+                   '&alive=' + this.sinfo.humans +
+                   '&spectators=' + (this.sinfo.spectate + this.sinfo.death) +
                    '&max_players=' + this.config.serverMaxConnections +
                    '&sport=' + this.config.serverPort +
                    '&gamemode=' + this.gameMode.name +
@@ -1245,12 +1229,10 @@ GameServer.prototype.startStatsServer = function (port) {
 };
 
 GameServer.prototype.getStats = function () {
-    var serv = this.getPlayers();
-
     var s = {
-        'current_players': serv.players,
-        'alive': serv.humans,
-        'spectators': serv.spectate,
+        'current_players': this.sinfo.players,
+        'alive': this.sinfo.humans,
+        'spectators': (this.sinfo.spectate + this.sinfo.death),
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
         'start_time': this.startTime

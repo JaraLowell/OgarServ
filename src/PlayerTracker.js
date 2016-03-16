@@ -4,7 +4,6 @@ var GameServer = require('./GameServer');
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
-    this.pin = 0;
     this.name = "";
     this.skin = '';
     this.gameServer = gameServer;
@@ -26,6 +25,7 @@ function PlayerTracker(gameServer, socket) {
     this.cTime = new Date();
     this.spectate = true;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
+    this.freeMouse = true;
     this.spectatedPlayer = -1; // Current player that this player is watching
 
     // Viewing box
@@ -197,9 +197,11 @@ PlayerTracker.prototype.update = function () {
         if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') {
             ip = this.socket.remoteAddress;
         }
-        if( ip != "BOT" && this.hscore > 100 ) {
+
+        if( ip != "BOT" && this.hscore > 500 ) {
             this.gameServer.mysql.writeScore(this.name, ip, this.hscore, this.gameServer.sqlconfig.table);
         }
+
         this.writeInfo = 12;
     }
 
@@ -218,6 +220,7 @@ PlayerTracker.prototype.update = function () {
                 this.gameServer.removeNode(cell);
             }
         }
+        this.gameServer.apcount = 0;
         if (this.disconnect == 0) {
             // Remove from client list
             var index = this.gameServer.clients.indexOf(this.socket);
@@ -228,23 +231,28 @@ PlayerTracker.prototype.update = function () {
     }
 };
 
-// Viewing box
-PlayerTracker.prototype.updateSightRange = function () { // For view distance
-    var totalSize = 1.0;
+// Viewing box (And Highscore Check)
+PlayerTracker.prototype.updateSightRange = function () {
+    var totalSize = 1.0,
+        totalScore = 0;
 
     for (var i = 0, len = this.cells.length; i < len; i++) {
         if (!this.cells[i]) {
             continue;
         }
         totalSize += this.cells[i].getSize();
+        totalScore += this.cells[i].mass;
     }
 
     var factor = Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
     this.sightRangeX = this.gameServer.config.serverViewBaseX / factor;
     this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;
+
+    if (totalScore > this.hscore) this.hscore = totalScore;
 };
 
-PlayerTracker.prototype.updateCenter = function () { // Get center of cells
+// Get center of cells
+PlayerTracker.prototype.updateCenter = function () {
     var len = this.cells.length;
 
     if (len <= 0) {
@@ -293,7 +301,7 @@ PlayerTracker.prototype.calcViewBox = function () {
         node = this.gameServer.nodes[i];
         if (!node) {
             continue;
-        } else if (this.score >= 5000 && node.cellType == 1) {
+        } else if (node.mass < 1) {
             continue;
         } else if (node.visibleCheck(this.viewBox, this.centerPos) || node.owner == this) {
             // Cell is in range of viewBox
@@ -328,7 +336,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
 
     // Use calcViewBox's way of looking for nodes
-    var newVisible = [], specZoom = 250;
+    var newVisible = [], specZoom = 256;
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
         if (!node) {

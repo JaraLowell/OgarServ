@@ -30,7 +30,6 @@ Virus.prototype.feed = function(feeder, gameServer) {
         this.fed = 0;
         gameServer.shootVirus(this);
     }
-
 };
 
 Virus.prototype.getEatingRange = function() {
@@ -46,12 +45,13 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits, maxSplits);
-    var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
 
     // Cell cannot split any further
     if (numSplits <= 0) {
         return;
     }
+
+    var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
 
     // Big cells will split into cells larger than 36 mass (1/4 of their mass)
     var bigSplits = 0;
@@ -71,29 +71,24 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     // Splitting
     var angle = 0; // Starting angle
-    for (var k = 0; k < numSplits; k++) {
-        angle = Math.random() * 6.28; // Get directions of splitting cells
-        gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
-        consumer.mass -= splitMass;
-    }
 
-    for (var k = 0; k < bigSplits; k++) {
-        angle = Math.random() * 6.28; // Random directions
-        splitMass = consumer.mass / 4;
-        var speed = 0;
-        if (splitMass < 1000) {
-            speed = 200;
-        } else if (splitMass < 2000) {
-            speed = 250;
-        } else if (splitMass < 3000) {
-            speed = 310;
-        } else {
-            speed = 370;
+    if(numSplits) {
+        for (var k = 0; k < numSplits; k++) {
+            angle = Math.random() * 6.28; // Get directions of splitting cells
+            gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
+            consumer.mass -= splitMass;
         }
-        gameServer.newCellVirused(client, consumer, angle, splitMass, speed);
-        consumer.mass -= splitMass;
     }
 
+    if(bigSplits) {
+        for (var k = 0; k < bigSplits; k++) {
+            angle = Math.random() * 6.28; // Random directions
+            splitMass = consumer.mass / 4;
+            var speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(splitMass) - 2.2) * 1.65, 1);
+            gameServer.newCellVirused(client, consumer, angle, splitMass, speed);
+            consumer.mass -= splitMass;
+        }
+    }
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
 

@@ -9,11 +9,9 @@ function Beacon() {
     this.cellType = 5; // Another new cell type
     this.agitated = 1; // Drawing purposes
     this.spiked = 1;
-
     this.stage = 0; // When it reaches 1000, kill largest player
     this.maxStage = 200;
     this.minMass = this.mass;
-
     this.color = {
         r: 255,
         g: 255,
@@ -35,22 +33,19 @@ Beacon.prototype.feed = function(feeder, gameServer) {
     // Sometimes spit out a ejected mass
     if(Math.random() < 0.25) {
         this.spawnEjected(gameServer, gameServer.getRandomColor());
+        gameServer.SendMessage('\u26EF Beacon, spitted out some mass!');
     }
 
     // Even more rarely spit out a moving virus
     // Spit out a moving virus in deterministic direction
     // every 20 shots
-    if(this.stage % 20 === 0) {
-        var moving = new MovingVirus(
-            gameServer.getNextNodeId(),
-            null,
-            {x: this.position.x, y: this.position.y},
-            125 // mass
-        );
+    if(this.stage % 20 == 0) {
+        var moving = new MovingVirus(gameServer.getNextNodeId(), null, {x: this.position.x, y: this.position.y}, 125);
         moving.angle = feeder.angle;
         moving.setMoveEngineData(20+10*Math.random(), Infinity, 1);
         gameServer.movingNodes.push(moving);
         gameServer.addNode(moving);
+        gameServer.SendMessage('\u26EF Beacon, released a virus!');
     }
 
     if(this.stage >= this.maxStage) {
@@ -61,10 +56,11 @@ Beacon.prototype.feed = function(feeder, gameServer) {
         var color = gameServer.getRandomColor();
         if(largest) {
             color = largest.color;
+            gameServer.SendMessage('\u26EF Beacon, targeted the largest player!!');
             // Do something to each of their cells:
             for(var i = 0, llen = largest.cells.length; i < llen; i++) {
                 var cell = largest.cells[i];
-                while(cell.mass > 10) {
+                while(cell.mass > 30) {
                     cell.mass -= gameServer.config.ejectMassLoss;
                     // Eject a mass in random direction
                     var ejected = new EjectedMass(
@@ -103,15 +99,19 @@ Beacon.prototype.feed = function(feeder, gameServer) {
     }
 
     gameServer.removeNode(feeder);
-}
+};
 
 Beacon.prototype.onAdd = function(gameServer) {
+    gameServer.SendMessage('\u26EF Beacon, cell spawned!');
     gameServer.gameMode.beacon = this;
-}
+};
 
 Beacon.prototype.abs = MotherCell.prototype.abs;
+
 Beacon.prototype.visibleCheck = MotherCell.prototype.visibleCheck;
+
 Beacon.prototype.spawnFood = MotherCell.prototype.spawnFood;
+
 Beacon.prototype.spawnEjected = function(gameServer, parentColor) {
     // Get starting position
     var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here

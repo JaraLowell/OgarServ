@@ -23,7 +23,7 @@ BotLoader.prototype.getName = function () {
         name = "Google";
     }
 
-    return "[\u26A1]" + name;
+    return "[BOT] " + name;
 };
 
 BotLoader.prototype.loadNames = function () {

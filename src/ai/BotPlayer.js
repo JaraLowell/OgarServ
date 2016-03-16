@@ -67,6 +67,9 @@ BotPlayer.prototype.updateSightRange = function () { // For view distance
 };
 
 BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
+    // We are paused...
+    if(!this.gameServer.run) return;
+
     // Remove nodes from visible nodes if possible
     for (var i = 0, llen = this.nodeDestroyQueue.length; i < llen; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
@@ -76,11 +79,11 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
     }
 
     // Update every 500 ms
-    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
+    if (this.tickViewBox <= 0) {
         this.visibleNodes = this.calcViewBox();
-        this.tickViewBox = 10;
+        this.tickViewBox = 9;
     } else {
-        if (this.tickViewBox > -100) this.tickViewBox--;
+        this.tickViewBox--;
         return;
     }
 
@@ -151,7 +154,15 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 this.food.push(check);
                 break;
             case 2: // Virus
-                if (!check.isMotherCell) this.virus.push(check); // Only real viruses! No mother cells;
+                if (check.isMotherCell) {
+                    var dist = this.getDist(cell, check);
+                    if (dist < 100) {
+                        this.predators.push(check);
+                        this.threats.push(check);
+                    }
+                } else {
+                    this.virus.push(check) // Only real viruses! No mother cells;
+                }
                 break;
             case 3: // Ejected mass
                 if (cell.mass > check.mass) {
@@ -159,7 +170,12 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 }
                 break;
             case 4: // Sticky Cell
-                this.virus.push(check);
+                var dist = this.getDist(cell, check);
+                if (dist < 300) {
+                    this.predators.push(check);
+                    this.threats.push(check);
+                    this.juke = true;
+                }
                 break;
             case 5: // Beacon Cell
                 this.virus.push(check);
@@ -265,7 +281,6 @@ BotPlayer.prototype.decide = function (cell) {
             if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
                 // Food is eaten/out of sight... so find a new food cell to target
                 this.target = this.findNearest(cell, this.food);
-
                 this.mouse = {x: this.target.position.x, y: this.target.position.y};
             }
             break;
@@ -282,16 +297,16 @@ BotPlayer.prototype.decide = function (cell) {
             angle = this.reverseAngle(angle);
 
             // Direction to move
-            var x1 = cell.position.x + (500 * Math.sin(angle));
-            var y1 = cell.position.y + (500 * Math.cos(angle));
+            var x1 = cell.position.x + (750 * Math.sin(angle));
+            var y1 = cell.position.y + (750 * Math.cos(angle));
 
             this.mouse = {x: x1, y: y1};
 
-            if (this.juke) {
+            if (this.juke && (this.cells.length <= (Math.random() * this.gameServer.config.playerMaxCells))) {
                 // Juking
                 this.gameServer.splitCells(this);
+                this.juke = false;
             }
-
             break;
         case 3: // Target prey
             // Recalculate prey based on bot's biggest cell
@@ -306,7 +321,7 @@ BotPlayer.prototype.decide = function (cell) {
             this.mouse = {x: this.target.position.x, y: this.target.position.y};
             var massReq = 1.25 * (this.target.mass * 2 ) * this.cells.length; // Mass required to splitkill the target
 
-            if ((cell.mass > massReq) && (this.cells.length < this.gameServer.config.playerMaxCells)) { // Will not split into more than 6 cells
+            if ((cell.mass > massReq) && (this.cells.length <= (Math.random() * this.gameServer.config.playerMaxCells))) { // Will not split into more than 6 cells
                 var splitDist = (4 * (cell.getSpeed() * 6)) + (cell.getSize() * 1.75); // Distance needed to splitkill
                 var distToTarget = this.getAccDist(cell, this.target); // Distance between the target and this cell
 

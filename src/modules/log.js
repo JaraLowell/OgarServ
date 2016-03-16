@@ -1,4 +1,4 @@
-﻿var fs = require("fs");
+var fs = require("fs");
 var util = require('util');
 var EOL = require('os').EOL;
 
@@ -56,18 +56,17 @@ Log.prototype.setup = function (gameServer) {
 
     if ( gameServer.config.serverLiveStats == 1 ) {
         this.onWriteConsole = function (gameServer) {
-            var serv = gameServer.getPlayers();
             var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
             if (rss > peek) {
-            	  peek = rss;
+                peek = rss;
             }
             var fpstext = "Unknown";
             if ( typeof fps != "undefined" ) {
                 var diff = process.hrtime(fps);
-                fpstext = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(2) + "ms";
+                fpstext = (((diff[0] * 1e9 + diff[1])/1000000)-1000).toFixed(1) + "ms";
             }
 
-            var line1 = "\u001B[4mPlaying :   " + fillChar(serv.humans, ' ', 5, true) + " │ Dead :      " + fillChar((serv.players - (serv.humans + serv.spectate + serv.bots)), ' ', 5, true) + " │ Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " │ Bot:        " + fillChar(serv.bots, ' ', 5, true) + " \u001B[24m";
+            var line1 = "\u001B[4mPlaying :   " + fillChar(gameServer.sinfo.humans, ' ', 5, true) + " │ Dead :      " + fillChar(gameServer.sinfo.death, ' ', 5, true) + " │ Spectator:  " + fillChar(gameServer.sinfo.spectate, ' ', 5, true) + " │ Bot:        " + fillChar(gameServer.sinfo.bots, ' ', 5, true) + " \u001B[24m";
             var line2 = "ejected : " + fillChar(numberWithCommas(gameServer.nodesEjected.length), ' ', 27, true) + " │ cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true) + " ";
             var line3 = "food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " │ moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true) + " ";
             var line4 = "virus   : " + fillChar(numberWithCommas(gameServer.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + fillChar(fpstext,' ', 27, true) + "\u001B[36m ";
@@ -93,8 +92,7 @@ Log.prototype.setup = function (gameServer) {
                 if (gameServer.config.serverLogToFile) ip_log.write("[" + gameServer.formatTime() + "] Connect: " + ip + EOL);
                 var yada = '';
                 if (gameServer.config.serverLiveStats == 0) {
-                    var serv = gameServer.getPlayers();
-                    yada = "(Play:" + serv.humans + " Spec: " + serv.spectate + ") ";
+                    yada = "(Play:" + gameServ.sinfo.humans + " Spec: " + gameServ.sinfo.spectate + ") ";
                 }
                 process.stdout.write("[" + gameServer.formatTime() + "] " + yada + "\u001B[32m" + util.format(ip) + "\u001B[0m" + EOL);
             };

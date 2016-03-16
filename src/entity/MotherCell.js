@@ -6,9 +6,11 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2; // Copies virus cell
-    this.color = {r: 190 + Math.floor(30*Math.random()),
-                  g: 70 + Math.floor(30*Math.random()),
-                  b: 85 + Math.floor(30*Math.random())};
+    this.color = {
+        r: 190 + Math.floor(30*Math.random()),
+        g: 70  + Math.floor(30*Math.random()),
+        b: 85  + Math.floor(30*Math.random())
+    };
     this.spiked = 1;
 }
 
@@ -36,7 +38,7 @@ MotherCell.prototype.update = function(gameServer) {
         this.mass--;
         i++;
     }
-}
+};
 
 MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = this.mass * 0.9;
@@ -97,12 +99,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             this.mass -= gameServer.config.virusStartMass;
         }
     }
-}
+};
 
 MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
     return (n < 0) ? -n: n;
-}
+};
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position

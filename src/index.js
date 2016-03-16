@@ -15,6 +15,8 @@ console.log("       |___/  \u001B[32mAn open source Agar.io server       \u001B[
 console.log("");
 console.log("\u001B[33m Node.js v" + process.versions.node + " (" + process.platform + " " + process.arch + ")");
 console.log(" Chrome's V8 JavaScript engine v" + process.versions.v8);
+console.log(" Library HTTP v" + process.versions.http_parser);
+console.log(" Library zlib v" + process.versions.zlib + "\u001B[0m");
 
 // Handle arguments
 process.argv.forEach(function (val) {
