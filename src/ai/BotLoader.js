@@ -19,7 +19,8 @@ BotLoader.prototype.getName = function () {
         name = this.randomNames[index].replace('\r', '');
         this.randomNames.splice(index, 1);
     } else {
-        name = "bot" + ++this.nameIndex;
+        this.loadNames();
+        name = "Google";
     }
 
     return "[BOT] " + name;
@@ -47,5 +48,5 @@ BotLoader.prototype.addBot = function () {
     this.gameServer.clients.push(s);
 
     // Add to world
-    s.packetHandler.setNickname(this.getName());
+    s.packetHandler.setNickname("<bot>" + this.getName());
 };

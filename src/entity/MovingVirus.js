@@ -1,12 +1,11 @@
-﻿var Virus = require('./Virus')
+var Virus = require('./Virus')
 
 function MovingVirus() {
     Virus.apply(this, Array.prototype.slice.call(arguments));
-
     this.color = {
         r: 104 + Math.floor(48*Math.random()),
         g: 0,
-        b: 40 + Math.floor(48*Math.random())
+        b: 40  + Math.floor(48*Math.random())
     };
     this.angle = 3.14*Math.random();
     this.setMoveEngineData(2+4*Math.random(), Infinity, 1);
@@ -14,7 +13,6 @@ function MovingVirus() {
 
 module.exports = MovingVirus;
 MovingVirus.prototype = new Virus();
-
 
 // Unlike original viruses, these don't grow and split.  They move
 MovingVirus.prototype.feed = function(feeder, gameServer) {
@@ -52,5 +50,4 @@ MovingVirus.prototype.onRemove = function(gameServer) {
     } else {
         console.log("[Warning] Tried to remove a non existing virus!");
     }
-
 };

@@ -25,6 +25,7 @@ function PlayerTracker(gameServer, socket) {
     this.cTime = new Date();
     this.spectate = true;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
+    this.freeMouse = true;
     this.spectatedPlayer = -1; // Current player that this player is watching
 
     // Viewing box
@@ -50,7 +51,7 @@ function PlayerTracker(gameServer, socket) {
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
-    }
+    };
 }
 
 module.exports = PlayerTracker;
@@ -77,9 +78,9 @@ PlayerTracker.prototype.getScore = function (reCalcScore) {
         var s = 0;
         for (var i = 0, llen = this.cells.length; i < llen; i++) {
             s += this.cells[i].mass;
-            this.score = s;
-            if (s > this.hscore) this.hscore = s;
         }
+        this.score = s;
+        if (s > this.hscore) this.hscore = s;
     }
     if (this.cells.length > this.cscore) this.cscore = this.cells.length;
     return this.score >> 0;
@@ -175,14 +176,13 @@ PlayerTracker.prototype.update = function () {
 
         // Send packet
         this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes, this.gameServer.config.serverVersion));
-
         this.nodeDestroyQueue = []; // Reset destroy queue
         this.nodeAdditionQueue = []; // Reset addition queue
 
         // Update leaderboard
         if (this.tickLeaderboard <= 0) {
             this.socket.sendPacket(this.gameServer.lb_packet);
-            this.tickLeaderboard = 20; // 20 ticks = 1 second
+            this.tickLeaderboard = 40; // 20 ticks = 1 second
             if (this.gameServer.sqlconfig.host != '') {
                 this.writeInfo--;
             }
@@ -197,9 +197,11 @@ PlayerTracker.prototype.update = function () {
         if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') {
             ip = this.socket.remoteAddress;
         }
-        if( ip != "BOT" && this.hscore > 100 ) {
+
+        if( ip != "BOT" && this.hscore > 500 ) {
             this.gameServer.mysql.writeScore(this.name, ip, this.hscore, this.gameServer.sqlconfig.table);
         }
+
         this.writeInfo = 12;
     }
 
@@ -210,14 +212,20 @@ PlayerTracker.prototype.update = function () {
         if (this.cells.length) {
             // Remove all client cells
             var len = this.cells.length;
-            for (var i = 0; i < len; i++) {
+            for(var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[0];
                 if (!cell) {
                     continue;
                 }
+                while(cell.mass > this.gameServer.config.ejectMassLoss) {
+                    cell.mass -= this.gameServer.config.ejectMassLoss;
+                    this.gameServer.ejectBoom(cell.position, cell.getColor());
+                }
                 this.gameServer.removeNode(cell);
             }
         }
+
+        this.gameServer.apcount = 0;
         if (this.disconnect == 0) {
             // Remove from client list
             var index = this.gameServer.clients.indexOf(this.socket);
@@ -228,23 +236,28 @@ PlayerTracker.prototype.update = function () {
     }
 };
 
-// Viewing box
-PlayerTracker.prototype.updateSightRange = function () { // For view distance
-    var totalSize = 1.0;
+// Viewing box (And Highscore Check)
+PlayerTracker.prototype.updateSightRange = function () {
+    var totalSize = 1.0,
+        totalScore = 0;
 
     for (var i = 0, len = this.cells.length; i < len; i++) {
         if (!this.cells[i]) {
             continue;
         }
         totalSize += this.cells[i].getSize();
+        totalScore += this.cells[i].mass;
     }
 
     var factor = Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
     this.sightRangeX = this.gameServer.config.serverViewBaseX / factor;
     this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;
+
+    if (totalScore > this.hscore) this.hscore = totalScore;
 };
 
-PlayerTracker.prototype.updateCenter = function () { // Get center of cells
+// Get center of cells
+PlayerTracker.prototype.updateCenter = function () {
     var len = this.cells.length;
 
     if (len <= 0) {
@@ -293,6 +306,8 @@ PlayerTracker.prototype.calcViewBox = function () {
         node = this.gameServer.nodes[i];
         if (!node) {
             continue;
+        } else if (node.mass < 1) {
+            continue;
         } else if (node.visibleCheck(this.viewBox, this.centerPos) || node.owner == this) {
             // Cell is in range of viewBox
             newVisible.push(node);
@@ -317,7 +332,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     // Now that we've updated center pos, get nearby cells
     // We're going to use config's view base times 3.5
 
-    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
+    var mult = 4.5; // To simplify multiplier, in case this needs editing later on
     this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
     this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
     this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
@@ -326,7 +341,7 @@ PlayerTracker.prototype.getSpectateNodesF = function () {
     this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
 
     // Use calcViewBox's way of looking for nodes
-    var newVisible = [], specZoom = 250;
+    var newVisible = [], specZoom = 256;
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
         if (!node) {

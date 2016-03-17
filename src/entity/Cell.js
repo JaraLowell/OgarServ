@@ -1,9 +1,11 @@
-﻿function Cell(nodeId, owner, position, mass, gameServer) {
+function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.color = {r: Math.floor(32*Math.random()),
-                  g: 196 + Math.floor(48*Math.random()),
-                  b: Math.floor(32*Math.random())};
+    this.color = {
+        r: Math.floor(32*Math.random()),
+        g: 196 + Math.floor(48*Math.random()),
+        b: Math.floor(32*Math.random())
+    };
     this.position = position;
     this.mass = mass; // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
@@ -38,8 +40,8 @@ Cell.prototype.getSkin = function () {
 
 Cell.prototype.setColor = function (color) {
     this.color.r = color.r;
-    this.color.b = color.b;
     this.color.g = color.g;
+    this.color.b = color.b;
 };
 
 Cell.prototype.getColor = function () {
@@ -176,7 +178,7 @@ Cell.prototype.calcMovePhys = function (config, gameServer) {
             this.position.y = ySave;
         }
         while (totTravel < speed);
-    } else if (this.cellType == 3) {
+    } else if (this.cellType == 113) { // Disabled with 113 for now cause it makes for a ton of lag!, should be 3.
         //movement and collision check for ejected mass cells
         var collisionDist = r * 2 - 5; // Minimum distance between the 2 cells (allow cells to go a little inside eachother before moving them)
         var maxTravel = r; //check inbetween places for collisions (is needed when cell still has high speed) - max inbetween move before next collision check is cell radius

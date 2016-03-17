@@ -3,7 +3,7 @@
     "version": "1.6.0",
     "description": "My ogar server http://ogar.mivabe.nl",
     "author": "Jara Lowell (http://ogar.mivabe.nl/)",
-    "license": "GPLv3",
+    "license": "Apache License, Version 2.0",
     "homepage": "https://github.com/JaraLowell/OgarServ",
     "main": "src/index.js",
     "engines": {
@@ -13,9 +13,10 @@
         "fs": "^0.0.2",
         "http": "^0.0.0",
         "mysql": "^2.10.2",
-        "request": "^2.67.0",
+        "underscore": "^1.8.3",
         "sys": "^0.0.1",
-        "ws": "^1.0.1"
+        "ws": "^1.0.1",
+        "url": "^0.11.0"
     },
     "devDependencies": {
     },

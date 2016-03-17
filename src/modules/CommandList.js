@@ -235,6 +235,26 @@ Commands.list = {
             console.log("\u001B[36mServer: \u001B[0mInvalid game mode selected");
         }
     },
+    kick: function(gameServer, split) {
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("\u001B[36mServer: \u001B[0mPlease specify a valid player ID!");
+            return;
+        }
+
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                var len = client.cells.length;
+                for (var j = 0; j < len; j++) {
+                    gameServer.removeNode(client.cells[0]);
+                }
+                client.socket.close();
+                console.log("\u001B[36mServer: \u001B[0mKicked " + id);
+                break;
+            }
+        }
+    },
     kill: function (gameServer, split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
@@ -468,9 +488,8 @@ Commands.list = {
         console.log("\u001B[36mServer: \u001B[0mPlayer " + id + " was not found");
     },
     status: function (gameServer, split) {
-        var serv = gameServer.getPlayers();
-        console.log("Connected players: " + serv.players + "/" + gameServer.config.serverMaxConnections);
-        console.log("Playing:    " + fillChar(serv.humans, ' ', 5, true) + " | Connecting: " + fillChar((serv.players - (serv.humans + serv.spectate + serv.bots)), ' ', 5, true) + " | Spectator:  " + fillChar(serv.spectate, ' ', 5, true) + " | Bot:        " + fillChar(serv.bots, ' ', 5, true));
+        console.log("Connected players: " + gameServer.sinfo.players + "/" + gameServer.config.serverMaxConnections);
+        console.log("Playing:    " + fillChar(gameServer.sinfo.humans, ' ', 5, true) + " | Connecting: " + fillChar((gameServer.sinfo.players - (gameServer.sinfo.humans + gameServer.sinfo.spectate + gameServer.sinfo.bots)), ' ', 5, true) + " | Spectator:  " + fillChar(gameServer.sinfo.spectate, ' ', 5, true) + " | Bot:        " + fillChar(gameServer.sinfo.bots, ' ', 5, true));
         console.log("-------------------------------------------------------------------------------");
         console.log("clients : " + fillChar(numberWithCommas(gameServer.clients.length), ' ', 27, true) + " | cells  :  " + fillChar(numberWithCommas(gameServer.nodesPlayer.length), ' ', 27, true));
         console.log("food    : " + fillChar(numberWithCommas(gameServer.nodes.length), ' ', 27, true) + " | moving :  " + fillChar(numberWithCommas(gameServer.movingNodes.length), ' ', 27, true));
@@ -553,10 +572,7 @@ Commands.list = {
         for (var i = 1; i < split.length; i++) {
             message += split[i] + " ";
         }
-        var packet = new Packet.BroadCast(message);
-        for (var i = 0; i < gameServer.clients.length; i++) {
-            gameServer.clients[i].sendPacket(packet);
-        }
+        gameServer.SendMessage(message);
         console.log("\u001B[36mServer: \u001B[0m" + message);
     }
 };

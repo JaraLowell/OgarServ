@@ -1,4 +1,4 @@
-﻿var Cell = require('./Cell');
+var Cell = require('./Cell');
 var Virus = require('./Virus');
 var MotherCell = require('./MotherCell');
 
@@ -9,10 +9,11 @@ function StickyCell() {
     this.agitated = 1; // Drawing purposes
     this.acquired = undefined;
     this.radius = this.getSize();
-    this.color = {r: 190 + Math.floor(30*Math.random()),
-                  g: 70 + Math.floor(30*Math.random()),
-                  b: 85 + Math.floor(30*Math.random())};
-    //this.setMoveEngineData(1, Infinity, 1);
+    this.color = {
+        r: 190 + Math.floor(30*Math.random()),
+        g: 70  + Math.floor(30*Math.random()),
+        b: 85  + Math.floor(30*Math.random())
+    };
 }
 
 module.exports = StickyCell;
@@ -54,7 +55,7 @@ StickyCell.prototype.update = function(gameServer) {
             check.agitated = false;
             continue;
         }
-        
+
         // Take away mass from colliders
         if(check.mass > 10) { check.mass *= 0.9975; }
 
@@ -67,7 +68,7 @@ StickyCell.prototype.update = function(gameServer) {
             this.acquired = check;
         }
     }
-}
+};
 
 StickyCell.prototype.onAdd = function(gameServer) {
     gameServer.gameMode.nodesSticky.push(this);
@@ -83,7 +84,7 @@ StickyCell.prototype.onConsume = function(consumer, gameServer) {
         consumer.mass -= 2*this.mass;
         if(consumer.mass < 10) { consumer.mass = 10; }
     }
-}
+};
 
 StickyCell.prototype.virusOnConsume = Virus.prototype.onConsume;
 

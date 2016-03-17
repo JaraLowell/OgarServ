@@ -38,7 +38,6 @@ PacketHandler.prototype.handleMessage = function (message) {
         case 0:
             // Set Nickname
             var nick = '';
-
             for (var i = 1, llen = view.byteLength; i < llen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
@@ -46,7 +45,6 @@ PacketHandler.prototype.handleMessage = function (message) {
                 }
                 nick += String.fromCharCode(charCode);
             }
-
             this.setNickname(nick);
             break;
         case 1:
@@ -59,6 +57,7 @@ PacketHandler.prototype.handleMessage = function (message) {
         case 16:
             // Mouse coordinates
             var client = this.socket.playerTracker;
+            if(!client.freeMouse) break;
             if (view.byteLength == 13) {
                 client.mouse.x = view.getInt32(1, true);
                 client.mouse.y = view.getInt32(5, true);
@@ -87,32 +86,16 @@ PacketHandler.prototype.handleMessage = function (message) {
             break;
         case 80:
             // Cookie Code from Agar.io
-            for (var message = '', i = 1, llen = view.byteLength; i < llen; i++) {
-                message += String.fromCharCode(view.getUint8(i, !0));
-            }
+            // for (var message = '', i = 1, llen = view.byteLength; i < llen; i++) {
+            //    message += String.fromCharCode(view.getUint8(i, !0));
+            // }
             break;
         case 82:
             // User login access token
-            var service = view.getUint8(1, !0);
-            for (var message = '', i = 2, llen = view.byteLength; i < llen; i++) {
-                message += String.fromCharCode(view.getUint8(i, !0));
-            }
-            switch (service) {
-                case 1:
-                    // Recieved facebook access token
-                    // fbapi(message, this.socket.remoteAddress);
-                    break;
-                case 2:
-                    // recieved google+ access token
-                    break;
-                default:
-                    break;
-            }
             break;
         case 90:
             // Send Server Info
-            var serv = this.gameServer.getPlayers();
-            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), serv.humans, this.gameServer.config.borderRight, this.gameServer.config.foodMaxAmount, this.gameServer.config.serverGamemode));
+            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), this.gameServer.sinfo.humans, this.gameServer.config.borderRight, this.gameServer.nodes.length, this.gameServer.config.serverGamemode));
             break;
         case 99:
             // Chat
@@ -164,6 +147,8 @@ PacketHandler.prototype.handleMessage = function (message) {
             LastMsg = message;
             SpamBlock = 0;
 
+            message = this.WordScan(message);
+
             if (this.gameServer.config.chatToConsole == 1) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
@@ -177,7 +162,7 @@ PacketHandler.prototype.handleMessage = function (message) {
 
             var packet = new Packet.Chat(this.socket.playerTracker, message);
             // Send to all clients (broadcast)
-            for (var i = 0; i < this.gameServer.clients.length; i++) {
+            for (var i = 0, llen = this.gameServer.clients.length; i < llen; i++) {
                 this.gameServer.clients[i].sendPacket(packet);
             }
             break;
@@ -190,23 +175,49 @@ PacketHandler.prototype.handleMessage = function (message) {
         case 255:
             // Connection Start
             if (view.byteLength == 5) {
-                var c = this.gameServer.config,
-                    serv = this.gameServer.getPlayers();
+                var c = this.gameServer.config;
 
                 // Boot Player if Server Full
-                if (serv.players > c.serverMaxConnections) {
+                if (this.gameServer.sinfo.players > c.serverMaxConnections) {
                     this.socket.sendPacket(new Packet.ServerMsg(93));
                     this.socket.close();
                 }
                 this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
-                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), serv.humans, c.borderRight, c.foodMaxAmount, this.gameServer.config.serverGamemode));
-                break;
+                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), this.gameServer.sinfo.humans, c.borderRight, c.foodMaxAmount, c.serverGamemode));
             }
             break;
         default:
             console.log("Unknown Packet ID: " + packetId);
             break;
     }
+};
+
+PacketHandler.prototype.WordScan = function(line) {
+    // a few bad words...
+    line = line.replace(/isis/gi, "kiss");
+    line = line.replace(/faggot/gi, "cloud");
+    line = line.replace(/hitler/gi, "coyote");
+    line = line.replace(/nazi/gi, "rat");
+    line = line.replace(/cock/gi, "broom");
+    line = line.replace(/fuck/gi, "meow");
+    line = line.replace(/dick/gi, "tree");
+    line = line.replace(/bitch/gi, "cat");
+    line = line.replace(/shit/gi, "mouse");
+    line = line.replace(/cunt/gi, "heat");
+    line = line.replace(/slut/gi, "love");
+    line = line.replace(/weed/gi, "flower");
+    line = line.replace(/gay/gi, "fly");
+    line = line.replace(/penis/gi, "daddy");
+    line = line.replace(/nigger/gi, "tigger");
+    line = line.replace(/nigga/gi, "tigger");
+    line = line.replace(/porn/gi, "milk");
+    line = line.replace(/cocaine/gi, "candy");
+    line = line.replace(/servertime/gi, "time now is " + this.gameServer.formatTime());
+    // Stop Stealing My BOT's Tags already!
+    line = line.replace(/\[(BOT)\]/gi, "[2ch]");
+    line = line.replace(/<BOT>/gi, "<2ch>");
+
+    return line;
 };
 
 PacketHandler.prototype.rcon = function(message, wname) {
@@ -233,6 +244,9 @@ PacketHandler.prototype.rcon = function(message, wname) {
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
+        if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') {
+            newNick = this.WordScan(newNick);
+        }
         // Set name first
         var newSkin = "";
         if (newNick != null && newNick.length != 0) {
@@ -261,10 +275,6 @@ PacketHandler.prototype.setNickname = function(newNick) {
         // No name or weird name, lets call it Cell + pid Number
         if (newNick == "" || newNick == "Unregistered" || newNick == "Un Named") {
             newNick = "Cell" + client.pID;
-        }
-        // Banned name, lets call it Virus + pid number
-        if ( newNick.toLowerCase() == "nazi" || newNick.toLowerCase() == "hitler" || newNick.toLowerCase() == "isis" ) {
-            newNick = "Virus" + client.pID;
         }
 
         if (this.gameServer.gameMode.haveTeams) {

@@ -1,14 +1,16 @@
-﻿var Cell = require('./Cell');
+var Cell = require('./Cell');
 var Virus = require('./Virus');
 var Food = require('./Food');
 
 function MotherCell() { // Temporary - Will be in its own file if Zeach decides to add this to vanilla
     Cell.apply(this, Array.prototype.slice.call(arguments));
-    
+
     this.cellType = 2; // Copies virus cell
-    this.color = {r: 190 + Math.floor(30*Math.random()),
-                  g: 70 + Math.floor(30*Math.random()),
-                  b: 85 + Math.floor(30*Math.random())};
+    this.color = {
+        r: 190 + Math.floor(30*Math.random()),
+        g: 70  + Math.floor(30*Math.random()),
+        b: 85  + Math.floor(30*Math.random())
+    };
     this.spiked = 1;
 }
 
@@ -22,7 +24,7 @@ MotherCell.prototype.getEatingRange = function() {
 MotherCell.prototype.update = function(gameServer) {
     // Add mass
     this.mass += 0.25;
-    
+
     // Spawn food
     var maxFood = 10; // Max food spawned per tick
     var i = 0; // Food spawn counter
@@ -31,26 +33,26 @@ MotherCell.prototype.update = function(gameServer) {
         if (gameServer.currentFood < gameServer.config.foodMaxAmount) {
             this.spawnFood(gameServer);
         }
-        
+
         // Incrementers
         this.mass--;
         i++;
     }
-}
+};
 
 MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = this.mass * 0.9;
     var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
-    
+
     // Loop for potential prey
     for (var i in gameServer.nodesPlayer) {
         var check = gameServer.nodesPlayer[i];
-        
+
         if (check.mass > safeMass) {
             // Too big to be consumed
             continue;
         }
-        
+
         // Calculations
         var len = r - (check.getSize() / 2) >> 0; 
         if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
@@ -58,7 +60,7 @@ MotherCell.prototype.checkEat = function(gameServer) {
             var xs = Math.pow(check.position.x - this.position.x, 2);
             var ys = Math.pow(check.position.y - this.position.y, 2);
             var dist = Math.sqrt( xs + ys );
-            
+
             if (r > dist) {
                 // Un-juggernaut if player was juggernaut
                 if(check.owner.juggernaut) {
@@ -72,14 +74,14 @@ MotherCell.prototype.checkEat = function(gameServer) {
     }
     for (var i in gameServer.movingNodes) {
         var check = gameServer.movingNodes[i];
-        
+
         if ((check.getType() == 1) || (check.mass > safeMass)) {
             // Too big to be consumed/ No player cells
             continue;
         }
-        
+
         // Calculations
-        var len = r >> 0; 
+        var len = r >> 0;
         if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
             // Eat the cell
             gameServer.removeNode(check);
@@ -97,12 +99,12 @@ MotherCell.prototype.checkEat = function(gameServer) {
             this.mass -= gameServer.config.virusStartMass;
         }
     }
-}
+};
 
 MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
     return (n < 0) ? -n: n;
-}
+};
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position
@@ -119,12 +121,12 @@ MotherCell.prototype.spawnFood = function(gameServer) {
 
     gameServer.addNode(f);
     gameServer.currentFood++;
-    
+
     // Move engine
     f.angle = angle;
     var dist = (Math.random() * 10) + 22; // Random distance
     f.setMoveEngineData(dist,15);
-    
+
     gameServer.setAsMovingNode(f);
 };
 

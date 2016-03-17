@@ -21,4 +21,3 @@ ServerInfo.prototype.build = function () {
     view.setFloat64(33, this.smode, true);
     return buf;
 };
-

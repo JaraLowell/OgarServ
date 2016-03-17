@@ -28,12 +28,30 @@ BotPlayer.prototype.getLowestCell = function () {
 
     // Starting cell
     var lowest = this.cells[0];
-    for (var i = 1; i < this.cells.length; i++) {
+    var i = this.cells.length;
+    while (i--) {
         if (lowest.mass > this.cells[i].mass) {
             lowest = this.cells[i];
         }
     }
     return lowest;
+};
+
+BotPlayer.prototype.getHighestCell = function() {
+    // Gets the cell with the highest mass
+    if (this.cells.length <= 0) {
+        return null; // Error!
+    }
+
+    // Starting cell
+    var highest = this.cells[0];
+    var i = this.cells.length;
+    while (i--) {
+        if (highest.mass > this.cells[i].mass) {
+            highest = this.cells[i];
+        }
+    }
+    return highest;
 };
 
 // Override
@@ -49,8 +67,11 @@ BotPlayer.prototype.updateSightRange = function () { // For view distance
 };
 
 BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
+    // We are paused...
+    if(!this.gameServer.run) return;
+
     // Remove nodes from visible nodes if possible
-    for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
+    for (var i = 0, llen = this.nodeDestroyQueue.length; i < llen; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
@@ -58,11 +79,11 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
     }
 
     // Update every 500 ms
-    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
+    if (this.tickViewBox <= 0) {
         this.visibleNodes = this.calcViewBox();
-        this.tickViewBox = 10;
+        this.tickViewBox = 9;
     } else {
-        if (this.tickViewBox > -100) this.tickViewBox--;
+        this.tickViewBox--;
         return;
     }
 
@@ -119,11 +140,12 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                     var dist = this.getDist(cell, check) - (r + check.getSize());
                     if (dist < 300) {
                         this.predators.push(check);
-                        if ((this.cells.length == 1) && (dist < 0)) {
+                        if ((this.cells.length < this.gameServer.config.playerMaxCells) && (dist < r + check.getSize())) { // was == 1
                             this.juke = true;
                         }
                     }
                     this.threats.push(check);
+                    break;
                 } else {
                     this.threats.push(check);
                 }
@@ -132,12 +154,31 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
                 this.food.push(check);
                 break;
             case 2: // Virus
-                if (!check.isMotherCell) this.virus.push(check); // Only real viruses! No mother cells;
+                if (check.isMotherCell) {
+                    var dist = this.getDist(cell, check);
+                    if (dist < 100) {
+                        this.predators.push(check);
+                        this.threats.push(check);
+                    }
+                } else {
+                    this.virus.push(check) // Only real viruses! No mother cells;
+                }
                 break;
             case 3: // Ejected mass
-                if (cell.mass > 16) {
+                if (cell.mass > check.mass) {
                     this.food.push(check);
                 }
+                break;
+            case 4: // Sticky Cell
+                var dist = this.getDist(cell, check);
+                if (dist < 300) {
+                    this.predators.push(check);
+                    this.threats.push(check);
+                    this.juke = true;
+                }
+                break;
+            case 5: // Beacon Cell
+                this.virus.push(check);
                 break;
             default:
                 break;
@@ -160,6 +201,18 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
 };
 
 // Custom
+BotPlayer.prototype.updatePrey = function(cell) {
+    // Recalculate prey
+    this.prey = [];
+    for (var i in this.visibleNodes) {
+        var check = this.visibleNodes[i];
+        if (check.cellType == 0 && cell.mass > (check.mass * 1.33) && check.mass > cell.mass / 5) {
+            // Prey
+            this.prey.push(check);
+        }
+    }
+};
+
 BotPlayer.prototype.clearLists = function () {
     this.predators = [];
     this.threats = [];
@@ -228,7 +281,6 @@ BotPlayer.prototype.decide = function (cell) {
             if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
                 // Food is eaten/out of sight... so find a new food cell to target
                 this.target = this.findNearest(cell, this.food);
-
                 this.mouse = {x: this.target.position.x, y: this.target.position.y};
             }
             break;
@@ -245,33 +297,31 @@ BotPlayer.prototype.decide = function (cell) {
             angle = this.reverseAngle(angle);
 
             // Direction to move
-            var x1 = cell.position.x + (500 * Math.sin(angle));
-            var y1 = cell.position.y + (500 * Math.cos(angle));
+            var x1 = cell.position.x + (750 * Math.sin(angle));
+            var y1 = cell.position.y + (750 * Math.cos(angle));
 
             this.mouse = {x: x1, y: y1};
 
-            // Cheating
-            if (cell.mass < 250) {
-                cell.mass += 0;
-            }
-
-            if (this.juke) {
+            if (this.juke && (this.cells.length <= (Math.random() * this.gameServer.config.playerMaxCells))) {
                 // Juking
                 this.gameServer.splitCells(this);
+                this.juke = false;
             }
-
             break;
         case 3: // Target prey
-            if ((!this.target) || (cell.mass < (this.target.mass * 1.2)) || this.target.mass > 200 || (this.visibleNodes.indexOf(this.target) == -1)) {
+            // Recalculate prey based on bot's biggest cell
+            this.updatePrey(this.getHighestCell());
+
+            if ((!this.target) || (cell.mass < (this.target.mass * 1.33)) || this.target.mass > 200 || (this.visibleNodes.indexOf(this.target) == -1)) {
+                if (this.prey.length == 0) break; // Error!
                 this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 
             this.mouse = {x: this.target.position.x, y: this.target.position.y};
-
             var massReq = 1.25 * (this.target.mass * 2 ) * this.cells.length; // Mass required to splitkill the target
 
-            if ((cell.mass > massReq) && (this.cells.length < 3)) { // Will not split into more than 4 cells
+            if ((cell.mass > massReq) && (this.cells.length <= (Math.random() * this.gameServer.config.playerMaxCells))) { // Will not split into more than 6 cells
                 var splitDist = (4 * (cell.getSpeed() * 6)) + (cell.getSize() * 1.75); // Distance needed to splitkill
                 var distToTarget = this.getAccDist(cell, this.target); // Distance between the target and this cell
 
@@ -350,12 +400,12 @@ BotPlayer.prototype.decide = function (cell) {
                 r++;
             }
         }
-        // Merge 
+        // Merge
         if (r >= 2) {
             this.mouse.x = this.centerPos.x;
             this.mouse.y = this.centerPos.y;
-            this.gameState = 0;
         }
+        this.gameState = 0;
     }
 };
 
@@ -391,16 +441,15 @@ BotPlayer.prototype.getRandom = function (list) {
 BotPlayer.prototype.combineVectors = function (list) {
     var pos = {x: 0, y: 0};
     var check;
-    for (var i = 0; i < list.length; i++) {
+    for (var i = 0, llen = list.length; i < llen; i++) {
         check = list[i];
         pos.x += check.position.x;
         pos.y += check.position.y;
     }
 
     // Get avg
-    pos.x = pos.x / list.length;
-    pos.y = pos.y / list.length;
-
+    pos.x = pos.x / llen;
+    pos.y = pos.y / llen;
     return pos;
 };
 
@@ -419,7 +468,7 @@ BotPlayer.prototype.checkPath = function (cell, check) {
 // Gets the biggest cell from the array
 BotPlayer.prototype.getBiggest = function (list) {
     var biggest = list[0];
-    for (var i = 1; i < list.length; i++) {
+    for (var i = 1, llen = list.length; i < llen; i++) {
         var check = list[i];
         if (check.mass > biggest.mass) {
             biggest = check;
@@ -430,7 +479,7 @@ BotPlayer.prototype.getBiggest = function (list) {
 
 BotPlayer.prototype.findNearbyVirus = function (cell, checkDist, list) {
     var r = cell.getSize() + 100; // Gets radius + virus radius
-    for (var i = 0; i < list.length; i++) {
+    for (var i = 0, llen = list.length; i < llen; i++) {
         var check = list[i];
         var dist = this.getDist(cell, check) - r;
         if (checkDist > dist) {
@@ -482,10 +531,5 @@ BotPlayer.prototype.getAngle = function (c1, c2) {
 };
 
 BotPlayer.prototype.reverseAngle = function (angle) {
-    if (angle > Math.PI) {
-        angle -= Math.PI;
-    } else {
-        angle += Math.PI;
-    }
-    return angle;
+    return angle > 3.14159 ? angle -= 3.14159 : angle += 3.14159;
 };
