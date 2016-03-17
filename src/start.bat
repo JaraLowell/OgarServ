@@ -7,5 +7,5 @@ rem *** exemple: C:\JXCore\JX install..... etc
 
 :loop
    cls
-   node --nouse-idle-notification --expose-gc index.js
+   node --nouse-idle-notification --expose-gc --always-compact --max-new-space-size=2048 --max-old-space-size=2048 index.js
    goto loop
