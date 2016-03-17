@@ -217,10 +217,11 @@ Experimental2.prototype.onServerInit = function(gameServer) {
 Experimental2.prototype.onTick = function(gameServer) {
     // Create a beacon if one doesn't exist
     if(!this.beacon) {
-        this.beacon = new Beacon(gameServer.getNextNodeId(),
-                                 null,
-                                 gameServer.getRandomPosition(),
-                                 this.beaconMass);
+        var pos = {
+            x: (gameServer.config.borderRight - gameServer.config.borderLeft) / 2,
+            y: (gameServer.config.borderBottom - gameServer.config.borderTop) / 2
+        };
+        this.beacon = new Beacon(gameServer.getNextNodeId(), null, pos, this.beaconMass);
         gameServer.addNode(this.beacon);
     }
 

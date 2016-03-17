@@ -815,6 +815,15 @@ GameServer.prototype.splitCells = function (client) {
     }
 };
 
+GameServer.prototype.ejectBoom = function (pos, color) {
+    var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, {x: pos.x, y: pos.y}, this.config.ejectMass);
+    ejected.setAngle(6.28*Math.random());
+    ejected.setMoveEngineData(Math.random() * this.config.ejectSpeed, 35, 0.5 + 0.4 * Math.random());
+    ejected.setColor(color);
+    this.addNode(ejected);
+    this.setAsMovingNode(ejected);
+};
+
 GameServer.prototype.ejectMass = function (client) {
     if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
         for (var i = 0, llen = client.cells.length; i < llen; i++) {
