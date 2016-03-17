@@ -212,14 +212,19 @@ PlayerTracker.prototype.update = function () {
         if (this.cells.length) {
             // Remove all client cells
             var len = this.cells.length;
-            for (var i = 0; i < len; i++) {
+            for(var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[0];
                 if (!cell) {
                     continue;
                 }
+                while(cell.mass > this.gameServer.config.ejectMassLoss) {
+                    cell.mass -= this.gameServer.config.ejectMassLoss;
+                    this.gameServer.ejectBoom(cell.position, cell.getColor());
+                }
                 this.gameServer.removeNode(cell);
             }
         }
+
         this.gameServer.apcount = 0;
         if (this.disconnect == 0) {
             // Remove from client list
