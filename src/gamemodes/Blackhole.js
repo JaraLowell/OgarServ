@@ -41,10 +41,12 @@ Blackhole.prototype.spawnMotherCell = function (gameServer) {
     // Checks if there are enough mother cells on the map
     if (this.nodesMother.length != 1) {
         // Spawns a mother cell
+
         var pos = {
-            x: (gameServer.config.borderRight - gameServer.config.borderLeft) / 2,
-            y: (gameServer.config.borderBottom - gameServer.config.borderTop) / 2
+            x: gameServer.config.borderRight / 2,
+            y: gameServer.config.borderBottom / 2
         };
+        // var pos =  gameServer.getRandomPosition();
 
         // Spawn if no cells are colliding
         var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass);
