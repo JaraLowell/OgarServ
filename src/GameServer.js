@@ -425,9 +425,9 @@ GameServer.prototype.removeNode = function (node) {
     }
 };
 
-GameServer.prototype.cellTick = function () {
+GameServer.prototype.cellTick = function (moveCells) {
     // Move cells
-    this.updateMoveEngine();
+    this.updateMoveEngine(moveCells);
 };
 
 GameServer.prototype.spawnTick = function () {
@@ -671,7 +671,7 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
-GameServer.prototype.updateMoveEngine = function () {
+GameServer.prototype.updateMoveEngine = function (moveCells) {
    // Sort cells to move the cells close to the mouse first
     var srt = [],
         len = this.nodesPlayer.length;
@@ -710,7 +710,7 @@ GameServer.prototype.updateMoveEngine = function () {
         }
 
         var client = cell.owner;
-        cell.calcMove(client.mouse.x, client.mouse.y, this);
+        cell.calcMove(client.mouse.x, client.mouse.y, this, moveCells);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);

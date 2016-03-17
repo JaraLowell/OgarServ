@@ -2,6 +2,8 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
+    this.shouldMoveCells = true; // False if the mouse packet wasn't triggered
+    this.movePacketTriggered = false;
     this.pID = -1;
     this.disconnect = -1; // Disconnection
     this.name = "";
@@ -98,6 +100,13 @@ PlayerTracker.prototype.getTeam = function () {
 
 // Functions
 PlayerTracker.prototype.update = function () {
+    // Move packet update
+    if (this.movePacketTriggered) {
+        this.movePacketTriggered = false;
+        this.shouldMoveCells = true;
+    } else {
+        this.shouldMoveCells = false;
+    }
     // Actions buffer (So that people cant spam packets)
     if (this.gameServer.run) {
         if (this.socket.packetHandler.pressSpace) { // Split cell
