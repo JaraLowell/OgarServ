@@ -358,17 +358,15 @@ GameServer.prototype.getRandomSpawn = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    // brightness setting 0 ~ 5 where 0 is dark colors
-    var brightness = 2 + (Math.random() * 3);
-
-    var rgb = [Math.random() * 250, Math.random() * 250, Math.random() * 250];
-    var mix = [brightness*51, brightness*51, brightness*51];
-    var colorRGB = [rgb[0] + mix[0], rgb[1] + mix[1], rgb[2] + mix[2]].map( function(x){ return Math.round(x / 2.0) })
+    var colorRGB = [0xFF, 0x07, ((Math.random() * (256 - 7)) >> 0) + 7];
+    colorRGB.sort(function () {
+        return 0.5 - Math.random()
+    });
 
     return {
-        r: colorRGB[1],
-        b: colorRGB[0],
-        g: colorRGB[2]
+        r: Math.round((colorRGB[0] + 210) / 2),
+        b: Math.round((colorRGB[1] + 210) / 2),
+        g: Math.round((colorRGB[2] + 210) / 2)
     };
 };
 
