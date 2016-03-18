@@ -361,7 +361,7 @@ GameServer.prototype.getRandomColor = function () {
     // brightness setting 0 ~ 5 where 0 is dark colors
     var brightness = 2 + (Math.random() * 3);
 
-    var rgb = [Math.random() * 256, Math.random() * 256, Math.random() * 256];
+    var rgb = [Math.random() * 250, Math.random() * 250, Math.random() * 250];
     var mix = [brightness*51, brightness*51, brightness*51];
     var colorRGB = [rgb[0] + mix[0], rgb[1] + mix[1], rgb[2] + mix[2]].map( function(x){ return Math.round(x / 2.0) })
 
