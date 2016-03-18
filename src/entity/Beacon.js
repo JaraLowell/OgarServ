@@ -26,15 +26,21 @@ Beacon.prototype.feed = function(feeder, gameServer) {
     // Increase the stage ('voltage' if you will)
     if(Math.random() < 0.25) {
         this.stage++;
+    } else {
+        gameServer.removeNode(feeder);
+        return;
     }
-    else return;
 
-    if(this.stage < 0) return;
+    if(this.stage < 1) {
+        gameServer.removeNode(feeder);
 
-    if(this.stage == 0 ) {
-        this.color.r = 155;
-        this.color.g = 211;
-        this.color.b = 10;
+        if(this.stage < 0) return;
+
+        if(this.stage == 0 ) {
+            this.color.r = 155;
+            this.color.g = 211;
+            this.color.b = 10;
+        }
     }
 
     this.mass = this.minMass + this.stage;
@@ -62,8 +68,8 @@ Beacon.prototype.feed = function(feeder, gameServer) {
     if(this.stage >= this.maxStage) {
         // Kill largest player and reset stage
         this.stage = -550;
-        this.color.r = 10;
-        this.color.g = 10;
+        this.color.r = 90;
+        this.color.g = 60;
         this.color.b = 10;
 
         var largest = gameServer.leaderboard[0];
@@ -108,25 +114,27 @@ Beacon.prototype.visibleCheck = MotherCell.prototype.visibleCheck;
 Beacon.prototype.spawnFood = MotherCell.prototype.spawnFood;
 
 Beacon.prototype.spawnEjected = function(gameServer, parentColor) {
-    // Get starting position
-    var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
-    var r = this.getSize();
-    var pos = {
-        x: this.position.x + ( r * Math.sin(angle) ),
-        y: this.position.y + ( r * Math.cos(angle) )
-    };
+    // Spawn spiral from the beacon 16 Ejected Mass Cells
+    var r = 16 + this.getSize();
+    var dist = 0;
+    var angle = Math.random();
 
-    // Spawn food
-    var f = new EjectedMass(gameServer.getNextNodeId(), null, pos, gameServer.config.ejectMass);
-    f.setColor(parentColor);
+    for (var k = 0; k < 16; k++) {
+        angle += 0.375;
+        dist += 6;
+        var pos = {
+            x: this.position.x + ( r * Math.sin(angle) ),
+            y: this.position.y + ( r * Math.cos(angle) )
+        };
+        // Spawn food
+        var f = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 2)));
+        f.setColor({r: 240 ,g:111 ,b:0});
+        gameServer.addNode(f);
+        gameServer.currentFood++;
 
-    gameServer.addNode(f);
-    gameServer.currentFood++;
-
-    // Move engine
-    f.angle = angle;
-    var dist = (Math.random() * 25) + 5; // Random distance
-    f.setMoveEngineData(dist,15);
-
-    gameServer.setAsMovingNode(f);
+        // Move engine
+        f.angle = angle;
+        f.setMoveEngineData(dist,15);
+        gameServer.setAsMovingNode(f);
+    }
 };
