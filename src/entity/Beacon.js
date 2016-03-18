@@ -79,13 +79,7 @@ Beacon.prototype.feed = function(feeder, gameServer) {
             }
         }
 
-        // Give back mass
-        for(var i = 0; i < this.maxStage/4; i++) {
-            this.spawnEjected(gameServer, color);
-        }
-
         this.mass = this.minMass;
-
         setTimeout(function () {
             this.mass = this.minMass;
             this.active = true;
