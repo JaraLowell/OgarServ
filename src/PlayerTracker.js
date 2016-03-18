@@ -227,7 +227,7 @@ PlayerTracker.prototype.update = function () {
                     continue;
                 }
                 while(cell.mass > this.gameServer.config.ejectMassLoss) {
-                    cell.mass -= this.gameServer.config.ejectMassLoss;
+                    cell.mass -= Math.round(this.gameServer.config.ejectMassLoss * 3.33);
                     this.gameServer.ejectBoom(cell.position, cell.getColor());
                 }
                 this.gameServer.removeNode(cell);
