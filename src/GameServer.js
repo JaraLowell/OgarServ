@@ -179,7 +179,7 @@ GameServer.prototype.start = function () {
     this.socketServer = new WebSocket.Server({
         port: this.config.serverPort,
         disableHixie: true,
-        clientTracking: false,
+        clientTracking: true,
         perMessageDeflate: false
     }, function () {
         // Spawn starting food
@@ -358,15 +358,17 @@ GameServer.prototype.getRandomSpawn = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    var colorRGB = [0xFF, 0x07, ((Math.random() * (140 - 7)) >> 0) + 7];
-    colorRGB.sort(function () {
-        return 0.5 - Math.random()
-    });
+    // brightness setting 0 ~ 5 where 0 is dark colors
+    var brightness = 2 + (Math.random() * 3);
+
+    var rgb = [Math.random() * 256, Math.random() * 256, Math.random() * 256];
+    var mix = [brightness*51, brightness*51, brightness*51];
+    var colorRGB = [rgb[0] + mix[0], rgb[1] + mix[1], rgb[2] + mix[2]].map( function(x){ return Math.round(x / 2.0) })
 
     return {
-        r: colorRGB[0] + 100,
-        b: colorRGB[1] + 100,
-        g: colorRGB[2] + 100
+        r: colorRGB[1],
+        b: colorRGB[0],
+        g: colorRGB[2]
     };
 };
 
@@ -425,9 +427,9 @@ GameServer.prototype.removeNode = function (node) {
     }
 };
 
-GameServer.prototype.cellTick = function (moveCells) {
+GameServer.prototype.cellTick = function () {
     // Move cells
-    this.updateMoveEngine(moveCells);
+    this.updateMoveEngine();
 };
 
 GameServer.prototype.spawnTick = function () {
@@ -531,6 +533,7 @@ GameServer.prototype.exitserver = function () {
         this.clients[i].sendPacket(packet);
     }
     console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
+    this.config.serverMaxConnections = 0;
 
     var temp = setTimeout(function () {
         console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
@@ -662,6 +665,7 @@ GameServer.prototype.virusCheck = function () {
         // Spawn if no cells are colliding
         var v = new Entity.Virus(this.getNextNodeId(), null, pos, this.config.virusStartMass);
         this.addNode(v);
+        this.spawnSpiral(pos, v.color);
     }
 };
 
@@ -671,7 +675,7 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
-GameServer.prototype.updateMoveEngine = function (moveCells) {
+GameServer.prototype.updateMoveEngine = function () {
    // Sort cells to move the cells close to the mouse first
     var srt = [],
         len = this.nodesPlayer.length;
@@ -710,7 +714,7 @@ GameServer.prototype.updateMoveEngine = function (moveCells) {
         }
 
         var client = cell.owner;
-        cell.calcMove(client.mouse.x, client.mouse.y, this, moveCells);
+        cell.calcMove(client.mouse.x, client.mouse.y, this);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -857,6 +861,39 @@ GameServer.prototype.ejectMass = function (client) {
             this.setAsMovingNode(ejected);
             client.lastEject = this.time;
         }
+    }
+};
+
+GameServer.prototype.spawnSpiral = function(position, color) {
+    var r = 150;
+    var rnd = Math.random() * 3.14;
+
+    var angle = rnd;
+    for (var k = 0, dist = 0; k < 16; k++) {
+        angle += 0.375;
+        dist += 3.14;
+        var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};
+
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
+        ejected.angle = angle;
+        ejected.setMoveEngineData(dist,15);
+        ejected.setColor({r: Math.floor(color.r / 70), g: Math.floor(color.g / 70), b: Math.floor(color.b / 70)});
+        this.addNode(ejected);
+        this.setAsMovingNode(ejected);
+    }
+
+    angle = rnd + 3.14;
+    for (var k = 0, dist = 0; k < 16; k++) {
+        angle += 0.375;
+        dist += 3.14;
+        var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};
+
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
+        ejected.angle = angle;
+        ejected.setMoveEngineData(dist,15);
+        ejected.setColor(color);
+        this.addNode(ejected);
+        this.setAsMovingNode(ejected);
     }
 };
 

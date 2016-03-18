@@ -36,9 +36,7 @@ PlayerCell.prototype.calcMergeTime = function (base) {
 };
 
 // Movement
-PlayerCell.prototype.calcMove = function (x2, y2, gameServer, moveCell) {
-    if (!this.owner.shouldMoveCells) return; // Mouse is in one place
-    
+PlayerCell.prototype.calcMove = function (x2, y2, gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
 

@@ -3,9 +3,9 @@ var Virus = require('./Virus')
 function MovingVirus() {
     Virus.apply(this, Array.prototype.slice.call(arguments));
     this.color = {
-        r: 104 + Math.floor(48*Math.random()),
-        g: 0,
-        b: 40  + Math.floor(48*Math.random())
+        r: 10  + Math.floor(Math.random() * 32),
+        g: 196 + Math.floor(Math.random() * 32),
+        b: 10  + Math.floor(Math.random() * 32)
     };
     this.angle = 3.14*Math.random();
     this.setMoveEngineData(2+4*Math.random(), Infinity, 1);

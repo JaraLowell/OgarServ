@@ -15,8 +15,8 @@ function Beacon() {
     this.minMass = this.mass;
     this.color = {
         r: 240,
-        g: 111,
-        b: 10
+        g: 240,
+        b: 240
     };
 }
 
@@ -39,7 +39,7 @@ Beacon.prototype.feed = function(feeder, gameServer) {
 
     // Sometimes spit out a ejected mass
     if(Math.random() < 0.10) {
-        this.spawnEjected(gameServer);
+        this.spawnEjected(gameServer, this.color);
     }
 
     // Even more rarely spit out a moving virus
@@ -90,22 +90,54 @@ Beacon.prototype.feed = function(feeder, gameServer) {
             this.mass = this.minMass;
             this.active = true;
             this.color.r = 240;
-            this.color.g = 111;
-            this.color.b = 10;
+            this.color.g = 240;
+            this.color.b = 240;
             this.spawnEjected(gameServer);
         }.bind(this), 600000);
     }
 
     // Indicate stage via color
-    this.color.r -= 1;
-    this.color.g += 1;
+    this.color.g -= 10;
+    this.color.b -= 10;
     gameServer.removeNode(feeder);
+};
+
+Beacon.prototype.spawnEjected = function(gameServer, color) {
+    var r = 32 + this.getSize();
+
+    var angle = 0; // Starting angle
+    for (var k = 0, dist = 0; k < 16; k++) {
+        angle += 0.375;
+        dist += 8;
+        var pos = {x: this.position.x + (r * Math.sin(angle)), y: this.position.y + (r * Math.cos(angle))};
+
+        var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
+        ejected.angle = angle;
+        ejected.setMoveEngineData(dist,15);
+        ejected.setColor({r: Math.floor(color.r / 70), g: Math.floor(color.g / 70), b: Math.floor(color.b / 70)});
+        gameServer.addNode(ejected);
+        gameServer.setAsMovingNode(ejected);
+    }
+
+    var angle = 3.14; // Starting angle
+    for (var k = 0, dist = 0; k < 16; k++) {
+        angle += 0.375;
+        dist += 8;
+        var pos = {x: this.position.x + (r * Math.sin(angle)), y: this.position.y + (r * Math.cos(angle))};
+
+        var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
+        ejected.angle = angle;
+        ejected.setMoveEngineData(dist,15);
+        ejected.setColor(color);
+        gameServer.addNode(ejected);
+        gameServer.setAsMovingNode(ejected);
+    }
 };
 
 Beacon.prototype.onAdd = function(gameServer) {
     gameServer.SendMessage('\u26EF Beacon, cell spawned!');
     gameServer.gameMode.beacon = this;
-    this.spawnEjected(gameServer);
+    this.spawnEjected(gameServer, this.color);
 };
 
 Beacon.prototype.abs = MotherCell.prototype.abs;
@@ -113,49 +145,3 @@ Beacon.prototype.abs = MotherCell.prototype.abs;
 Beacon.prototype.visibleCheck = MotherCell.prototype.visibleCheck;
 
 Beacon.prototype.spawnFood = MotherCell.prototype.spawnFood;
-
-Beacon.prototype.spawnEjected = function(gameServer) {
-    var r = 16 + this.getSize();
-    var dist = 0;
-
-    var angle = 0; // Starting angle
-    for (var k = 0; k < 16; k++) {
-        angle += 0.375;
-        dist += 6;
-        var pos = {
-            x: this.position.x + ( r * Math.sin(angle) ),
-            y: this.position.y + ( r * Math.cos(angle) )
-        };
-        // Spawn food
-        var f = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 2)));
-        f.setColor({r: 240 ,g:111 ,b:0});
-        gameServer.addNode(f);
-        gameServer.currentFood++;
-
-        // Move engine
-        f.angle = angle;
-        f.setMoveEngineData(dist,15);
-        gameServer.setAsMovingNode(f);
-    }
-
-    dist = 0;
-    var angle = 3.14; // Starting angle
-    for (var k = 0; k < 16; k++) {
-        angle += 0.375;
-        dist += 6;
-        var pos = {
-            x: this.position.x + ( r * Math.sin(angle) ),
-            y: this.position.y + ( r * Math.cos(angle) )
-        };
-        // Spawn food
-        var f = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 2)));
-        f.setColor({r:0 ,g:0 ,b:0});
-        gameServer.addNode(f);
-        gameServer.currentFood++;
-
-        // Move engine
-        f.angle = angle;
-        f.setMoveEngineData(dist,15);
-        gameServer.setAsMovingNode(f);
-    }
-};

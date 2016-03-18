@@ -10,9 +10,9 @@ function StickyCell() {
     this.acquired = undefined;
     this.radius = this.getSize();
     this.color = {
-        r: 190 + Math.floor(30*Math.random()),
-        g: 70  + Math.floor(30*Math.random()),
-        b: 85  + Math.floor(30*Math.random())
+        r: 210 + Math.floor(Math.random() * 32),
+        g: 10  + Math.floor(Math.random() * 32),
+        b: 10  + Math.floor(Math.random() * 32)
     };
 }
 

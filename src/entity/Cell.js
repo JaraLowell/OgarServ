@@ -2,9 +2,9 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {
-        r: Math.floor(32*Math.random()),
-        g: 196 + Math.floor(48*Math.random()),
-        b: Math.floor(32*Math.random())
+        r:       Math.floor(Math.random() * 32),
+        g: 196 + Math.floor(Math.random() * 32),
+        b:       Math.floor(Math.random() * 32)
     };
     this.position = position;
     this.mass = mass; // Starting mass of the cell
@@ -178,7 +178,7 @@ Cell.prototype.calcMovePhys = function (config, gameServer) {
             this.position.y = ySave;
         }
         while (totTravel < speed);
-    } else if (this.cellType == 113) { // Disabled with 113 for now cause it makes for a ton of lag!, should be 3.
+    } else if (this.cellType == 113) {
         //movement and collision check for ejected mass cells
         var collisionDist = r * 2 - 5; // Minimum distance between the 2 cells (allow cells to go a little inside eachother before moving them)
         var maxTravel = r; //check inbetween places for collisions (is needed when cell still has high speed) - max inbetween move before next collision check is cell radius

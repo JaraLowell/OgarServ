@@ -7,9 +7,9 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 
     this.cellType = 2; // Copies virus cell
     this.color = {
-        r: 190 + Math.floor(30*Math.random()),
-        g: 70  + Math.floor(30*Math.random()),
-        b: 85  + Math.floor(30*Math.random())
+        r: 200 + Math.floor(Math.random() * 30),
+        g: 70  + Math.floor(Math.random() * 30),
+        b: 70  + Math.floor(Math.random() * 30)
     };
     this.spiked = 1;
 }

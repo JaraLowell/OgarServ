@@ -68,7 +68,6 @@ PacketHandler.prototype.handleMessage = function (message) {
                 client.mouse.x = view.getFloat64(1, true);
                 client.mouse.y = view.getFloat64(9, true);
             }
-            client.movePacketTriggered = true;
             break;
         case 17:
             // Space Press - Split cell
@@ -214,9 +213,13 @@ PacketHandler.prototype.WordScan = function(line) {
     line = line.replace(/porn/gi, "milk");
     line = line.replace(/cocaine/gi, "candy");
     line = line.replace(/servertime/gi, "time now is " + this.gameServer.formatTime());
+
     // Stop Stealing My BOT's Tags already!
     line = line.replace(/\[(BOT)\]/gi, "[2ch]");
     line = line.replace(/<BOT>/gi, "<2ch>");
+
+    // Block http:// in chat/name
+    line = line.replace(/.*?:\/\//g, "");
 
     return line;
 };
