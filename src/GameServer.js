@@ -874,10 +874,10 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
         dist += 3.14;
         var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};
 
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, Math.round(dist / 4) + 1);
         ejected.angle = angle;
         ejected.setMoveEngineData(dist,15);
-        ejected.setColor({r: Math.floor(mycolor.r / 70), g: Math.floor(mycolor.g / 70), b: Math.floor(mycolor.b / 70)});
+        ejected.setColor({r: Math.floor(mycolor.r / 80), g: Math.floor(mycolor.g / 80), b: Math.floor(mycolor.b / 80)});
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }
@@ -888,7 +888,7 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
         dist += 3.14;
         var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};
 
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, Math.round(dist / 4) + 1);
         ejected.angle = angle;
         ejected.setMoveEngineData(dist,15);
         ejected.setColor(mycolor);
