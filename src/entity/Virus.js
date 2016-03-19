@@ -42,53 +42,62 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     // Cell consumes mass and then splits
     consumer.addMass(this.mass);
 
-    var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
-    var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
-    numSplits = Math.min(numSplits, maxSplits);
+    // Math for the Max number of splits
+    var maxSplits = Math.floor(consumer.mass / 16) - 1;
+    var numSplits = gameServer.config.playerMaxCells - client.cells.length;
+        numSplits = Math.min(numSplits, maxSplits);
 
     // Cell cannot split any further
     if (numSplits <= 0) {
         return;
     }
 
-    var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
+    var mass = consumer.mass; // Mass of the consumer
+    var splitMass = Math.min(mass / (numSplits + 1), 36); // Maximum size of new splits
+    var bigSplits = []; // Big splits
 
-    // Big cells will split into cells larger than 36 mass (1/4 of their mass)
-    var bigSplits = 0;
-    var endMass = consumer.mass - (numSplits * splitMass);
-    if ((endMass > 300) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
+    // Big cells will split into cells larger than 24 mass
+    // won't do the regular way unless it can split more than 4 times
+    if      (numSplits == 1) bigSplits = [mass / 2];
+    else if (numSplits == 2) bigSplits = [mass / 4, mass / 4];
+    else if (numSplits == 3) bigSplits = [mass / 4, mass / 4, mass / 7];
+    else if (numSplits == 4) bigSplits = [mass / 5, mass / 7, mass / 8, mass / 10];
+    else {
+        var endMass = mass - numSplits * splitMass;
+        var m = endMass,
+            i = 0;
+        if (m > 466) { // Threshold
+            // While can split into an even smaller cell (1000 => 333, 167, etc)
+            var mult = 3.33;
+            while (m / mult > 24) {
+                m /= mult;
+                mult = 2; // First mult 3.33, the next ones 2
+                bigSplits.push(m >> 0);
+                i++;
+            }
+        }
     }
-    if ((endMass > 1200) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-    if ((endMass > 3000) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
+    numSplits -= bigSplits.length;
 
     // Splitting
-    var angle = 0; // Starting angle
+    if(bigSplits.length) {
+        for (var k = 0,  angle = 0, speed = 150; k < bigSplits.length; k++) {
+            angle = Math.random() * 6.28;
+            speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(splitMass) - 2.2) * 1.65, 1);
+            consumer.mass -= bigSplits[k];
+            gameServer.newCellVirused(client, consumer, angle, bigSplits[k], speed);
+        }
+    }
 
     if(numSplits) {
-        for (var k = 0; k < numSplits; k++) {
+        for (var k = 0, angle = 0; k < numSplits; k++) {
             angle = Math.random() * 6.28; // Get directions of splitting cells
-            gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
             consumer.mass -= splitMass;
+            gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
         }
     }
 
-    if(bigSplits) {
-        for (var k = 0; k < bigSplits; k++) {
-            angle = Math.random() * 6.28; // Random directions
-            splitMass = consumer.mass / 4;
-            var speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(splitMass) - 2.2) * 1.65, 1);
-            gameServer.newCellVirused(client, consumer, angle, splitMass, speed);
-            consumer.mass -= splitMass;
-        }
-    }
+    // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
 

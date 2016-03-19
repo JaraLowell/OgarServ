@@ -86,7 +86,7 @@ Beacon.prototype.feed = function(feeder, gameServer) {
             this.color.r = 240;
             this.color.g = 240;
             this.color.b = 240;
-            this.spawnEjected(gameServer);
+            this.spawnEjected(gameServer, this.color);
         }.bind(this), 600000);
     }
 

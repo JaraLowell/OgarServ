@@ -587,11 +587,13 @@ GameServer.prototype.spawnFood = function () {
 
 GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     if (pos == null) { // Get random pos
-        pos = this.getRandomSpawn();//pos = this.getRandomPosition();
+        pos = this.getRandomSpawn();
     }
-    if (mass == null) { // Get starting mass
+
+    if (mass == null) {
         mass = this.config.playerStartMass;
     }
+
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
 
@@ -862,7 +864,7 @@ GameServer.prototype.ejectMass = function (client) {
     }
 };
 
-GameServer.prototype.spawnSpiral = function(position, color) {
+GameServer.prototype.spawnSpiral = function(position, mycolor) {
     var r = 150;
     var rnd = Math.random() * 3.14;
 
@@ -875,7 +877,7 @@ GameServer.prototype.spawnSpiral = function(position, color) {
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
         ejected.angle = angle;
         ejected.setMoveEngineData(dist,15);
-        ejected.setColor({r: Math.floor(color.r / 70), g: Math.floor(color.g / 70), b: Math.floor(color.b / 70)});
+        ejected.setColor({r: Math.floor(mycolor.r / 70), g: Math.floor(mycolor.g / 70), b: Math.floor(mycolor.b / 70)});
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }
@@ -889,7 +891,7 @@ GameServer.prototype.spawnSpiral = function(position, color) {
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, dist / 4);
         ejected.angle = angle;
         ejected.setMoveEngineData(dist,15);
-        ejected.setColor(color);
+        ejected.setColor(mycolor);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }

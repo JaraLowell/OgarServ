@@ -26,14 +26,14 @@ function Experimental2() {
     this.motherCellMass = 200;
     this.motherCellMaxMass = 400;
     this.motherUpdateInterval = 5; // How many ticks it takes to update the mother cell (1 tick = 50 ms)
-    this.motherSpawnInterval = 100; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
+    this.motherSpawnInterval = 350; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
     this.motherMinAmount = 5;
 
     this.movingVirusMass = 100;
-    this.movingVirusMinAmount = 10;
+    this.movingVirusMinAmount = 7;
 
     this.stickyMass = 75;
-    this.stickyMinAmount = 3;
+    this.stickyMinAmount = 2;
     this.stickyUpdateInterval = 1;
     this.tickSticky = 0;
 
