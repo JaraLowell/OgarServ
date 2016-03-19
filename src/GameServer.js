@@ -629,6 +629,15 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     // Set initial mouse coords
     player.freeMouse = true;
     player.mouse = {x: pos.x, y: pos.y};
+    player.startpos = {x: pos.x, y: pos.y};
+
+    // 30s Timer, to kick players that no move within that time frame
+    setTimeout(function () {
+        if (player.mouse.x == player.startpos.x && player.mouse.y == player.startpos.y) {
+            console.log("None moving Cell " + player.name + " kicked");
+            player.socket.close();
+        }
+    }.bind(this), 30000);
 };
 
 GameServer.prototype.virusCheck = function () {

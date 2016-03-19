@@ -18,6 +18,7 @@ function PlayerTracker(gameServer, socket) {
     this.writeInfo = 12;
     this.remoteAddress = "undefined";
     this.mouse = {x: 0, y: 0};
+    this.startpos = {x: 0, y: 0};
     this.tickLeaderboard = 0; //
     this.tickViewBox = 0;
     this.mouseCells = []; // For individual cell movement
