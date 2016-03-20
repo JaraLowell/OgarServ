@@ -633,7 +633,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
 
     // 30s Timer, to kick players that no move within that time frame
     setTimeout(function () {
-        if (cell.position.x == player.startpos.x && cell.position.y == player.startpos.y) {
+        if (player.mouse.x == player.startpos.x && player.mouse.y == player.startpos.y) {
             console.log("\u001B[35mCell " + player.name + " kicked for inactivity\u001B[0m");
             player.socket.close();
         }
