@@ -621,7 +621,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
         if (player.skin) {
             info = " (" + player.skin.slice(1) + ")";
         }
-        console.log("\u001B[33m" + player.name + info + " joined the game\u001B[0m");
+        console.log("\u001B[33mCell " + player.name + info + " joined the game\u001B[0m");
     }
 
     this.addNode(cell);
@@ -633,11 +633,11 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
 
     // 30s Timer, to kick players that no move within that time frame
     setTimeout(function () {
-        if (player.mouse.x == player.startpos.x && player.mouse.y == player.startpos.y) {
-            console.log("None moving Cell " + player.name + " kicked");
+        if (cell.position.x == player.startpos.x && cell.position.y == player.startpos.y) {
+            console.log("\u001B[35mCell " + player.name + " kicked for inactivity\u001B[0m");
             player.socket.close();
         }
-    }.bind(this), 30000);
+    }.bind(this), 20000);
 };
 
 GameServer.prototype.virusCheck = function () {

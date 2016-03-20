@@ -5,7 +5,7 @@ function BroadCast(message) {
 module.exports = BroadCast;
 
 BroadCast.prototype.build = function () {
-    var nick = "System";
+    var nick = "\uD83D\uDCE2 ";
     var buf = new ArrayBuffer(9 + 2 * nick.length + 2 * this.message.length);
     var view = new DataView(buf);
     view.setUint8(0, 99);
