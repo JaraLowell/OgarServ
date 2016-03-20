@@ -45,13 +45,13 @@ Beacon.prototype.feed = function(feeder, gameServer) {
     // Even more rarely spit out a moving virus
     // Spit out a moving virus in deterministic direction
     // every 30 shots
-    if(this.stage % 30 && Math.random() < 0.15) {
+    if(this.stage % 30 && Math.random() < 0.10) {
         var moving = new MovingVirus(gameServer.getNextNodeId(), null, {x: this.position.x, y: this.position.y}, 125);
         moving.angle = feeder.angle;
         moving.setMoveEngineData(20+10*Math.random(), Infinity, 1);
         gameServer.movingNodes.push(moving);
         gameServer.addNode(moving);
-        gameServer.SendMessage('\u26EF Beacon, released a virus!');
+        gameServer.SendMessage('\u26EF releasing a virus!');
     }
 
     if(this.stage >= this.maxStage) {
@@ -65,9 +65,10 @@ Beacon.prototype.feed = function(feeder, gameServer) {
 
         var largest = gameServer.leaderboard[0];
         var color = gameServer.getRandomColor();
+
         if(largest) {
             color = largest.color;
-            gameServer.SendMessage('\u26EF Beacon, targeted the largest player!!');
+            gameServer.SendMessage('\u26EF targeting ' + largest.getName() + ', and releasing a cell unbinding virus!');
             // Do something to each of their cells:
             for(var i = 0, llen = largest.cells.length; i < llen; i++) {
                 var cell = largest.cells[i];
