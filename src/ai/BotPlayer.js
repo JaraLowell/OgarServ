@@ -462,7 +462,7 @@ BotPlayer.prototype.checkPath = function (cell, check) {
     var v2 = this.getAngle(check, cell);
     v2 = this.reverseAngle(v2);
 
-    return !!((v1 <= (v2 + .25) ) && (v1 >= (v2 - .25) ));
+    return ((v1 <= (v2 + .25)) && (v1 >= (v2 - .25)));
 };
 
 // Gets the biggest cell from the array
@@ -487,19 +487,6 @@ BotPlayer.prototype.findNearbyVirus = function (cell, checkDist, list) {
         }
     }
     return false; // Returns a bool if no nearby viruses are found
-};
-
-BotPlayer.prototype.checkPath = function (cell, check) {
-    // Get angle of path
-    var v1 = Math.atan2(cell.position.x - player.mouse.x, cell.position.y - player.mouse.y);
-
-    // Get angle of vector (cell -> virus)
-    var v2 = this.getAngle(cell, check);
-    var dist = this.getDist(cell, check);
-
-    var inRange = Math.atan((2 * cell.getSize()) / dist); // Opposite/adjacent
-    console.log(inRange);
-    return !!((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange)));
 };
 
 BotPlayer.prototype.getDist = function (cell, check) {
@@ -531,5 +518,5 @@ BotPlayer.prototype.getAngle = function (c1, c2) {
 };
 
 BotPlayer.prototype.reverseAngle = function (angle) {
-    return angle > 3.14159 ? angle -= 3.14159 : angle += 3.14159;
+    return (angle > 3.14159) ? angle - 3.14159 : angle + 3.14159;
 };

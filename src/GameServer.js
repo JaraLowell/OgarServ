@@ -179,7 +179,7 @@ GameServer.prototype.start = function () {
     this.socketServer = new WebSocket.Server({
         port: this.config.serverPort,
         disableHixie: true,
-        clientTracking: true,
+        clientTracking: false,
         perMessageDeflate: false
     }, function () {
         // Spawn starting food
