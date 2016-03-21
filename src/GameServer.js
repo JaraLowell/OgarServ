@@ -882,6 +882,7 @@ GameServer.prototype.ejectMass = function (client) {
 };
 
 GameServer.prototype.spawnSpiral = function(position, mycolor) {
+    if(this.config.virusSpirals != 1) {
         return;
     }
 
