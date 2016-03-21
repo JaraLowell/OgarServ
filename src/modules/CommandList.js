@@ -430,9 +430,9 @@ Commands.list = {
                 position = fillChar(client.centerPos.x.toFixed(0), ' ', 5, true) + ', ' + fillChar(client.centerPos.y.toFixed(0), ' ', 5, true);
                 var yemp = "";
                 if(client.pingssent > 0) {
-                    yemp = " | " + client.pingssent + "ms";
-                    if(client.pingssent > 3000.0) {
-                        yemp = " | ∞";
+                    yemp = " | " + fillChar(client.pingssent + "ms", ' ', 9, true);
+                    if(client.pingssent > 9999.9) {
+                        yemp = " | " + fillChar("∞", ' ', 9, true);
                     }
                 }
                 console.log(" " + id + " | " + ip + " |\u001B[36m " + nick + " \u001B[0m| " + cells + " | " + score + " | " + position + yemp);

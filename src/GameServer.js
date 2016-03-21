@@ -101,6 +101,7 @@ function GameServer() {
         virusMaxAmount: 20,           // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,          // Starting virus size (In mass)
         virusFeedAmount: 7,           // Amount of times you need to feed a virus to shoot it
+        virusSpirals: 0,              // Disable or Enable virus ejected mass spirals
         mothercellMaxMass: 5000,      // Max mass the mothercell can get to. (0 for unlimited)
         ejectMass: 13,                // Mass of ejected cells
         ejectMassLoss: 15,            // Mass lost when ejecting cells
@@ -881,6 +882,9 @@ GameServer.prototype.ejectMass = function (client) {
 };
 
 GameServer.prototype.spawnSpiral = function(position, mycolor) {
+        return;
+    }
+
     var r = 140;
     var rnd = Math.random() * 3.14;
 

@@ -98,6 +98,10 @@ Beacon.prototype.feed = function(feeder, gameServer) {
 };
 
 Beacon.prototype.spawnEjected = function(gameServer, color) {
+    if(gameServer.config.virusSpirals != 1) {
+        return;
+    }
+
     var r = 32 + this.getSize();
     var rnd = Math.random() * 3.14;
 
