@@ -291,8 +291,15 @@ GameServer.prototype.start = function () {
         var bindObject = {server: this, socket: ws};
         ws.on('error', close.bind(bindObject, 1));
         ws.on('close', close.bind(bindObject, 0));
-        this.clients.push(ws);
+        ws.on('pong', function() {
+            var diff = process.hrtime(ws.playerTracker.pingssent);
+            ws.playerTracker.pingssent = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(1);
+        });
 
+        ws.playerTracker.pingssent = process.hrtime();
+        ws.ping();
+
+        this.clients.push(ws);
         this.MasterPing();
     }
     this.startStatsServer(this.config.serverStatsPort);
@@ -874,7 +881,7 @@ GameServer.prototype.ejectMass = function (client) {
 };
 
 GameServer.prototype.spawnSpiral = function(position, mycolor) {
-    var r = 150;
+    var r = 140;
     var rnd = Math.random() * 3.14;
 
     var angle = rnd;
@@ -885,8 +892,8 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
 
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, Math.round(dist / 4) + 1);
         ejected.angle = angle;
-        ejected.setMoveEngineData(dist,15);
-        ejected.setColor({r: Math.floor(mycolor.r / 80), g: Math.floor(mycolor.g / 80), b: Math.floor(mycolor.b / 80)});
+        ejected.setMoveEngineData(Math.floor(dist * 1.25),15);
+        ejected.setColor({r: Math.floor(mycolor.r / 25), g: Math.floor(mycolor.g / 25), b: Math.floor(mycolor.b / 25)});
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }
@@ -899,7 +906,7 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
 
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, Math.round(dist / 4) + 1);
         ejected.angle = angle;
-        ejected.setMoveEngineData(dist,15);
+        ejected.setMoveEngineData(Math.floor(dist * 1.25),15);
         ejected.setColor(mycolor);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);

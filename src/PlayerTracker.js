@@ -17,6 +17,7 @@ function PlayerTracker(gameServer, socket) {
     this.cscore = 0; // Max Cells
     this.writeInfo = 12;
     this.remoteAddress = "undefined";
+    this.pingssent = 0;
     this.mouse = {x: 0, y: 0};
     this.startpos = {x: 0, y: 0};
     this.tickLeaderboard = 0; //

@@ -99,8 +99,9 @@ Beacon.prototype.feed = function(feeder, gameServer) {
 
 Beacon.prototype.spawnEjected = function(gameServer, color) {
     var r = 32 + this.getSize();
+    var rnd = Math.random() * 3.14;
 
-    var angle = 0; // Starting angle
+    var angle = rnd; // Starting angle
     for (var k = 0, dist = 0; k < 16; k++) {
         angle += 0.375;
         dist += 8;
@@ -108,13 +109,13 @@ Beacon.prototype.spawnEjected = function(gameServer, color) {
 
         var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
         ejected.angle = angle;
-        ejected.setMoveEngineData(dist,15);
-        ejected.setColor({r: Math.floor(color.r / 70), g: Math.floor(color.g / 70), b: Math.floor(color.b / 70)});
+        ejected.setMoveEngineData(Math.floor(dist * 1.5),15);
+        ejected.setColor({r: Math.floor(color.r / 25), g: Math.floor(color.g / 25), b: Math.floor(color.b / 25)});
         gameServer.addNode(ejected);
         gameServer.setAsMovingNode(ejected);
     }
 
-    var angle = 3.14; // Starting angle
+    var angle = rnd + 3.14; // Starting angle
     for (var k = 0, dist = 0; k < 16; k++) {
         angle += 0.375;
         dist += 8;
@@ -122,7 +123,7 @@ Beacon.prototype.spawnEjected = function(gameServer, color) {
 
         var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
         ejected.angle = angle;
-        ejected.setMoveEngineData(dist,15);
+        ejected.setMoveEngineData(Math.floor(dist * 1.5),15);
         ejected.setColor(color);
         gameServer.addNode(ejected);
         gameServer.setAsMovingNode(ejected);

@@ -384,7 +384,7 @@ Commands.list = {
     playerlist: function (gameServer, split) {
         console.log("Showing " + gameServer.clients.length + " players: ");
         console.log(" ID         | IP              | " + fillChar('NICK', ' ', ( gameServer.config.playerMaxNickLength + 2 )) + " | CELLS | SCORE  | POSITION    "); // Fill space
-        console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 )));
+        console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION     |          '.length + ( gameServer.config.playerMaxNickLength + 2 )));
         for (var i = 0; i < gameServer.clients.length; i++) {
             var client = gameServer.clients[i].playerTracker;
 
@@ -406,17 +406,20 @@ Commands.list = {
                 console.log(" " + id + " | " + ip + " | " + data);
             }
             else if (client.spectate) {
-                try {
-                    // Get spectated player
-                    if (gameServer.getMode().specByLeaderboard) { // Get spec type
-                        nick = gameServer.leaderboard[client.spectatedPlayer].name;
-                    } else {
-                        nick = gameServer.clients[client.spectatedPlayer].playerTracker.name;
+                if(client.freeMouse) {
+                    try {
+                        // Get spectated player
+                        if (gameServer.getMode().specByLeaderboard) { // Get spec type
+                            nick = gameServer.leaderboard[client.spectatedPlayer].name;
+                        } else {
+                            nick = gameServer.clients[client.spectatedPlayer].playerTracker.name;
+                        }
+                    } catch (e) {
+                        // Specating nobody
+                        nick = "";
                     }
-                } catch (e) {
-                    // Specating nobody
-                    nick = "";
-                }
+                } else nick = "Free Roam Mode";
+
                 nick = (nick == "") ? "No Player Selected" : nick;
                 data = fillChar("SPECTATOR: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
                 console.log(" " + id + " | " + ip + " | " + data);
@@ -425,7 +428,14 @@ Commands.list = {
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore(true), ' ', 6, true);
                 position = fillChar(client.centerPos.x.toFixed(0), ' ', 5, true) + ', ' + fillChar(client.centerPos.y.toFixed(0), ' ', 5, true);
-                console.log(" " + id + " | " + ip + " |\u001B[36m " + nick + " \u001B[0m| " + cells + " | " + score + " | " + position);
+                var yemp = "";
+                if(client.pingssent > 0) {
+                    yemp = " | " + client.pingssent + "ms";
+                    if(client.pingssent > 3000.0) {
+                        yemp = " | ∞";
+                    }
+                }
+                console.log(" " + id + " | " + ip + " |\u001B[36m " + nick + " \u001B[0m| " + cells + " | " + score + " | " + position + yemp);
             } else {
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
