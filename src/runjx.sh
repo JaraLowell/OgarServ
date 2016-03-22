@@ -3,7 +3,7 @@ clear
 
 if ! [ -x "$(command -v jx)" ]; then
   echo JXcore not installed, installing it now...
-  curl http://jxcore.com/xil.sh | bash
+  curl https://raw.githubusercontent.com/jxcore/jxcore/master/tools/jx_install.sh | bash
   sleep 2
 fi
 
