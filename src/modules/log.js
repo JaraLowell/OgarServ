@@ -92,7 +92,7 @@ Log.prototype.setup = function (gameServer) {
                 if (gameServer.config.serverLogToFile) ip_log.write("[" + gameServer.formatTime() + "] Connect: " + ip + EOL);
                 var yada = '';
                 if (gameServer.config.serverLiveStats == 0) {
-                    yada = "(Play:" + gameServ.sinfo.humans + " Spec: " + gameServ.sinfo.spectate + ") ";
+                    yada = "(Play:" + gameServer.sinfo.humans + " Spec: " + gameServer.sinfo.spectate + ") ";
                 }
                 process.stdout.write("[" + gameServer.formatTime() + "] " + yada + "\u001B[32m" + util.format(ip) + "\u001B[0m" + EOL);
             };
