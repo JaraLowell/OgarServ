@@ -30,12 +30,37 @@ Cell.prototype.getName = function () {
     }
 };
 
+// Premium Skins, we can also set those to other cells. (Exception is cells with the agitated flag, sticky cell)
 Cell.prototype.getSkin = function () {
-    if (this.owner) {
-        return this.owner.skin;
-    } else {
-        return "";
+    switch (this.cellType) {
+        case 0:
+            // Player cell
+            if (this.owner) {
+                return this.owner.skin;
+            }
+            break
+        case 1:
+            // Food cell
+            break;
+        case 2:
+            // Mother or Virus cell
+            return "%gas";
+            break;
+        case 3:
+            // Ejected Mas
+            return "%proton";
+            break;
+        case 4:
+            // Sticky cell
+            break;
+        case 5:
+            // Beacon cell
+            return "%proton";
+            break;
+        default:
+            break;
     }
+    return "";
 };
 
 Cell.prototype.setColor = function (color) {
