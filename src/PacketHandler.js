@@ -154,6 +154,8 @@ PacketHandler.prototype.handleMessage = function (message) {
 
             message = this.WordScan(message);
 
+            if(message == "pos") message = this.MyPos();
+
             if (this.gameServer.config.chatToConsole == 1) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
@@ -248,7 +250,36 @@ PacketHandler.prototype.rcon = function(message, wname) {
         return true;
     }
     return false;
-}
+};
+
+PacketHandler.prototype.MyPos = function() {
+    var clientpos = this.socket.playerTracker.centerPos;
+    var msizex = (this.gameServer.config.borderRight - this.gameServer.config.borderLeft) / 5;
+    var msizey = (this.gameServer.config.borderBottom - this.gameServer.config.borderTop) / 5;
+
+    var pX = "1";
+    var shortX = "left";
+    if( clientpos.x > msizex      ) { pX = "2"; shortX = "left";  }
+    if( clientpos.x > (msizex * 2)) { pX = "3"; shortX = "middle";}
+    if( clientpos.x > (msizex * 3)) { pX = "4"; shortX = "right"; }
+    if( clientpos.x > (msizex * 4)) { pX = "5"; shortX = "right"; }
+
+    var pY = "A";
+    var shortY = "top";
+    if( clientpos.y > msizey      ) { pY = "B"; shortY = "top"; }
+    if( clientpos.y > (msizey * 2)) { pY = "C"; shortY = "middle"; }
+    if( clientpos.y > (msizey * 3)) { pY = "D"; shortY = "bottom"; }
+    if( clientpos.y > (msizey * 4)) { pY = "E"; shortY = "bottom"; }
+
+    var short = "";
+    if(shortY == "middle" && shortX == "middle") {
+        short = "center @ ";
+    } else {
+        short = shortY + " " + shortX + " @ ";
+    }
+
+    return "i am at " + clientpos.x + " : " + clientpos.y + " (" + short + pY + pX + ")";
+};
 
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
