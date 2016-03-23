@@ -1,6 +1,8 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
+    this.name = '';
+    this.skin = '';
     this.color = {
         r:       Math.floor(Math.random() * 32),
         g: 196 + Math.floor(Math.random() * 32),
@@ -24,19 +26,22 @@ module.exports = Cell;
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 Cell.prototype.getName = function () {
     if (this.owner) {
-        return this.owner.name;
+        if(this.name != this.owner.name) this.name = this.owner.name;
+        return this.name;
     } else {
         return "";
     }
 };
 
-// Premium Skins, we can also set those to other cells. (Exception is cells with the agitated flag, sticky cell)
 Cell.prototype.getSkin = function () {
+    return "";
+
     switch (this.cellType) {
         case 0:
             // Player cell
             if (this.owner) {
-                return this.owner.skin;
+                if(this.skin != this.owner.skin) this.skin = this.owner.skin;
+                return this.skin;
             }
             break
         case 1:
@@ -44,10 +49,12 @@ Cell.prototype.getSkin = function () {
             break;
         case 2:
             // Mother or Virus cell
+            if(this.skin == '') this.skin = "%gas";
             return "%gas";
             break;
         case 3:
             // Ejected Mas
+            if(this.skin == '') this.skin = "%proton";
             return "%proton";
             break;
         case 4:
@@ -55,7 +62,8 @@ Cell.prototype.getSkin = function () {
             break;
         case 5:
             // Beacon cell
-            return "%proton";
+            if(this.skin == '') this.skin = "%gas";
+            return "%gas";
             break;
         default:
             break;

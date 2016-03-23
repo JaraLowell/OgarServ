@@ -122,6 +122,11 @@ PacketHandler.prototype.handleMessage = function (message) {
                 message += String.fromCharCode(charCode);
             }
 
+            message = message.trim();
+            if (message == "") {
+                break;
+            }
+
             var wname = this.socket.playerTracker.name;
             if (wname == "") wname = "Spectator";
 

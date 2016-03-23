@@ -110,13 +110,8 @@ Log.prototype.setup = function (gameServer) {
                     if (gameServer.config.serverLogToFile) {
                         var text = "[" + gameServer.formatTime() + "] " + util.format(d);
                         // Remove Color Codes from log
-                        text = text.replace("\u001B[0m", "");  // Reset
-                        text = text.replace("\u001B[31m", ""); // Red
-                        text = text.replace("\u001B[32m", ""); // Green
-                        text = text.replace("\u001B[33m", ""); // Yellow
-                        text = text.replace("\u001B[34m", ""); // Blue
-                        text = text.replace("\u001B[35m", ""); // Purple
-                        text = text.replace("\u001B[36m", ""); // Cyan
+
+                        text = text.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
                         console_log.write(text + EOL);
                     }
                     process.stdout.write("[" + gameServer.formatTime() + "] " + util.format(d) + EOL);

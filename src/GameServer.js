@@ -188,7 +188,7 @@ GameServer.prototype.start = function () {
 
         // Start Main Loop
         this.MasterPing();
-        setInterval(this.mainLoop.bind(this), 3);
+        setInterval(this.mainLoop.bind(this), 5);
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -435,7 +435,12 @@ GameServer.prototype.removeNode = function (node) {
 
 GameServer.prototype.cellTick = function () {
     // Move cells
-    this.updateMoveEngine();
+    if(this.sinfo.humans >= 15) {
+        this.updateMoveEngineNoSrt();
+    } else {
+        this.updateMoveEngine();
+    }
+    this.updateMoveNodes();
 };
 
 GameServer.prototype.spawnTick = function () {
@@ -468,9 +473,9 @@ GameServer.prototype.mainLoop = function () {
     if (this.tick >= 50) {
         // Loop main functions
         if (this.run) {
-            setTimeout(this.cellTick(), 0);
-            setTimeout(this.spawnTick(), 0);
-            setTimeout(this.gamemodeTick(), 0);
+            setTimeout(this.cellTick(), 3);
+            setTimeout(this.spawnTick(), 6);
+            setTimeout(this.gamemodeTick(), 9);
         }
 
         // Update the client's maps
@@ -485,7 +490,7 @@ GameServer.prototype.mainLoop = function () {
         if (this.run) {
             // Update cells/leaderboard loop
             if (this.tickMain >= 20) { // 1 Second
-                setTimeout(this.cellUpdateTick(), 0);
+                setTimeout(this.cellUpdateTick(), 12);
 
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
@@ -693,15 +698,11 @@ GameServer.prototype.getDist = function (x1, y1, x2, y2) {
 };
 
 GameServer.prototype.updateMoveEngine = function () {
-   // Sort cells to move the cells close to the mouse first
-    var srt = [],
-        len = this.nodesPlayer.length;
+    // Sort cells to move the cells close to the mouse first
+    var len = this.nodesPlayer.length,
+        srt = _.range(len);
 
-    for (var i = 0; i < len; i++) {
-        srt[i] = i;
-    }
-
-    for (var i = 0; i < len; i++) {
+    for (var i = 0;len > i; i++) {
         // Recycle unused nodes
         if (typeof this.nodesPlayer[i] == "undefined") {
             this.nodesPlayer.splice(i, 1);
@@ -709,11 +710,11 @@ GameServer.prototype.updateMoveEngine = function () {
             continue;
         }
 
-        var clientI = this.nodesPlayer[srt[i]].owner;
-        for (var j = i + 1; j < len; j++) {
-            var clientJ = this.nodesPlayer[srt[j]].owner;
-            if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y ) > 
-                this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y )) {
+        var clientI = this.nodesPlayer[srt[i]].owner.mouse;
+        for (var j = i + 1;len > j; j++) {
+            var clientJ = this.nodesPlayer[srt[j]].owner.mouse;
+            if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.x, clientI.y ) > 
+                this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.x, clientJ.y )) {
                 var aux = srt[i];
                 srt[i] = srt[j];
                 srt[j] = aux;
@@ -722,7 +723,7 @@ GameServer.prototype.updateMoveEngine = function () {
     }
 
     // Move player cells
-    for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
+    for (var i = 0;len > i; i++) {
         var cell = this.nodesPlayer[srt[i]];
 
         // Do not move cells that have already been eaten or have collision turned off
@@ -730,8 +731,8 @@ GameServer.prototype.updateMoveEngine = function () {
             continue;
         }
 
-        var client = cell.owner;
-        cell.calcMove(client.mouse.x, client.mouse.y, this);
+        var client = cell.owner.mouse;
+        cell.calcMove(client.x, client.y, this);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -754,9 +755,47 @@ GameServer.prototype.updateMoveEngine = function () {
             this.removeNode(check);
         }
     }
+};
 
+GameServer.prototype.updateMoveEngineNoSrt = function () {
+    // Move player cells
+    for (var i = 0, len = this.nodesPlayer.length; i < len; i++) {
+        var cell = this.nodesPlayer[i];
+
+        // Do not move cells that have already been eaten or have collision turned off
+        if (!cell) {
+            continue;
+        }
+
+        var client = cell.owner.mouse;
+        cell.calcMove(client.x, client.y, this);
+
+        // Check if cells nearby
+        var list = this.getCellsInRange(cell);
+        for (var j = 0, llen = list.length; j < llen; j++) {
+            var check = list[j];
+
+            // if we're deleting from this.nodesPlayer, fix outer loop variables; we need to update its length, and maybe 'i' too
+            if (check.cellType == 0) {
+                len--;
+                if (check.nodeId < cell.nodeId) {
+                    i--;
+                }
+            }
+
+            // Consume effect
+            check.onConsume(cell, this);
+
+            // Remove cell
+            check.setKiller(cell);
+            this.removeNode(check);
+        }
+    }
+};
+
+GameServer.prototype.updateMoveNodes = function () {
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
-    for (var i = 0, llen = this.movingNodes.length; i < llen; i++) {
+    for (var i = 0, llen = this.movingNodes.length;llen > i; i++) {
         var check = this.movingNodes[i];
 
         // Recycle unused nodes
@@ -780,7 +819,9 @@ GameServer.prototype.updateMoveEngine = function () {
             }
         }
     }
-};
+}
+
+
 
 GameServer.prototype.setAsMovingNode = function (node) {
     this.movingNodes.push(node);
@@ -890,7 +931,7 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
     var rnd = Math.random() * 3.14;
 
     var angle = rnd;
-    for (var k = 0, dist = 0; k < 16; k++) {
+    for (var k = 0, dist = 0; 16 > k; k++) {
         angle += 0.375;
         dist += 3.14;
         var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};
@@ -904,7 +945,7 @@ GameServer.prototype.spawnSpiral = function(position, mycolor) {
     }
 
     angle = rnd + 3.14;
-    for (var k = 0, dist = 0; k < 16; k++) {
+    for (var k = 0, dist = 0; 16 > k; k++) {
         angle += 0.375;
         dist += 3.14;
         var pos = {x: position.x + (r * Math.sin(angle)), y: position.y + (r * Math.cos(angle))};

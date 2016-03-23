@@ -1,4 +1,4 @@
-﻿// Imports
+// Imports
 var GameMode = require('../gamemodes');
 var Packet = require('../packet');
 var Entity = require('../entity');
@@ -14,15 +14,32 @@ module.exports = Commands;
 // Utils
 var fillChar = function (data, char, fieldLength, rTL) {
     var result = data.toString();
+    var llen = decodeUnicode(result);
     if (rTL === true) {
-        for (var i = result.length; i < fieldLength; i++)
+        for (var i = llen; i < fieldLength; i++)
             result = char.concat(result);
     }
     else {
-        for (var i = result.length; i < fieldLength; i++)
+        for (var i = llen; i < fieldLength; i++)
             result = result.concat(char);
     }
     return result;
+};
+
+var decodeUnicode = function (str) {
+    var r = [], i = 0;
+    while(i < str.length) {
+        var chr = str.charCodeAt(i++);
+        if(chr >= 0xD800 && chr <= 0xDBFF) {
+            // surrogate pair
+            var low = str.charCodeAt(i++);
+            r.push(0x10000 + ((chr - 0xD800) << 10) | (low - 0xDC00));
+        } else {
+            // ordinary character
+            r.push(chr);
+        }
+    }
+    return r.length;
 };
 
 var seconds2time = function (seconds) {
@@ -382,14 +399,17 @@ Commands.list = {
         console.log("\u001B[36mServer: \u001B[0mPlayer " + id + " was not found");
     },
     playerlist: function (gameServer, split) {
-        console.log("Showing " + gameServer.clients.length + " players: ");
-        console.log(" ID         | IP              | " + fillChar('NICK', ' ', ( gameServer.config.playerMaxNickLength + 2 )) + " | CELLS | SCORE  | POSITION    "); // Fill space
-        console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION     |          '.length + ( gameServer.config.playerMaxNickLength + 2 )));
+        var showall = false;
+        if ((typeof split[1] != 'undefined') && (split[1].toLowerCase() == "all")) {
+            showall = true;
+        }
+        console.log(" ID         | IP              | CELLS | SCORE  | POSITION     | LATENCY | NICK"); // Fill space
+        console.log("----------------------------------------------------------------------------------------------");
         for (var i = 0; i < gameServer.clients.length; i++) {
             var client = gameServer.clients[i].playerTracker;
 
             // ID with 3 digits length
-            var id = fillChar((client.pID), ' ', 10, true);
+            var id = fillChar((client.pID), ' ', 10, false);
 
             // Get ip (15 digits length)
             var ip = "BOT";
@@ -400,12 +420,12 @@ Commands.list = {
 
             // Get name and data
             var nick = '', cells = '', score = '', position = '', data = '';
-            if (client.disconnect >= 0) {
+            if (client.disconnect >= 0 && showall) {
                 var tmp = "(" + client.disconnect + "sec remaining) DISCONNECTED";
                 data = fillChar(tmp, '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
-                console.log(" " + id + " | " + ip + " | " + data);
+                console.log("\u001B[31m " + id + " | " + ip + " | " + data + "\u001B[0m");
             }
-            else if (client.spectate) {
+            else if (client.spectate && showall) {
                 if(client.freeMouse) {
                     try {
                         // Get spectated player
@@ -421,25 +441,25 @@ Commands.list = {
                 } else nick = "Free Roam Mode";
 
                 nick = (nick == "") ? "No Player Selected" : nick;
-                data = fillChar("SPECTATOR: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
-                console.log(" " + id + " | " + ip + " | " + data);
+                data = "-------------------------------SPECTATOR: " + nick;
+                console.log("\u001B[33m " + id + " | " + ip + " | " + data + "\u001B[0m");
             } else if (client.cells.length > 0) {
-                nick = fillChar((client.name == "") ? "No Player Selected" : client.name, ' ', ( gameServer.config.playerMaxNickLength + 2 ));
+                nick = (client.name == "") ? "No Player Selected" : client.name;
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore(true), ' ', 6, true);
                 position = fillChar(client.centerPos.x.toFixed(0), ' ', 5, true) + ', ' + fillChar(client.centerPos.y.toFixed(0), ' ', 5, true);
-                var yemp = "";
+                var yemp = "-";
                 if(client.pingssent > 0) {
-                    yemp = " | " + fillChar(client.pingssent + "ms", ' ', 9, true);
-                    if(client.pingssent > 9999.9) {
-                        yemp = " | " + fillChar("∞", ' ', 9, true);
+                    yemp = client.pingssent + "ms";
+                    if(client.pingssent > 999.9) {
+                        yemp = "∞";
                     }
                 }
-                console.log(" " + id + " | " + ip + " |\u001B[36m " + nick + " \u001B[0m| " + cells + " | " + score + " | " + position + yemp);
-            } else {
+                console.log(" " + id + " | " + ip + " | " + cells + " | " + score + " | " + position + " | " + fillChar(yemp, ' ', 7, true) + " |\u001B[36m " + nick + "\u001B[0m");
+            } else if (showall) {
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + ( gameServer.config.playerMaxNickLength + 2 ), true);
-                console.log(" " + id + " | " + ip + " | " + data);
+                console.log("\u001B[33m " + id + " | " + ip + " | " + data + "\u001B[0m");
             }
         }
     },

@@ -200,7 +200,7 @@ Experimental2.prototype.spawnStickyCell = function(gameServer) {
         // Spawn if no cells are colliding
         var m = new StickyCell(gameServer.getNextNodeId(), null, pos, this.stickyMass);
         //gameServer.movingNodes.push(m);
-        gameServer.addNode(m); 
+        gameServer.addNode(m);
     }
 };
 

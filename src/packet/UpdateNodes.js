@@ -28,19 +28,20 @@ module.exports = UpdateNodes;
 UpdateNodes.prototype.build = function () {
     // Calculate nodes sub packet size before making the data view
     var nodesLength = 0;
-    for (var i = 0, llen = this.nodes.length; i < llen; i++) {
+    for (var i = 0, llen = this.nodes.length; llen > i; i++) {
         var node = this.nodes[i];
-        if (typeof node == "undefined") {
-            continue;
-        }
+        if ("undefined" != typeof node) {
+            var extrabyte = 0;
+            if(node.cellType != 1 && (node.name == '' || Math.random() < 0.10)) node.getName();
+            if(node.cellType != 1 && (node.skin == '' || Math.random() < 0.10)) node.getSkin();
 
-        var extrabyte = 0;
-        if (node.getSkin()) extrabyte = 1;
+            if (node.skin) extrabyte = 1;
 
-        if (this.serverVersion == 1) {
-            nodesLength = nodesLength + 20 + extrabyte + (node.getName().length * 2) + node.getSkin().length;
-        } else {
-            nodesLength = nodesLength + 16 + extrabyte + (node.getName().length * 2) + node.getSkin().length;
+            if (this.serverVersion == 1) {
+                nodesLength += 20 + extrabyte + (node.name.length * 2) + node.skin.length;
+            } else {
+                nodesLength += 16 + extrabyte + (node.name.length * 2) + node.skin.length;
+            }
         }
     }
 
@@ -72,8 +73,8 @@ UpdateNodes.prototype.build = function () {
 
         if (typeof node == "undefined") continue;
 
-        var skin = node.getSkin(),
-            name = node.getName(),
+        var skin = node.skin,
+            name = node.name,
             bits = 0,
             agitated = node.agitated;
 
