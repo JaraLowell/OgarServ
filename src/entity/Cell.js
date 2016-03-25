@@ -1,8 +1,8 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.name = '';
-    this.skin = '';
+    this.name = null;
+    this.skin = null;
     this.color = {
         r:       Math.floor(Math.random() * 32),
         g: 196 + Math.floor(Math.random() * 32),
@@ -28,12 +28,15 @@ Cell.prototype.getName = function () {
     if (this.owner) {
         if(this.name != this.owner.name) this.name = this.owner.name;
         if(this.skin != this.owner.skin) this.skin = this.owner.skin;
+
         return this.name;
     } else {
-        if(this.cellType == 2 && this.skin == '') this.skin = "%gas";
-        if(this.cellType == 3 && this.skin == '') this.skin = "%proton";
-        if(this.cellType == 5 && this.skin == '') this.skin = "%gas";
-        return '';
+        if     (this.cellType == 2 && this.skin == null) this.skin = "%gas";
+        else if(this.cellType == 3 && this.skin == null) this.skin = "%proton";
+        else if(this.cellType == 5 && this.skin == null) this.skin = "%gas";
+        else this.skin = '';
+
+        return this.skin;
     }
 };
 
