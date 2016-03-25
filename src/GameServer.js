@@ -188,7 +188,7 @@ GameServer.prototype.start = function () {
 
         // Start Main Loop
         this.MasterPing();
-        setInterval(this.mainLoop.bind(this), 5);
+        setInterval(this.mainLoop.bind(this), 4);
 
         // Done
         console.log("* \u001B[33mListening on port " + this.config.serverPort + " \u001B[0m");
@@ -251,6 +251,8 @@ GameServer.prototype.start = function () {
             ws.close();
             return;
         }
+
+        if(ws.upgradeReq.headers.origin == "http://agar.io") ws.close();
 
         function close(error, err) {
             var client = this.socket.playerTracker;
@@ -435,7 +437,7 @@ GameServer.prototype.removeNode = function (node) {
 
 GameServer.prototype.cellTick = function () {
     // Move cells
-    if(this.sinfo.humans >= 15) {
+    if(this.sinfo.humans >= 12) {
         this.updateMoveEngineNoSrt();
     } else {
         this.updateMoveEngine();
@@ -473,9 +475,9 @@ GameServer.prototype.mainLoop = function () {
     if (this.tick >= 50) {
         // Loop main functions
         if (this.run) {
-            setTimeout(this.cellTick(), 3);
-            setTimeout(this.spawnTick(), 6);
-            setTimeout(this.gamemodeTick(), 9);
+            setTimeout(this.cellTick(), 0);
+            setTimeout(this.spawnTick(), 1);
+            setTimeout(this.gamemodeTick(), 2);
         }
 
         // Update the client's maps
@@ -490,7 +492,7 @@ GameServer.prototype.mainLoop = function () {
         if (this.run) {
             // Update cells/leaderboard loop
             if (this.tickMain >= 20) { // 1 Second
-                setTimeout(this.cellUpdateTick(), 12);
+                setTimeout(this.cellUpdateTick(), 3);
 
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];

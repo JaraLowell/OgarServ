@@ -122,44 +122,49 @@ PacketHandler.prototype.handleMessage = function (message) {
                 message += String.fromCharCode(charCode);
             }
 
+            // Remove trailing spaces
             message = message.trim();
             if (message == "") {
                 break;
             }
 
+            // Get player name
             var wname = this.socket.playerTracker.name;
             if (wname == "") wname = "Spectator";
 
+            // Rcon if enabled
             if (this.gameServer.config.serverAdminPass != '') {
                 if ( this.rcon(message, wname) == true ) break;
             }
 
+            // Spam chat delay
             if ((this.gameServer.time - this.socket.playerTracker.cTime) < this.gameServer.config.chatIntervalTime) {
                 var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (this.gameServer.time - this.socket.playerTracker.cTime)) / 1000) % 60);
                 var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
                 this.socket.sendPacket(packet);
                 break;
             }
-
             this.socket.playerTracker.cTime = this.gameServer.time;
 
+            // Location to chat
+            if(message == "pos") message = this.MyPos();
+
+            // Repeating chat block
             if (message == LastMsg) {
                 ++SpamBlock;
                 if (SpamBlock > 5) this.socket.close();
                 break;
             }
-
             LastMsg = message;
             SpamBlock = 0;
 
+            // Profanity filter
             message = this.WordScan(message);
 
-            if(message == "pos") message = this.MyPos();
-
+            // Chat logging
             if (this.gameServer.config.chatToConsole == 1) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
-
             if (this.gameServer.config.serverLogToFile) {
                 var fs = require('fs');
                 var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
@@ -167,8 +172,8 @@ PacketHandler.prototype.handleMessage = function (message) {
                 wstream.end();
             }
 
-            var packet = new Packet.Chat(this.socket.playerTracker, message);
             // Send to all clients (broadcast)
+            var packet = new Packet.Chat(this.socket.playerTracker, message);
             for (var i = 0, llen = this.gameServer.clients.length; i < llen; i++) {
                 this.gameServer.clients[i].sendPacket(packet);
             }

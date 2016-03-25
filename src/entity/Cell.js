@@ -27,48 +27,14 @@ module.exports = Cell;
 Cell.prototype.getName = function () {
     if (this.owner) {
         if(this.name != this.owner.name) this.name = this.owner.name;
+        if(this.skin != this.owner.skin) this.skin = this.owner.skin;
         return this.name;
     } else {
-        return "";
+        if(this.cellType == 2 && this.skin == '') this.skin = "%gas";
+        if(this.cellType == 3 && this.skin == '') this.skin = "%proton";
+        if(this.cellType == 5 && this.skin == '') this.skin = "%gas";
+        return '';
     }
-};
-
-Cell.prototype.getSkin = function () {
-    return "";
-
-    switch (this.cellType) {
-        case 0:
-            // Player cell
-            if (this.owner) {
-                if(this.skin != this.owner.skin) this.skin = this.owner.skin;
-                return this.skin;
-            }
-            break
-        case 1:
-            // Food cell
-            break;
-        case 2:
-            // Mother or Virus cell
-            if(this.skin == '') this.skin = "%gas";
-            return "%gas";
-            break;
-        case 3:
-            // Ejected Mas
-            if(this.skin == '') this.skin = "%proton";
-            return "%proton";
-            break;
-        case 4:
-            // Sticky cell
-            break;
-        case 5:
-            // Beacon cell
-            if(this.skin == '') this.skin = "%gas";
-            return "%gas";
-            break;
-        default:
-            break;
-    }
-    return "";
 };
 
 Cell.prototype.setColor = function (color) {

@@ -32,8 +32,9 @@ UpdateNodes.prototype.build = function () {
         var node = this.nodes[i];
         if ("undefined" != typeof node) {
             var extrabyte = 0;
-            if(node.cellType != 1 && (node.name == '' || Math.random() < 0.10)) node.getName();
-            if(node.cellType != 1 && (node.skin == '' || Math.random() < 0.10)) node.getSkin();
+            if(node.cellType != 1 && node.name == '') {
+                node.getName();
+            }
 
             if (node.skin) extrabyte = 1;
 
