@@ -4,6 +4,7 @@ function Food() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 1;
+    this.name = '';
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
