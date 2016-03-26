@@ -292,14 +292,15 @@ GameServer.prototype.start = function () {
         }
 
         var bindObject = {server: this, socket: ws};
+        ws.on('pong', function() {
+            if(typeof ws.playerTracker.pingssent == 'object') {
+                var diff = process.hrtime(ws.playerTracker.pingssent);
+                ws.playerTracker.pingssent = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(1);
+            } else ws.playerTracker.pingssent = 0;
+        });
         ws.on('error', close.bind(bindObject, 1));
         ws.on('close', close.bind(bindObject, 0));
-        ws.on('pong', function() {
-            var diff = process.hrtime(ws.playerTracker.pingssent);
-            ws.playerTracker.pingssent = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(1);
-        });
 
-        ws.playerTracker.pingssent = process.hrtime();
         ws.ping();
 
         this.clients.push(ws);
