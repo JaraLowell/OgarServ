@@ -504,7 +504,7 @@ GameServer.prototype.mainLoop = function () {
                     var hours = Math.floor( (t/(1000*60*60)) % 24 );
                     hours = (hours < 10 ? "0" : "") + hours;
                     minutes = (minutes < 10 ? "0" : "") + minutes;
-                    this.LBextraLine = ("~ ~ ~ ~ ~ " + hours + ":" + minutes + " ~ ~ ~ ~ ~ ~ ");
+                    this.config.LBextraLine = ("--------« " + hours + ":" + minutes + " »---------- ");
                 }
 
                 // Update leaderboard with the gamemode's method
