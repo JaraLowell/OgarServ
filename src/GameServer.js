@@ -34,6 +34,7 @@ function GameServer() {
     this.movingNodes = []; // For move engine
     this.pcount = 0;
     this.leaderboard = [];
+    this.LBextraLine = '';
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.log = new Logger();
@@ -495,10 +496,21 @@ GameServer.prototype.mainLoop = function () {
             if (this.tickMain >= 20) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 3);
 
+                // Create a Time count down in a nice string and adds to LB
+                var t = (this.startTime.getTime() + (this.config.serverResetTime * 3600000))- local.getTime();
+                var days = Math.floor( t/(1000*60*60*24) );
+                if(days == 0) {
+                    var minutes = Math.floor( (t/1000/60) % 60 );
+                    var hours = Math.floor( (t/(1000*60*60)) % 24 );
+                    hours = (hours < 10 ? "0" : "") + hours;
+                    minutes = (minutes < 10 ? "0" : "") + minutes;
+                    this.LBextraLine = ("~ ~ ~ ~ ~ " + hours + ":" + minutes + " ~ ~ ~ ~ ~ ~ ");
+                }
+
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
-                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
+                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB, this.LBextraLine);
                 this.pcount++;
             }
             // Check Bot Min Players
