@@ -2,6 +2,9 @@ var Virus = require('./Virus')
 
 function MovingVirus() {
     Virus.apply(this, Array.prototype.slice.call(arguments));
+
+    this.skin = '%gas';
+    this.name = '';
     this.color = {
         r: 10  + Math.floor(Math.random() * 32),
         g: 196 + Math.floor(Math.random() * 32),

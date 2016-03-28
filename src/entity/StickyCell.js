@@ -6,6 +6,7 @@ function StickyCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 4; // New cell type
+    this.name = '';
     this.agitated = 1; // Drawing purposes
     this.acquired = undefined;
     this.radius = this.getSize();

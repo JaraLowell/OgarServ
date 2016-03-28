@@ -5,6 +5,8 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2;
+    this.name = '';
+    this.skin = '%gas';
     this.spiked = 1;
     this.fed = 0;
     this.isMotherCell = false; // Not to confuse bots

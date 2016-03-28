@@ -13,6 +13,8 @@ function Beacon() {
     this.active = true;
     this.maxStage = 100; // When it reaches 50, rekt largest player
     this.minMass = this.mass;
+    this.name = '';
+    this.skin = '%gas';
     this.color = {
         r: 240,
         g: 240,

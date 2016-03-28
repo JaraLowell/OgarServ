@@ -31,11 +31,6 @@ Cell.prototype.getName = function () {
 
         return this.name;
     } else {
-        if     (this.cellType == 2 && this.skin=='') this.skin = "%gas";
-        else if(this.cellType == 3 && this.skin=='') this.skin = "%proton";
-        else if(this.cellType == 5 && this.skin=='') this.skin = "%gas";
-
-        this.name = '';
         return '';
     }
 };

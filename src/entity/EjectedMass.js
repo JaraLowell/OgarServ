@@ -4,6 +4,8 @@ function EjectedMass() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 3;
+    this.name = ''
+    this.skin = '%proton';
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
 }

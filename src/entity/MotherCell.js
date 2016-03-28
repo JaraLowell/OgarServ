@@ -6,6 +6,8 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2; // Copies virus cell
+    this.name = '';
+    this.skin = '%gas';
     this.color = {
         r: 200 + Math.floor(Math.random() * 30),
         g: 70  + Math.floor(Math.random() * 30),
