@@ -2,7 +2,7 @@
 clear
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  npm install ws http fs sys mysql url underscore
+  npm install ws http fs sys mysql url underscore vector2-node
   sleep 2
 fi
 

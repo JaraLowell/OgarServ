@@ -9,7 +9,7 @@ fi
 
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  jx install ws http fs sys mysql url underscore
+  jx install ws http fs sys mysql url underscore vector2-node
   sleep 2
 fi
 
