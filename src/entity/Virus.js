@@ -5,8 +5,8 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2;
-    this.name = '';
     this.skin = '%gas';
+    this.name = '';
     this.spiked = 1;
     this.fed = 0;
     this.isMotherCell = false; // Not to confuse bots
@@ -45,9 +45,9 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     consumer.addMass(this.mass);
 
     // Math for the Max number of splits
-    var maxSplits = Math.floor(consumer.mass / 16) - 1;
+    var maxSplits = Math.floor(consumer.mass / gameServer.config.playerMaxCells) - 1;
     var numSplits = gameServer.config.playerMaxCells - client.cells.length;
-        numSplits = Math.min(numSplits, maxSplits);
+    numSplits = Math.min(numSplits, maxSplits);
 
     // Cell cannot split any further
     if (numSplits <= 0) {
@@ -57,6 +57,7 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     var mass = consumer.mass; // Mass of the consumer
     var splitMass = Math.min(mass / (numSplits + 1), 36); // Maximum size of new splits
     var bigSplits = []; // Big splits
+    var speed = 150;
 
     // Big cells will split into cells larger than 24 mass
     // won't do the regular way unless it can split more than 4 times
@@ -83,19 +84,20 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     // Splitting
     if(bigSplits.length) {
-        for (var k = 0,  angle = 0, speed = 150; k < bigSplits.length; k++) {
+        for (var k = 0,  angle = 0; k < bigSplits.length; k++) {
             angle = Math.random() * 6.28;
-            speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(splitMass) - 2.2) * 1.65, 1);
+            speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(bigSplits[k]) - 2.2) * 1.65, 1);
             consumer.mass -= bigSplits[k];
             gameServer.newCellVirused(client, consumer, angle, bigSplits[k], speed);
         }
     }
 
     if(numSplits) {
+        speed = gameServer.config.playerSplitSpeed * Math.max((Math.log10(splitMass) - 2.2) * 1.65, 1);
         for (var k = 0, angle = 0; k < numSplits; k++) {
             angle = Math.random() * 6.28; // Get directions of splitting cells
             consumer.mass -= splitMass;
-            gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
+            gameServer.newCellVirused(client, consumer, angle, splitMass, speed);
         }
     }
 

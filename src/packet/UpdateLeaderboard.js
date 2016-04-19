@@ -31,6 +31,8 @@ UpdateLeaderboard.prototype.build = function () {
     var bufferSize = 5;
     var validElements = 0;
     var lbElemtns = lb.length;
+    // var customtxt = '~ ~ ~ Happy Easter ~ ~ ~ ~ ';
+    var customtxt = this.extraline;
 
     switch (this.packetLB) {
         case 48: // Custom Text List
@@ -78,8 +80,6 @@ UpdateLeaderboard.prototype.build = function () {
             return buf;
             break;
         case 49: // FFA-type Packet (List)
-            var customtxt = this.extraline;
-
             // Get size of packet
             for (var i = 0; i < lbElemtns; i++) {
                 if (typeof lb[i] == "undefined") {
@@ -95,6 +95,8 @@ UpdateLeaderboard.prototype.build = function () {
             }
 
             if(customtxt) {
+                customtxt += ".";
+
                 bufferSize += 4;
                 bufferSize += customtxt.length * 2
                 bufferSize += 2;

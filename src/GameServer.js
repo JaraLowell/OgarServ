@@ -34,7 +34,6 @@ function GameServer() {
     this.movingNodes = []; // For move engine
     this.pcount = 0;
     this.leaderboard = [];
-    this.LBextraLine = '';
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.log = new Logger();
@@ -132,7 +131,8 @@ function GameServer() {
         tourneyAutoFill: 0,           // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,    // The timer for filling the server with bots will not count down unless there is this amount of real players
         experimentalIgnoreMax: 0,     // Ignore the foodMaxAmount when the mothercells shoot. (Set to 1 to turn it on)
-        gameLBlength: 10              // Number of names to display on Leaderboard (Vanilla value: 10)
+        gameLBlength: 10,             // Number of names to display on Leaderboard (Vanilla value: 10)
+        LBextraLine: ''
     };
     // Parse config
     this.loadConfig();
@@ -302,7 +302,7 @@ GameServer.prototype.start = function () {
         ws.on('error', close.bind(bindObject, 1));
         ws.on('close', close.bind(bindObject, 0));
 
-        ws.ping();
+        // ws.ping();
 
         this.clients.push(ws);
         this.MasterPing();
@@ -496,7 +496,6 @@ GameServer.prototype.mainLoop = function () {
             if (this.tickMain >= 20) { // 1 Second
                 setTimeout(this.cellUpdateTick(), 3);
 
-                // Create a Time count down in a nice string and adds to LB
                 var t = (this.startTime.getTime() + (this.config.serverResetTime * 3600000))- local.getTime();
                 var days = Math.floor( t/(1000*60*60*24) );
                 if(days == 0) {
@@ -504,13 +503,13 @@ GameServer.prototype.mainLoop = function () {
                     var hours = Math.floor( (t/(1000*60*60)) % 24 );
                     hours = (hours < 10 ? "0" : "") + hours;
                     minutes = (minutes < 10 ? "0" : "") + minutes;
-                    this.config.LBextraLine = ("--------� " + hours + ":" + minutes + " �---------- ");
+                    this.config.LBextraLine = ("─────────« " + hours + ":" + minutes + " »──────────");
                 }
 
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
-                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB, this.LBextraLine);
+                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB, this.config.LBextraLine);
                 this.pcount++;
             }
             // Check Bot Min Players
@@ -554,32 +553,34 @@ GameServer.prototype.mainLoop = function () {
 };
 
 GameServer.prototype.exitserver = function () {
-    var packet = new Packet.BroadCast("*** Automatic Server Restart in 30 seconds to clean connections and memory ***");
-    for (var i = 0, llen = this.clients.length; i < llen; i++) {
-        this.clients[i].sendPacket(packet);
+    if(this.config.serverMaxConnections != 0) {
+        var packet = new Packet.BroadCast("*** Automatic Server Restart in 30 seconds to clean connections and memory ***");
+        for (var i = 0, llen = this.clients.length; i < llen; i++) {
+            this.clients[i].sendPacket(packet);
+        }
+        console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
+        this.config.serverMaxConnections = 0;
+
+        var temp = setTimeout(function () {
+            console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
+
+            // Close MySQL
+            if (this.sqlconfig.host != '') {
+                console.log("* \u001B[33mClosing mysql connection...\u001B[0m");
+                this.mysql.close();
+            }
+
+            // Store Ban File
+            if (this.banned.length > 0) {
+                console.log("* \u001B[33mSaving ban file...\u001B[0m");
+                fs.writeFileSync('./gameserver.ban', ini.stringify(this.banned));
+            }
+
+            this.socketServer.close();
+            process.exit(1);
+            window.close();
+        }.bind(this), 30000);
     }
-    console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
-    this.config.serverMaxConnections = 0;
-
-    var temp = setTimeout(function () {
-        console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
-
-        // Close MySQL
-        if (this.sqlconfig.host != '') {
-            console.log("* \u001B[33mClosing mysql connection...\u001B[0m");
-            this.mysql.close();
-        }
-
-        // Store Ban File
-        if (this.banned.length > 0) {
-            console.log("* \u001B[33mSaving ban file...\u001B[0m");
-            fs.writeFileSync('./gameserver.ban', ini.stringify(this.banned));
-        }
-
-        this.socketServer.close();
-        process.exit(1);
-        window.close();
-    }.bind(this), 30000);
 };
 
 GameServer.prototype.updateClients = function () {
@@ -885,6 +886,9 @@ GameServer.prototype.splitCells = function (client) {
             split.ignoreCollision = true;
             split.restoreCollisionTicks = 10; //vanilla agar.io = 10
 
+            split.name = client.name;
+            if(client.skin) split.skin = client.skin;
+
             // Add to moving cells list
             this.setAsMovingNode(split);
             this.addNode(split);
@@ -989,6 +993,9 @@ GameServer.prototype.newCellVirused = function (client, parent, angle, mass, spe
     newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
     newCell.ignoreCollision = true; // Remove collision checks
+
+    newCell.name = client.name;
+    if(client.skin) newCell.skin = client.skin;
 
     // Add to moving cells list
     this.addNode(newCell);

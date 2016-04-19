@@ -32,7 +32,7 @@ UpdateNodes.prototype.build = function () {
         var node = this.nodes[i];
         if ("undefined" != typeof node) {
             var extrabyte = 0;
-            if(node.cellType != 1 && node.name == null) {
+            if(node.cellType == 0 && node.name == null) {
                 node.getName();
             }
 

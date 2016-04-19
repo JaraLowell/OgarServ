@@ -27,17 +27,17 @@ function Experimental2() {
     this.motherCellMaxMass = 400;
     this.motherUpdateInterval = 5; // How many ticks it takes to update the mother cell (1 tick = 50 ms)
     this.motherSpawnInterval = 350; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
-    this.motherMinAmount = 5;
+    this.motherMinAmount = 20;
 
     this.movingVirusMass = 100;
-    this.movingVirusMinAmount = 7;
+    this.movingVirusMinAmount = 48;
 
     this.stickyMass = 75;
-    this.stickyMinAmount = 2;
+    this.stickyMinAmount = 6;
     this.stickyUpdateInterval = 1;
     this.tickSticky = 0;
 
-    this.beaconMass = 500;
+    this.beaconMass = 550;
 }
 
 module.exports = Experimental2;

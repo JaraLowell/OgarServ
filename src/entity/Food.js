@@ -5,6 +5,7 @@ function Food() {
 
     this.cellType = 1;
     this.name = '';
+    this.skin = '';
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;

@@ -343,3 +343,9 @@ PacketHandler.prototype.setNickname = function(newNick) {
         client.spectate = false;
     }
 };
+
+// Fun functions to reverse a string, for example `OgarServ` to `vreSragO`
+// Used as April's first joke in 2016
+PacketHandler.prototype.ReverseString = function(s) {
+  return s.split('').reverse().join('')
+};
