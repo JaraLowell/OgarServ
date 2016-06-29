@@ -1,4 +1,4 @@
-function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, serverVersion) {
+﻿function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, serverVersion) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
     this.nonVisibleNodes = nonVisibleNodes;

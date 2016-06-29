@@ -1,4 +1,4 @@
-function UpdateLeaderboard(leaderboard, packetLB, extraline) {
+﻿function UpdateLeaderboard(leaderboard, packetLB, extraline) {
     this.leaderboard = leaderboard;
     this.packetLB = packetLB;
     this.extraline = extraline;

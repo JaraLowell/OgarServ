@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 var EjectedMass = require('../entity/EjectedMass');
 
 function Virus() {

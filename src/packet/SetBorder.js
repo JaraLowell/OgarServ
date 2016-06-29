@@ -1,14 +1,15 @@
-function SetBorder(left, right, top, bottom) {
+function SetBorder(left, right, top, bottom, version) {
     this.left = left;
     this.right = right;
     this.top = top;
     this.bottom = bottom;
+    this.version = version;
 }
 
 module.exports = SetBorder;
 
 SetBorder.prototype.build = function () {
-    var version = "OgarServ 1.6.4Rev308 by Jara Lowell";
+    var version = "OgarServ " + this.version + " by Jara Lowell";
     var buf = new ArrayBuffer(39 + 2 * version.length);
     var view = new DataView(buf);
 

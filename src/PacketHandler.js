@@ -1,11 +1,8 @@
 var Packet = require('./packet');
-var LastMsg;
-var SpamBlock;
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
-    // Detect protocol version - we can do something about it later
     this.protocol = 0;
     this.pressQ = false;
     this.pressW = false;
@@ -58,16 +55,24 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Mouse coordinates
             var client = this.socket.playerTracker;
             if(!client.freeMouse) break;
+
             if (view.byteLength == 13) {
+                // protocol late 5, 6, 7
                 client.mouse.x = view.getInt32(1, true);
                 client.mouse.y = view.getInt32(5, true);
             } else if (view.byteLength == 9) {
+                // early protocol 5
                 client.mouse.x = view.getInt16(1, true);
                 client.mouse.y = view.getInt16(3, true);
             } else if (view.byteLength == 21) {
+                // protocol 4
                 client.mouse.x = view.getFloat64(1, true);
                 client.mouse.y = view.getFloat64(9, true);
             }
+
+            if (isNaN(client.mouse.x)) client.mouse.x = client.centerPos.x;
+            if (isNaN(client.mouse.y)) client.mouse.y = client.centerPos.y;
+
             break;
         case 17:
             // Space Press - Split cell
@@ -140,7 +145,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Spam chat delay
             if ((this.gameServer.time - this.socket.playerTracker.cTime) < this.gameServer.config.chatIntervalTime) {
                 var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (this.gameServer.time - this.socket.playerTracker.cTime)) / 1000) % 60);
-                var packet = new Packet.BroadCast("Wait " + time + " seconds more, before you can send a message.");
+                var packet = new Packet.BroadCast("*** Wait " + time + " seconds more, before you can send a message. ***");
                 this.socket.sendPacket(packet);
                 break;
             }
@@ -150,13 +155,20 @@ PacketHandler.prototype.handleMessage = function (message) {
             if(message == "pos") message = this.MyPos();
 
             // Repeating chat block
-            if (message == LastMsg) {
-                ++SpamBlock;
-                if (SpamBlock > 5) this.socket.close();
-                break;
+            if (message == this.socket.playerTracker.lastchat) {
+                this.socket.playerTracker.spam++;
+                if (this.socket.playerTracker.spam > 2)
+                {
+                    console.log("\u001B[35m" + wname + " kicked for spam\u001B[0m");
+                    var packet = new Packet.BroadCast("*** Your kicked for spamming chat! ***");
+                    this.socket.sendPacket(packet);
+                    this.socket.close();
+                    break;
+                }
+            } else {
+                this.socket.playerTracker.lastchat = message;
+                this.socket.playerTracker.spam = 0;
             }
-            LastMsg = message;
-            SpamBlock = 0;
 
             // Profanity filter
             message = this.WordScan(message);
@@ -165,6 +177,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             if (this.gameServer.config.chatToConsole == 1) {
                 console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
             }
+
             if (this.gameServer.config.serverLogToFile) {
                 var fs = require('fs');
                 var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
@@ -182,7 +195,9 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Some score stuff it seems send by Agar.io
             break;
         case 254:
-            // Handshake setUint32(1, 5, !0)
+            this.protocol = view.getInt32(1, true);
+            if(this.protocol < 4) this.protocol = 4;
+            this.socket.sendPacket(new Packet.ClearNodes());
             break;
         case 255:
             // Connection Start
@@ -193,8 +208,9 @@ PacketHandler.prototype.handleMessage = function (message) {
                 if (this.gameServer.sinfo.players > c.serverMaxConnections) {
                     this.socket.sendPacket(new Packet.ServerMsg(93));
                     this.socket.close();
+                    break;
                 }
-                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom, this.gameServer.version));
                 this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), this.gameServer.sinfo.humans, c.borderRight, c.foodMaxAmount, c.serverGamemode));
             }
             break;
@@ -212,14 +228,14 @@ PacketHandler.prototype.WordScan = function(line) {
     line = line.replace(/nazi/gi, "rat");
     line = line.replace(/cock/gi, "broom");
     line = line.replace(/fuck/gi, "meow");
-    line = line.replace(/dick/gi, "tree");
-    line = line.replace(/bitch/gi, "cat");
-    line = line.replace(/shit/gi, "mouse");
-    line = line.replace(/cunt/gi, "heat");
+    line = line.replace(/dick/gi, "rose");
+    line = line.replace(/bitch/gi, "sweet");
+    line = line.replace(/shit/gi, "poo");
+    line = line.replace(/cunt/gi, "egad");
     line = line.replace(/slut/gi, "love");
     line = line.replace(/weed/gi, "flower");
-    line = line.replace(/gay/gi, "fly");
-    line = line.replace(/penis/gi, "daddy");
+    line = line.replace(/gay/gi, "bat");
+    line = line.replace(/penis/gi, "darn");
     line = line.replace(/nigger/gi, "tigger");
     line = line.replace(/nigga/gi, "tigger");
     line = line.replace(/porn/gi, "milk");

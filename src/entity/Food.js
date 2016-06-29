@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 
 function Food() {
     Cell.apply(this, Array.prototype.slice.call(arguments));

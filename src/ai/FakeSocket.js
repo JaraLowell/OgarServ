@@ -7,7 +7,6 @@ function FakeSocket(gameServer) {
 module.exports = FakeSocket;
 
 // Override
-
 FakeSocket.prototype.sendPacket = function (packet) {
     // Fakes sending a packet
     return;
@@ -22,7 +21,6 @@ FakeSocket.prototype.close = function (error) {
         if (!cell) {
             continue;
         }
-
         this.server.removeNode(cell);
     }
 

@@ -1,6 +1,7 @@
 module.exports = {
     AddNode: require('./AddNode'),
     ClearNodes: require('./ClearNodes'),
+    ClearAll: require('./ClearAll'),
     UpdatePosition: require('./UpdatePosition'),
     SetBorder: require('./SetBorder'),
     UpdateNodes: require('./UpdateNodes'),

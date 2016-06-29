@@ -25,6 +25,8 @@ function PlayerTracker(gameServer, socket) {
     this.mouseCells = []; // For individual cell movement
     this.team = 0;
     this.cTime = new Date();
+    this.lastchat = "";
+    this.spam = 0;
     this.spectate = true;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
     this.freeMouse = true;

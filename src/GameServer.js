@@ -22,6 +22,7 @@ Math.log10 = Math.log10 || function (x) { return Math.log(x) / Math.LN10; };
 function GameServer() {
     // Startup 
     this.run = true;
+    this.version = "1.6.4.336";
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
@@ -46,6 +47,7 @@ function GameServer() {
     this.tick = 0;      // 1 second ticks of mainLoop
     this.tickMain = 0;  // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
+    this.fullTick = 0;
     this.master = 0;    // Used for Master Ping spam protection
     this.sinfo = {
         players: 0,
@@ -231,6 +233,10 @@ GameServer.prototype.start = function () {
     });
 
     function connectionEstablished(ws) {
+        // Lets no Allow some weird sites access...
+        var origin = ws.upgradeReq.headers.origin;
+
+
         if (this.config.serverMaxConnPerIp) {
             for (var cons = 1, i = 0, llen = this.clients.length; i < llen; i++) {
                 if (this.clients[i].remoteAddress == ws._socket.remoteAddress) {
@@ -253,7 +259,11 @@ GameServer.prototype.start = function () {
             return;
         }
 
-        // if (ws.upgradeReq.headers.origin == "http://agar.io") ws.close();
+        // As we donot support the new protocol we for now ban all access from agar.io
+        if(origin == "http://agar.io") {
+            ws.close();
+            return;
+        }
 
         function close(error, err) {
             var client = this.socket.playerTracker;
@@ -276,7 +286,7 @@ GameServer.prototype.start = function () {
             this.socket.sendPacket = function () { }; // Clear function so no packets are sent
         }
 
-        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " (" + cons + ") [origin " + ws.upgradeReq.headers.origin + ws.upgradeReq.url + "]");
+        this.log.onConnect("Client connect: " + ws._socket.remoteAddress + ":" + ws._socket.remotePort + " (" + cons + ") [origin " + origin + ws.upgradeReq.url + "]");
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
 
@@ -293,16 +303,8 @@ GameServer.prototype.start = function () {
         }
 
         var bindObject = {server: this, socket: ws};
-        ws.on('pong', function() {
-            if(typeof ws.playerTracker.pingssent == 'object') {
-                var diff = process.hrtime(ws.playerTracker.pingssent);
-                ws.playerTracker.pingssent = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(1);
-            } else ws.playerTracker.pingssent = 0;
-        });
         ws.on('error', close.bind(bindObject, 1));
         ws.on('close', close.bind(bindObject, 0));
-
-        // ws.ping();
 
         this.clients.push(ws);
         this.MasterPing();
@@ -474,74 +476,76 @@ GameServer.prototype.mainLoop = function () {
     this.time = local;
 
     // Default 50 (aka 50ms) if change here change movespeed as well
-    if (this.tick >= 50) {
-        // Loop main functions
-        if (this.run) {
-            setTimeout(this.cellTick(), 0);
-            setTimeout(this.spawnTick(), 1);
-            setTimeout(this.gamemodeTick(), 2);
-        }
+    if (this.tick >= 45) {
+        this.fullTick++;
+        setTimeout(this.cellTick(), 0);
 
-        // Update the client's maps
-        this.updateClients();
-        this.getPlayers();
-        this.tickMain++;
+        if (this.fullTick >= 2) {
+            // Loop main functions
+            setTimeout(this.spawnTick(), 0);
+            setTimeout(this.gamemodeTick(), 0);
 
-        if (this.config.serverLiveStats && this.tickMain >= 20) {
-            this.log.onWriteConsole(this);
-        }
+            // Update the client's maps
+            this.updateClients();
+            this.getPlayers();
+            this.tickMain++;
 
-        if (this.run) {
-            // Update cells/leaderboard loop
-            if (this.tickMain >= 20) { // 1 Second
-                setTimeout(this.cellUpdateTick(), 3);
+            if (this.config.serverLiveStats && this.tickMain >= 11) {
+                this.log.onWriteConsole(this);
+            }
 
-                var t = (this.startTime.getTime() + (this.config.serverResetTime * 3600000))- local.getTime();
-                var days = Math.floor( t/(1000*60*60*24) );
-                if(days == 0) {
-                    var minutes = Math.floor( (t/1000/60) % 60 );
-                    var hours = Math.floor( (t/(1000*60*60)) % 24 );
-                    hours = (hours < 10 ? "0" : "") + hours;
-                    minutes = (minutes < 10 ? "0" : "") + minutes;
-                    this.config.LBextraLine = ("─────────« " + hours + ":" + minutes + " »──────────");
+            if (this.run) {
+                // Update cells/leaderboard loop
+                if (this.tickMain >= 11) { // 1 Second
+                    setTimeout(this.cellUpdateTick(), 3);
+
+                    var t = (this.startTime.getTime() + (this.config.serverResetTime * 3600000))- local.getTime();
+                    var days = Math.floor( t/(1000*60*60*24) );
+                    if(days == 0) {
+                        var minutes = Math.floor( (t/1000/60) % 60 );
+                        var hours = Math.floor( (t/(1000*60*60)) % 24 );
+                        hours = (hours < 10 ? "0" : "") + hours;
+                        minutes = (minutes < 10 ? "0" : "") + minutes;
+                        this.config.LBextraLine = ("─────────« " + hours + ":" + minutes + " »──────────");
+                    }
+
+                    // Update leaderboard with the gamemode's method
+                    this.leaderboard = [];
+                    this.gameMode.updateLB(this);
+                    this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB, this.config.LBextraLine);
+                    this.pcount++;
                 }
-
-                // Update leaderboard with the gamemode's method
-                this.leaderboard = [];
-                this.gameMode.updateLB(this);
-                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB, this.config.LBextraLine);
-                this.pcount++;
+                // Check Bot Min Players
+                if (((this.sinfo.humans + this.sinfo.bots) < this.config.serverBots) && (this.config.serverBots > 0)) {
+                    this.bots.addBot();
+                }
             }
-            // Check Bot Min Players
-            if (((this.sinfo.humans + this.sinfo.bots) < this.config.serverBots) && (this.config.serverBots > 0)) {
-                this.bots.addBot();
+
+            // Pause and Unpause on player connects
+            if (this.config.serverAutoPause == 1) {
+                var temp = ( this.sinfo.players - this.sinfo.bots );
+                if (!this.run && temp != 0) {
+                    console.log("[Auto Pause] \u001B[32mGame World Resumed!\u001B[0m");
+                    this.run = true;
+                } else if (this.run && temp == 0 && (this.time - this.startTime) > 30000 && this.pcount > 60) {
+                    console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
+                    this.run = false;
+                    this.nodesEjected = [];
+                    this.movingNodes = [];
+                    this.leaderboard = [];
+                    this.gameMode.updateLB(this);
+                }
             }
-        }
 
-        // Pause and Unpause on player connects
-        if (this.config.serverAutoPause == 1) {
-            var temp = ( this.sinfo.players - this.sinfo.bots );
-            if (!this.run && temp != 0) {
-                console.log("[Auto Pause] \u001B[32mGame World Resumed!\u001B[0m");
-                this.run = true;
-            } else if (this.run && temp == 0 && (this.time - this.startTime) > 30000 && this.pcount > 60) {
-                console.log("[Auto Pause] \u001B[31mGame World Paused!\u001B[0m");
-                this.run = false;
-                this.nodesEjected = [];
-                this.movingNodes = [];
-                this.leaderboard = [];
-                this.gameMode.updateLB(this);
+            // Auto Server Reset
+            if (this.config.serverResetTime > 0 && ( local - this.startTime ) > ( this.config.serverResetTime * 3600000 )) {
+                this.exitserver();
             }
-        }
 
-        // Auto Server Reset
-        if (this.config.serverResetTime > 0 && ( local - this.startTime ) > ( this.config.serverResetTime * 3600000 )) {
-            this.exitserver();
-        }
-
-        // Reset
-        if (this.tickMain >= 20) {
-            this.tickMain = 0;
+            if (this.tickMain >= 11) {
+                this.tickMain = 0;
+            }
+            this.fullTick=0
         }
         this.tick = 0;
 
@@ -650,9 +654,10 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
         if (player.skin) {
             info = " (" + player.skin.slice(1) + ")";
         }
-        console.log("\u001B[33mCell " + player.name + info + " joined the game\u001B[0m");
+        console.log("\u001B[33m" + player.name + info + " joined the game\u001B[0m");
     }
 
+    player.socket.sendPacket(new Packet.ClearNodes());
     this.addNode(cell);
 
     // Set initial mouse coords
@@ -663,7 +668,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     // 30s Timer, to kick players that no move within that time frame
     setTimeout(function () {
         if (player.mouse.x == player.startpos.x && player.mouse.y == player.startpos.y) {
-            console.log("\u001B[35mCell " + player.name + " kicked for inactivity\u001B[0m");
+            console.log("\u001B[35m" + player.name + " kicked for inactivity\u001B[0m");
             player.socket.close();
         }
     }.bind(this), 20000);
@@ -1323,6 +1328,7 @@ GameServer.prototype.MasterPing = function () {
                    '&name=' + sName +
                    '&opp=' + myos.platform() + ' ' + myos.arch() +
                    '&uptime=' + process.uptime() +
+                   '&version=OgarServ ' + this.version +
                    '&start_time=' + this.startTime.getTime();
 
         var send = this.postData('http://ogar.mivabe.nl/master', data, function(res) {
