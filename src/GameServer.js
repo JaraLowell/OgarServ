@@ -22,7 +22,7 @@ Math.log10 = Math.log10 || function (x) { return Math.log(x) / Math.LN10; };
 function GameServer() {
     // Startup 
     this.run = true;
-    this.version = "1.6.4.336";
+    this.version = "1.6.5.337";
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
