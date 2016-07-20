@@ -619,7 +619,7 @@ GameServer.prototype.spawnFood = function () {
 };
 
 GameServer.prototype.spawnPlayer = function (player, pos, mass) {
-    if (pos == null) { // Get random pos
+    if (pos == null) {
         pos = this.getRandomSpawn();
     }
 
@@ -631,25 +631,24 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
 
     if ('_socket' in player.socket) {
-        /* var zname = player.name;
-         * if (zname === "") zname = "Un Named";
-         *
-         *       var packet = new Packet.BroadCast(zname + " joined the game!");
-         *       for (var i = 0; i < this.clients.length; i++) {
-         *           this.clients[i].sendPacket(packet);
-         *       }
-         */
+        // Send MOTD
+        if( this.config.serverName != '') {
+            player.socket.sendPacket(new Packet.BroadCast("*** Welcome to " + this.config.serverName + ", running OgarServ version " + this.version + " ***"));
+        }
+
+        // Send Multiple Times Loged in Msg
         for (var i = 0, llen = this.clients.length; i < llen; i++) {
             if (this.clients[i].remoteAddress == player.socket.remoteAddress && this.clients[i].remotePort != player.socket.remotePort) {
-                var packet = new Packet.BroadCast("*** You're logged in multiple times from your IP!, you might get lag due this ***");
-                player.socket.sendPacket(packet);
+                player.socket.sendPacket(new Packet.BroadCast("*** You're logged in multiple times from your IP!, you might get lag due this ***"));
                 break;
             }
         }
+
+        // Send Auto Restart Msg
         if (this.config.serverResetTime > 0) {
-            var packet = new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***");
-            player.socket.sendPacket(packet);
+            player.socket.sendPacket(new Packet.BroadCast("*** Remember, This server auto restarts after " + this.config.serverResetTime + " hours uptime! ***"));
         }
+
         var info = "";
         if (player.skin) {
             info = " (" + player.skin.slice(1) + ")";
@@ -657,7 +656,9 @@ GameServer.prototype.spawnPlayer = function (player, pos, mass) {
         console.log("\u001B[33m" + player.name + info + " joined the game\u001B[0m");
     }
 
+    // Send Map Reset to Client
     player.socket.sendPacket(new Packet.ClearNodes());
+
     this.addNode(cell);
 
     // Set initial mouse coords
