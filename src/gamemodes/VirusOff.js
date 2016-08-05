@@ -36,7 +36,7 @@ VO.prototype.pressQ = function(gameServer,player) {
     }
 };
 
-VO.prototype.pressW = function(gameServer,player) {
+VO.prototype.pressW = function(gameServer,client) {
     for (var i = 0, llen = client.cells.length; i < llen; i++) {
         var cell = client.cells[i];
 
