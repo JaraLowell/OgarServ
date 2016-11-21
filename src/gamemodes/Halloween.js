@@ -2,31 +2,36 @@ var FFA = require('./FFA'); // Base gamemode
 var Entity = require('../entity');
 var Logger = require('../modules/Logger');
 
-function Experimental() {
+function Halloween() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
 
-    this.ID = 2;
-    this.name = "Experimental";
+    this.ID = 3;
+    this.name = "Halloween";
     this.specByLeaderboard = true;
 
-    // Gamemode Specific Variables
+    // Mother Cell
     this.nodesMother = [];
+    this.motherSpawnInterval = 25 * 5;  // How many ticks it takes to spawn another mother cell (5 seconds)
+    this.motherUpdateInterval = 5;     // How many ticks it takes to spawn mother food (1 second)
+    this.motherMinAmount = 20;
+    this.motherMaxAmount = 30;
     this.tickMotherSpawn = 0;
     this.tickMotherUpdate = 0;
 
-    // Config
-    this.motherSpawnInterval = 25 * 5;  // How many ticks it takes to spawn another mother cell (5 seconds)
-    this.motherUpdateInterval = 5;     // How many ticks it takes to spawn mother food (1 second)
-    this.motherMinAmount = 7;
-    this.motherMaxAmount = 11;
+    // Sticky Cell
+    this.nodesSticky = []; // we dont have a sticky cell no more
+    this.tickSticky = 0;
+    this.stickyMass = 75;
+    this.stickyMinAmount = 3;
+    this.stickyUpdateInterval = 3;
 }
 
-module.exports = Experimental;
-Experimental.prototype = new FFA();
+module.exports = Halloween;
+Halloween.prototype = new FFA();
 
 // Gamemode Specific Functions
 
-Experimental.prototype.spawnMotherCell = function (gameServer) {
+Halloween.prototype.spawnMotherCell = function (gameServer) {
     // Checks if there are enough mother cells on the map
     if (this.nodesMother.length >= this.motherMinAmount) {
         return;
@@ -42,23 +47,51 @@ Experimental.prototype.spawnMotherCell = function (gameServer) {
     gameServer.addNode(mother);
 };
 
+Halloween.prototype.spawnStickyCell = function(gameServer) {
+    // Checks if there are enough mother cells on the map
+    if (this.nodesSticky.length >= this.stickyMinAmount) {
+        return
+    }
+
+    // Spawns a mother cell
+    var pos =  gameServer.getRandomPosition();
+    if (gameServer.willCollide(pos, 149)) {
+        // cannot find safe position => do not spawn
+        return;
+    }
+
+    // Spawn if no cells are colliding
+    var sticky = new Entity.StickyCell(gameServer, null, pos, this.stickyMass);
+    gameServer.addNode(sticky);
+};
+
+Halloween.prototype.updateStickyCells = function(gameServer) {
+    for (var i in this.nodesSticky) {
+        var sticky = this.nodesSticky[i];
+
+        sticky.update(gameServer);
+    }
+};
+
 // Override
 
-Experimental.prototype.onServerInit = function (gameServer) {
+Halloween.prototype.onServerInit = function (gameServer) {
     // Called when the server starts
     gameServer.run = true;
-
-    // Turn off Virus
-    gameServer.config.virusMinAmount = 0;
-    gameServer.config.virusMaxAmount = 0;
+    // Enebale Virus Spirals
+    gameServer.config.virusSpirals = 1;
+    // Enable Moving Virusses
+    gameServer.config.virusMoving = 1;
+    // Set Helloween Color Theme
+    gameServer.config.virusColor = {r:230, g: 60, b: 10}
 
     var mapSize = Math.max(gameServer.border.width, gameServer.border.height);
 
     // Good Values are :
-    // gameServer.config.foodMinAmount = Math.ceil(mapSize / 6);
-    // gameServer.config.foodMaxAmount = Math.ceil(mapSize / 4);
-    // gameServer.config.virusMinAmount = Math.ceil(mapSize / 850);
-    // gameServer.config.virusMaxAmount = Math.ceil(mapSize / 350);
+    gameServer.config.foodMinAmount = Math.ceil(mapSize / 6);
+    gameServer.config.foodMaxAmount = Math.ceil(mapSize / 4);
+    gameServer.config.virusMinAmount = Math.ceil(mapSize / 850);
+    gameServer.config.virusMaxAmount = Math.ceil(mapSize / 350);
     this.motherMinAmount = Math.ceil(mapSize / 2000);
     this.motherMaxAmount = Math.ceil(this.motherMinAmount * 1.5);
 
@@ -71,12 +104,21 @@ Experimental.prototype.onServerInit = function (gameServer) {
         var angle = prey.isMoving ? prey.getAngle() : this.getAngle();
         this.setBoost(16 * 20, angle);
     };
-    Entity.MotherCell.prototype.onAdd = function () {
-        var random = Math.floor(Math.random() * 21) - 10;
+    Entity.Food.prototype.onAdd = function () {
+        var random = Math.floor(Math.random() * 41) - 20;
         this.setColor({
             r: gameServer.config.virusColor.r + random,
             g: gameServer.config.virusColor.g + random,
-            b: gameServer.config.virusColor.b + random,
+            b: 0
+        });
+        gameServer.currentFood++;
+    };
+    Entity.MotherCell.prototype.onAdd = function () {
+        var random = Math.floor(Math.random() * 41) - 20;
+        this.setColor({
+            r: gameServer.config.virusColor.r + random,
+            g: gameServer.config.virusColor.g + random,
+            b: 0
         });
         self.nodesMother.push(this);
     };
@@ -85,12 +127,12 @@ Experimental.prototype.onServerInit = function (gameServer) {
         if (index != -1) {
             self.nodesMother.splice(index, 1);
         } else {
-            Logger.error("Experimental.onServerInit.MotherVirus.onRemove: Tried to remove a non existing virus!");
+            Logger.error("Halloween.onServerInit.MotherVirus.onRemove: Tried to remove a non existing virus!");
         }
     };
 };
 
-Experimental.prototype.onChange = function (gameServer) {
+Halloween.prototype.onChange = function (gameServer) {
     // Remove all mother cells
     for (var i in this.nodesMother) {
         gameServer.removeNode(this.nodesMother[i]);
@@ -102,7 +144,16 @@ Experimental.prototype.onChange = function (gameServer) {
     Entity.MotherCell.prototype.onRemove = require('../Entity/MotherCell').prototype.onRemove;
 };
 
-Experimental.prototype.onTick = function (gameServer) {
+Halloween.prototype.onTick = function (gameServer) {
+    if(!this.beacon) {
+        var pos = {
+            x: 0,
+            y: 0
+        };
+        this.beacon = new Entity.Beacon(gameServer, null, pos, 300);
+        gameServer.addNode(this.beacon);
+    }
+
     // Mother Cell Spawning
     if (this.tickMotherSpawn >= this.motherSpawnInterval) {
         this.tickMotherSpawn = 0;

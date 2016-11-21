@@ -1,6 +1,8 @@
 // Project imports
-var BotPlayer = require('./BotPlayer');
+var fs = require("fs");
+// var Logger = require('../modules/Logger');
 var FakeSocket = require('./FakeSocket');
+var BotPlayer = require('./BotPlayer');
 var PacketHandler = require('../PacketHandler');
 
 function BotLoader(gameServer) {
@@ -15,27 +17,25 @@ BotLoader.prototype.getName = function () {
 
     // Picks a random name for the bot
     if (this.randomNames.length > 0) {
-        var index = Math.floor(Math.random() * this.randomNames.length);
-        name = this.randomNames[index].replace('\r', '');
-        this.randomNames.splice(index, 1);
+        var index = (this.randomNames.length * Math.random()) >>> 0;
+        name = this.randomNames[index];
     } else {
-        this.loadNames();
-        name = "Google";
+        name = "[BOT] " + ++this.nameIndex;
     }
 
-    return "[BOT] " + name;
+    return name;
 };
 
 BotLoader.prototype.loadNames = function () {
     this.randomNames = [];
-    // Load names
-    try {
-        var fs = require("fs"); // Import the util library
+
+    if (fs.existsSync("./botnames.txt")) {
         // Read and parse the names - filter out whitespace-only names
-        this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split("\n");
-    } catch (e) {
-        // Nothing, use the default names
+        this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split(/[\r\n]+/).filter(function (x) {
+            return x != ''; // filter empty names
+        });
     }
+
     this.nameIndex = 0;
 };
 
@@ -48,5 +48,5 @@ BotLoader.prototype.addBot = function () {
     this.gameServer.clients.push(s);
 
     // Add to world
-    s.packetHandler.setNickname("<bot>" + this.getName());
+    s.packetHandler.setNickname(this.getName());
 };

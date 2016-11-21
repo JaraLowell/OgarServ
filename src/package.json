@@ -1,0 +1,30 @@
+{
+    "name": "OgarServ",
+    "version": "1.7.0.338",
+    "description": "Jaras Open source Ogar server",
+    "author": "Devin Ryan <devin@forairan.com> (http://devin.codes/), Barbosik (https://github.com/Barbosik/MultiOgar) and Jara Lowell (https://github.com/Jaralowell/OgarServ)",
+    "homepage": "http://ogar.mivabe.nl",
+    "license": "Apache License 2.0",
+    "main": "index.js",
+    "dependencies": {
+        "quad-node": "^1.0.5",
+        "vector2-node": "latest",
+        "ws": "latest",
+        "http": "latest",
+        "fs": "latest",
+        "sys": "latest",
+        "mysql": "latest",
+        "xmlhttprequest": "latest"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Jaralowell/OgarServ"
+    },
+    "bugs": {
+        "url": "https://github.com/Jaralowell/OgarServ/issues"
+    }
+}

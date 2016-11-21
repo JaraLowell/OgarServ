@@ -5,55 +5,75 @@ var MovingVirus = require('./MovingVirus');
 
 function Beacon() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-
-    this.cellType = 5; // Another new cell type
-    this.agitated = 1; // Drawing purposes
-    this.spiked = 1;
+    this.cellType = 5;
+    this.isAgitated = false;
+    this.isSpiked = true;
+    this.isMotherCell = false;
     this.stage = 0;
     this.active = true;
     this.maxStage = 100; // When it reaches 50, rekt largest player
     this.minMass = this.mass;
-    this.name = '';
-    this.skin = '%gas';
-    this.color = {
-        r: 240,
-        g: 240,
-        b: 240
-    };
+    this.start = {};
+    this.startcolor = {};
 }
 
 module.exports = Beacon;
 Beacon.prototype = new Cell();
 
-Beacon.prototype.feed = function(feeder, gameServer) {
+Beacon.prototype.canEat = function (cell) {
+    return cell.cellType == 3; // virus can eat ejected mass only
+};
+
+Beacon.prototype.onEat = function (prey) {
     // Increase the stage ('voltage' if you will)
     if(Math.random() < 0.25 && this.active) {
         this.stage++;
+        this.mass += this.gameServer.config.ejectMassLoss;
     } else {
-        gameServer.removeNode(feeder);
         return;
     }
 
     this.mass = this.minMass + this.stage;
 
-    // Spit out a nutrient
-    this.spawnFood(gameServer);
-
     // Sometimes spit out a ejected mass
     if(Math.random() < 0.10) {
-        this.spawnEjected(gameServer, this.color);
+        this.gameServer.sendChatMessage(null, null, '\u26EF ~ blooming ~');
+        this.spawnEjected(this.gameServer, this.color);
+    } else {
+        // Spit out a nutrient
+        var size1 = this.getSize();
+        var size2 = this.gameServer.config.foodMinSize;
+        for (var i = 0; i < this.motherCellSpawnAmount; i++) {
+            size1 = Math.sqrt(size1 * size1 - size2 * size2);
+            size1 = Math.max(size1, this.motherCellMinSize);
+            this.setSize(size1);
+
+            // Spawn food with size2
+            var angle = Math.random() * 2 * Math.PI;
+            var r = this.getSize();
+            var pos = {
+                x: this.position.x + r * Math.sin(angle),
+                y: this.position.y + r * Math.cos(angle)
+            };
+
+            // Spawn food
+            var food = new Food(this.gameServer, null, pos, size2);
+            food.setColor(this.gameServer.getRandomColor());
+            this.gameServer.addNode(food);
+
+            // Eject to random distance
+            food.setBoost(32 + 32 * Math.random(), angle);
+        }
     }
 
     // Even more rarely spit out a moving virus
     // Spit out a moving virus in deterministic direction
     // every 30 shots
     if(this.stage % 30 && Math.random() < 0.10) {
-        var moving = new MovingVirus(gameServer.getNextNodeId(), null, {x: this.position.x, y: this.position.y}, 125);
-        moving.angle = feeder.angle;
-        moving.setMoveEngineData(20+10*Math.random(), Infinity, 1);
-        gameServer.movingNodes.push(moving);
-        gameServer.addNode(moving);
-        gameServer.SendMessage('\u26EF releasing a virus!');
+        this.gameServer.sendChatMessage(null, null, '\u26EF releasing a virus!');
+        var v = new MovingVirus(this.gameServer, null, this.position, this.gameServer.config.virusMinSize - Math.floor(50*Math.random()));
+        this.gameServer.movingNodes.push(v);
+        this.gameServer.addNode(v);
     }
 
     if(this.stage >= this.maxStage) {
@@ -65,20 +85,24 @@ Beacon.prototype.feed = function(feeder, gameServer) {
         this.color.g = 10;
         this.color.b = 10;
 
-        var largest = gameServer.leaderboard[0];
-        var color = gameServer.getRandomColor();
+        var largest = this.gameServer.leaderboard[0];
+        var color = this.gameServer.getRandomColor();
 
         if(largest) {
             color = largest.color;
-            gameServer.SendMessage('\u26EF targeting ' + largest.getName() + ', and releasing a cell unbinding virus!');
+            this.gameServer.sendChatMessage(null, null, '\u26EF targeting ' + largest.getName() + ', and releasing a cell unbinding virus!');
+            this.gameServer.splitCells(largest);
             // Do something to each of their cells:
-            for(var i = 0, llen = largest.cells.length; i < llen; i++) {
-                var cell = largest.cells[i];
-                while(cell.mass > gameServer.config.ejectMassLoss) {
-                    cell.mass -= Math.round(gameServer.config.ejectMassLoss * 6.66);
-                    gameServer.ejectBoom(cell.position, cell.getColor());
+            var loss = Math.round(this.gameServer.config.ejectSizeLoss * 1.25);
+            for(var i = 0, size = 0, llen = largest.cells.length; i < llen; i++) {
+                var node = largest.cells[i];
+                if(!node) continue;
+                size = node.getSize();
+                node.setSize(32);
+                while(size >= 32) {
+                    size -= loss;
+                    this.gameServer.ejectBoom(node.position, node.getColor());
                 }
-                cell.mass = gameServer.config.ejectMassLoss;
             }
         }
 
@@ -86,60 +110,61 @@ Beacon.prototype.feed = function(feeder, gameServer) {
         setTimeout(function () {
             this.mass = this.minMass;
             this.active = true;
-            this.color.r = 240;
-            this.color.g = 240;
-            this.color.b = 240;
-            this.spawnEjected(gameServer, this.color);
+            this.color = this.startcolor
+            this.spawnEjected(this.gameServer, this.color);
         }.bind(this), 600000);
     }
 
     // Indicate stage via color
-    this.color.g -= 10;
-    this.color.b -= 10;
-    gameServer.removeNode(feeder);
+    this.color.r -= 1;
+    this.color.g += 1;
 };
 
 Beacon.prototype.spawnEjected = function(gameServer, color) {
-    if(gameServer.config.virusSpirals != 1) {
-        return;
-    }
-
-    var r = 32 + this.getSize();
+    var r = 400;
     var rnd = Math.random() * 3.14;
+    var position = {
+        x: 0,
+        y: 0
+    };
 
     var angle = rnd; // Starting angle
     for (var k = 0, dist = 0; k < 16; k++) {
         angle += 0.375;
-        dist += 8;
-        var pos = {x: this.position.x + (r * Math.sin(angle)), y: this.position.y + (r * Math.cos(angle))};
+        dist += 24;
+        var pos = {x: Math.ceil(position.x + (r * Math.sin(angle))), y: Math.ceil(position.y + (r * Math.cos(angle)))};
 
-        var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
+        var ejected = new EjectedMass(gameServer, null, pos, 10 + Math.ceil(gameServer.config.ejectSize * dist / 250));
         ejected.angle = angle;
-        ejected.setMoveEngineData(Math.floor(dist * 1.5),15);
         ejected.setColor({r: Math.floor(color.r / 25), g: Math.floor(color.g / 25), b: Math.floor(color.b / 25)});
+        ejected.setBoost(dist * 1.2, angle);
         gameServer.addNode(ejected);
-        gameServer.setAsMovingNode(ejected);
     }
 
     var angle = rnd + 3.14; // Starting angle
     for (var k = 0, dist = 0; k < 16; k++) {
         angle += 0.375;
-        dist += 8;
-        var pos = {x: this.position.x + (r * Math.sin(angle)), y: this.position.y + (r * Math.cos(angle))};
+        dist += 24;
+        var pos = {x: Math.ceil(position.x + (r * Math.sin(angle))), y: Math.ceil(position.y + (r * Math.cos(angle)))};
 
-        var ejected = new EjectedMass(gameServer.getNextNodeId(), null, pos, (gameServer.config.ejectMass + (dist / 3)));
+        var ejected = new EjectedMass(gameServer, null, pos, 10 + Math.ceil(gameServer.config.ejectSize * dist / 250));
         ejected.angle = angle;
-        ejected.setMoveEngineData(Math.floor(dist * 1.5),15);
         ejected.setColor(color);
+        ejected.setBoost(dist * 1.2, angle);
         gameServer.addNode(ejected);
-        gameServer.setAsMovingNode(ejected);
     }
 };
 
 Beacon.prototype.onAdd = function(gameServer) {
-    gameServer.SendMessage('\u26EF Beacon, cell spawned!');
-    gameServer.gameMode.beacon = this;
-    this.spawnEjected(gameServer, this.color);
+    var random = Math.floor(Math.random() * 21) - 10;
+    var color = { r: gameServer.config.virusColor.r + random,
+                  g: gameServer.config.virusColor.g + random,
+                  b: gameServer.config.virusColor.b + random };
+    this.setColor(color);
+    this.startcolor = color;
+    gameServer.sendChatMessage(null, null, '\u26EF Beacon, cell spawned!');
+    //gameServer.gameMode.beacon = this;
+    this.spawnEjected(gameServer, color);
 };
 
 Beacon.prototype.abs = MotherCell.prototype.abs;

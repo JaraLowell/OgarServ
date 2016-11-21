@@ -1,7 +1,9 @@
-﻿exports.parse = exports.decode = decode;
+exports.parse = exports.decode = decode;
 exports.stringify = exports.encode = encode;
+
 exports.safe = safe;
 exports.unsafe = unsafe;
+exports.getLagMessage = getLagMessage;
 
 var eol = process.platform === "win32" ? "\r\n" : "\n";
 
@@ -27,8 +29,7 @@ function encode(obj, opt) {
             val.forEach(function (item) {
                 out += safe(k + "[]") + separator + safe(item) + "\n";
             });
-        }
-        else if (val && typeof val === "object") {
+        } else if (val && typeof val === "object") {
             children.push(k);
         } else {
             out += safe(k) + separator + safe(val) + eol;
@@ -59,25 +60,30 @@ function dotSplit(str) {
     return str.replace(/\1/g, '\u0002LITERAL\\1LITERAL\u0002')
         .replace(/\\\./g, '\u0001')
         .split(/\./).map(function (part) {
-            return part.replace(/\1/g, '\\.')
+        return part.replace(/\1/g, '\\.')
                 .replace(/\2LITERAL\\1LITERAL\2/g, '\u0001');
-        });
+    });
 }
 
 function decode(str) {
     var out = {},
         p = out,
         state = "START",
-    // section     |key = value
+        // section     |key = value
         re = /^\[([^\]]*)\]$|^([^=]+)(=(.*))?$/i,
         lines = str.split(/[\r\n]+/g),
         section = null;
 
     lines.forEach(function (line, _, __) {
+        var testLine = line.trim();
+
+        // skip empty lines or commented lines
         if (!line || line.match(/^\s*[;#]/)) {
+            // skip commented lines
             return;
         }
-
+        // E.g. serverTimeout = 30
+        // Returns ["serverTimeout = 30", undefined, "serverTimeout ", "= 30", "30"]
         var match = line.match(re);
 
         if (!match) {
@@ -103,10 +109,27 @@ function decode(str) {
             }
         }
 
+        //// Mass to Size function catcher
+        if (startsWith(value, "massToSize(") && endsWith(value, ")")) {
+            // 11: length of "massToSize("
+            var strValue = value.slice(11, value.length - 1).trim();
+            value = Math.sqrt(parseFloat(strValue) * 100) + 0.5;
+        }
+        function startsWith(value, pattern) {
+            return value.length >= pattern.length && 
+                value.indexOf(pattern) === 0;
+        };
+        function endsWith(value, pattern) {
+            return value.length >= pattern.length && 
+                value.lastIndexOf(pattern) === value.length - pattern.length;
+        };
+
         // safeguard against resetting a previously defined
         // array by accidentally forgetting the brackets
         if (isNaN(value)) {
             p[key] = value;
+        } else if (isInt(value)) {
+            p[key] = parseInt(value);
         } else {
             p[key] = parseFloat(value);
         }
@@ -141,19 +164,11 @@ function decode(str) {
 }
 
 function isQuoted(val) {
-    return (val.charAt(0) === "\"" && val.slice(-1) === "\"")
-        || (val.charAt(0) === "'" && val.slice(-1) === "'");
+    return (val.charAt(0) === "\"" && val.slice(-1) === "\"") || (val.charAt(0) === "'" && val.slice(-1) === "'");
 }
 
 function safe(val) {
-    return (typeof val !== "string"
-    || val.match(/[=\r\n]/)
-    || val.match(/^\[/)
-    || (val.length > 1
-    && isQuoted(val))
-    || val !== val.trim())
-        ? JSON.stringify(val)
-        : val.replace(/;/g, '\\;').replace(/#/g, "\\#");
+    return (typeof val !== "string" || val.match(/[=\r\n]/) || val.match(/^\[/) || (val.length > 1 && isQuoted(val)) || val !== val.trim()) ? JSON.stringify(val) : val.replace(/;/g, '\\;').replace(/#/g, "\\#");
 }
 
 function unsafe(val, doUnesc) {
@@ -165,7 +180,8 @@ function unsafe(val, doUnesc) {
         }
         try {
             val = JSON.parse(val);
-        } catch (_) {
+        } catch (err) {
+            Logger.error(err.stack);
         }
     } else {
         // walk the val to find the first not-escaped ; character
@@ -195,5 +211,17 @@ function unsafe(val, doUnesc) {
 }
 
 var isInt = function (n) {
-    return parseInt(n) === n;
+    return parseInt(n) == n;
 };
+
+function getLagMessage(updateTimeAvg) {
+    if (updateTimeAvg < 20)
+        return "perfectly smooth";
+    if (updateTimeAvg < 35)
+        return "good";
+    if (updateTimeAvg < 40)
+        return "tiny lag";
+    if (updateTimeAvg < 50)
+        return "lag";
+    return "extremely high lag";
+}

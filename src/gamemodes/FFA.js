@@ -12,14 +12,13 @@ module.exports = FFA;
 FFA.prototype = new Mode();
 
 // Gamemode Specific Functions
-
 FFA.prototype.leaderboardAddSort = function (player, leaderboard) {
     // Adds the player and sorts the leaderboard
     var len = leaderboard.length - 1;
     var loop = true;
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+        if (player.getScore() <= leaderboard[len].getScore()) {
             leaderboard.splice(len + 1, 0, player);
             loop = false; // End the loop if a spot is found
         }
@@ -32,41 +31,37 @@ FFA.prototype.leaderboardAddSort = function (player, leaderboard) {
 };
 
 // Override
-
 FFA.prototype.onPlayerSpawn = function (gameServer, player) {
-    // Random color
-    player.color = gameServer.getRandomColor();
-
-    // Set up variables
-    var pos, startMass;
-
+    player.setColor(player.isMinion ? { r: 240, g: 240, b: 255 } : gameServer.getRandomColor());
     // Spawn player
-    gameServer.spawnPlayer(player, pos, startMass);
+    gameServer.spawnPlayer(player);
 };
 
 FFA.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
     // Loop through all clients
-    for (var i = 0, llen = gameServer.clients.length; i < llen; i++) {
-        if (typeof gameServer.clients[i] == "undefined") {
+    for (var i = 0, len = gameServer.clients.length; i < len; i++) {
+        if (gameServer.clients[i] == null)
             continue;
-        }
 
         var player = gameServer.clients[i].playerTracker;
-        var playerScore = player.getScore(true);
-        if (player.cells.length <= 0) {
+
+        if (player.isRemoved)
             continue;
-        }
+
+        if (player.cells.length <= 0)
+            continue;
 
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
-
-        } else if (lb.length < gameServer.config.gameLBlength) {
+        } else if (lb.length < gameServer.config.serverMaxLB) {
             this.leaderboardAddSort(player, lb);
         } else {
-            // 10 in leaderboard already
-            if (playerScore > lb[gameServer.config.gameLBlength - 1].getScore(false)) {
+            // Max in leaderboard already
+            var playerScore = player.getScore();
+            if (playerScore > lb[gameServer.config.serverMaxLB - 1].getScore()) {
                 lb.pop();
                 this.leaderboardAddSort(player, lb);
             }

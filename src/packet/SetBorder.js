@@ -1,30 +1,37 @@
-function SetBorder(left, right, top, bottom, version) {
-    this.left = left;
-    this.right = right;
-    this.top = top;
-    this.bottom = bottom;
-    this.version = version;
+// Import
+var BinaryWriter = require("./BinaryWriter");
+
+
+function SetBorder(playerTracker, border, gameType, serverName) {
+    this.playerTracker = playerTracker;
+    this.border = border;
+    this.gameType = gameType;
+    this.serverName = serverName;
 }
 
 module.exports = SetBorder;
 
-SetBorder.prototype.build = function () {
-    var version = "OgarServ " + this.version + " by Jara Lowell";
-    var buf = new ArrayBuffer(39 + 2 * version.length);
-    var view = new DataView(buf);
-
-    view.setUint8(0, 64, true);
-    view.setFloat64(1, this.left, true);
-    view.setFloat64(9, this.top, true);
-    view.setFloat64(17, this.right, true);
-    view.setFloat64(25, this.bottom, true);
-    var offset = 33;
-    view.setUint32(offset, 1, true);
-    offset += 4;
-    for (var j = 0, llen = version.length; j < llen; j++) {
-        view.setUint16(offset, version.charCodeAt(j), true);
-        offset += 2;
+SetBorder.prototype.build = function (protocol) {
+    var scrambleX = this.playerTracker.scrambleX;
+    var scrambleY = this.playerTracker.scrambleY;
+    if (this.gameType == null) {
+        var buffer = new Buffer(33);
+        buffer.writeUInt8(0x40, 0, true);
+        buffer.writeDoubleLE(this.border.minx + scrambleX, 1, true);
+        buffer.writeDoubleLE(this.border.miny + scrambleY, 9, true);
+        buffer.writeDoubleLE(this.border.maxx + scrambleX, 17, true);
+        buffer.writeDoubleLE(this.border.maxy + scrambleY, 25, true);
+        return buffer;
     }
-    view.setUint16(offset, 0, true);
-    return buf;
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x40);                                // Packet ID
+    writer.writeDouble(this.border.minx + scrambleX);
+    writer.writeDouble(this.border.miny + scrambleY);
+    writer.writeDouble(this.border.maxx + scrambleX);
+    writer.writeDouble(this.border.maxy + scrambleY);
+    writer.writeUInt32(this.gameType >> 0);
+    var name = this.serverName;
+    if (name == null) name = "";
+    writer.writeStringZeroUtf8(name);
+    return writer.toBuffer();
 };

@@ -1,4 +1,4 @@
-﻿var Cell = require('./Cell');
+var Cell = require('./Cell');
 var Virus = require('./Virus');
 var MotherCell = require('./MotherCell');
 
@@ -6,15 +6,15 @@ function StickyCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 4; // New cell type
-    this.skin = '';
-    this.name = '';
-    this.agitated = 1; // Drawing purposes
+    this.isAgitated = true;
+    this.isSpiked = false;
+    this.isMotherCell = false;
     this.acquired = undefined;
     this.radius = this.getSize();
     this.color = {
-        r: 210 + Math.floor(Math.random() * 32),
-        g: 10  + Math.floor(Math.random() * 32),
-        b: 10  + Math.floor(Math.random() * 32)
+        r: 210 + Math.floor(Math.random() * 20),
+        g: 30 +  Math.floor(Math.random() * 20),
+        b:       Math.floor(Math.random() * 20)
     };
 }
 
@@ -25,36 +25,37 @@ StickyCell.prototype.update = function(gameServer) {
     if(this.acquired) {
         if(this.acquired.killedBy) {
             // Cell was killed and we need to free it
+            this.acquired = undefined;
+        } else {
+            // Remain attached to the acquired victim
+            var check = this.acquired;
+            var dist = check.getDist(check.position.x, check.position.y, this.position.x, this.position.y);
+            var collisionDist = check.getSize() + this.radius;
+
+            var dY = this.position.y - check.position.y;
+            var dX = this.position.x - check.position.x;
+            var theta = Math.atan2(dY, dX);
+            var dMag = collisionDist - dist - 20; // -20 So it's not ghosting
+
+            this.position.x += (dMag * Math.cos(theta)) >> 0;
+            this.position.y += (dMag * Math.sin(theta)) >> 0;
+
+            // Gradually degrade in color
+            if (this.color.r > 210) this.color.r *= 0.999;
+            if (this.color.g > 30)  this.color.g *= 0.999;
+            if (this.color.b > 0)   this.color.b *= 0.999;
         }
-
-        // Remain attached to the acquired victim
-        var check = this.acquired;
-        var dist = check.getDist(check.position.x, check.position.y, this.position.x, this.position.y);
-        var collisionDist = check.getSize() + this.radius;
-
-        var dY = this.position.y - check.position.y;
-        var dX = this.position.x - check.position.x;
-        var theta = Math.atan2(dY, dX);
-        var dMag = collisionDist - dist - 20; // -20 So it's not ghosting
-
-        this.position.x += (dMag * Math.cos(theta)) >> 0;
-        this.position.y += (dMag * Math.sin(theta)) >> 0;
-
-        // Gradually degrade in color
-        if (this.color.r > 160) this.color.r *= 0.999;
-        if (this.color.g > 40)  this.color.g *= 0.999;
-        if (this.color.b > 55)  this.color.b *= 0.999;
     }
 
     // Look for victims
-    for (var i in gameServer.nodesPlayer) {
-        var check = gameServer.nodesPlayer[i];
+    for (var i in gameServer.nodes) {
+        var check = gameServer.nodes[i];
 
         // Do boundary (non-absorbing) collision check
         var collisionDist = check.getSize() + this.radius;
 
         if(!check.simpleCollide(check.position.x, check.position.y,this,collisionDist)) {
-            check.agitated = false;
+            check.isAgitated = false;
             continue;
         }
 
@@ -74,6 +75,7 @@ StickyCell.prototype.update = function(gameServer) {
 
 StickyCell.prototype.onAdd = function(gameServer) {
     gameServer.gameMode.nodesSticky.push(this);
+    gameServer.sendChatMessage(null, null, '\u26EF a sticky cell was spawned!');
 };
 
 StickyCell.prototype.onConsume = function(consumer, gameServer) {

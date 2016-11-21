@@ -1,12 +1,16 @@
-var Mode = require('./Mode');
+﻿var Mode = require('./Mode');
 
 function Zombie() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.ID = 12;
     this.name = "Zombie FFA";
     this.haveTeams = true;
-    this.zombieColor = {'r': 223, 'g': 223, 'b': 223};
+    this.zombieColor = {
+        'r': 223,
+        'g': 223,
+        'b': 223
+    };
     this.zombies = [];
     this.players = [];
 }
@@ -22,7 +26,7 @@ Zombie.prototype.leaderboardAddSort = function (player, leaderboard) {
     var loop = true;
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+        if (player.getScore() <= leaderboard[len].getScore()) {
             leaderboard.splice(len + 1, 0, player);
             loop = false; // End the loop if a spot is found
         }
@@ -37,15 +41,15 @@ Zombie.prototype.leaderboardAddSort = function (player, leaderboard) {
 Zombie.prototype.makeZombie = function (player) {
     // turns a player into a zombie
     player.team = 0;
-    player.color = this.zombieColor;
-    for (var i = 0, llen = player.cells.length; i < llen; i++) {
+    player.setColor(this.zombieColor);
+    for (var i = 0; i < player.cells.length; i++) {
         // remove cell from players array
         var index = this.players.indexOf(player.cells[i]);
         if (index != -1) {
             this.players.splice(index, 1);
         }
         // change color of cell
-        player.cells[i].color = this.zombieColor;
+        player.cells[i].setColor(this.zombieColor);
         // add cell to zombie array
         this.zombies.push(player.cells[i]);
     }
@@ -57,13 +61,13 @@ Zombie.prototype.onPlayerSpawn = function (gameServer, player) {
     // make player a zombie if there are none
     if (this.zombies.length == 0) {
         player.team = 0;
-        player.color = this.zombieColor;
+        player.setColor(this.zombieColor);
     } else {
         // use player id as team so that bots are still able to fight (even though they probably turn into zombies very fast)
         player.team = player.pID;
-        player.color = gameServer.getRandomColor();
+        player.setColor(gameServer.getRandomColor());
     }
-
+    
     // Spawn player
     gameServer.spawnPlayer(player);
 };
@@ -92,19 +96,20 @@ Zombie.prototype.onCellRemove = function (cell) {
     }
 };
 
+// TODO: remove it (move physics is managed by GameServer)
 Zombie.prototype.onCellMove = function (x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
-
+    
     // Find team
-    for (var i = 0, llen = cell.owner.visibleNodes.length; i < llen; i++) {
+    for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
-
+        
         if ((check.getType() != 0) || (cell.owner == check.owner)) {
             continue;
         }
-
+        
         // Collision with zombies
         if (check.owner.getTeam() == team || check.owner.getTeam() == 0 || team == 0) {
             // Check if in collision range
@@ -113,10 +118,10 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
                 // Skip
                 continue;
             }
-
+            
             // First collision check passed... now more precise checking
             dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
-
+            
             // Calculations
             if (dist < collisionDist) { // Collided
                 if (check.owner.getTeam() == 0 && team != 0) {
@@ -130,44 +135,47 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
                 var newAngle = Math.atan2(newDeltaX, newDeltaY);
-
+                
                 var move = collisionDist - dist;
-
-                check.position.x = check.position.x + ( move * Math.sin(newAngle) ) >> 0;
-                check.position.y = check.position.y + ( move * Math.cos(newAngle) ) >> 0;
+                
+                check.setPosition({
+                    x: check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    y: check.position.y + (move * Math.cos(newAngle)) >> 0
+                });
             }
         }
     }
 };
 
 Zombie.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
     // Loop through all clients
-    for (var i = 0, llen = gameServer.clients.length; i < llen; i++) {
+    for (var i = 0; i < gameServer.clients.length; i++) {
         if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].playerTracker.team == 0) {
             continue;
         }
-
+        
         var player = gameServer.clients[i].playerTracker;
-        var playerScore = player.getScore(true);
+        var playerScore = player.getScore();
         if (player.cells.length <= 0) {
             continue;
         }
-
+        
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
-
+            continue;
         } else if (lb.length < 10) {
             this.leaderboardAddSort(player, lb);
         } else {
             // 10 in leaderboard already
-            if (playerScore > lb[9].getScore(false)) {
+            if (playerScore > lb[9].getScore()) {
                 lb.pop();
                 this.leaderboardAddSort(player, lb);
             }
         }
     }
-
+    
     this.rankOne = lb[0];
 };

@@ -1,14 +1,15 @@
 module.exports = {
+    BinaryWriter: require('./BinaryWriter'),
+    BinaryReader: require('./BinaryReader'),
+    ChatMessage: require('./ChatMessage'),
     AddNode: require('./AddNode'),
-    ClearNodes: require('./ClearNodes'),
     ClearAll: require('./ClearAll'),
+    ClearOwned: require('./ClearOwned'),
     UpdatePosition: require('./UpdatePosition'),
+    ServerStat: require('./ServerStat'),
+    ServerInfo: require('./ServerInfo.js'),
     SetBorder: require('./SetBorder'),
     UpdateNodes: require('./UpdateNodes'),
     UpdateLeaderboard: require('./UpdateLeaderboard'),
     DrawLine: require('./DrawLine'),
-    Chat: require('./Chat'),
-    BroadCast: require('./BroadCast.js'),
-    ServerInfo: require('./ServerInfo.js'),
-    ServerMsg: require('./ServerMsg.js')
 };

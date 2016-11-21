@@ -1,16 +1,13 @@
-function AddNode(item) {
+function AddNode(playerTracker, item) {
+    this.playerTracker = playerTracker;
     this.item = item;
 }
 
 module.exports = AddNode;
 
-AddNode.prototype.build = function () {
-    // Only add player controlled cells with this packet or it will bug the camera
-    var buf = new ArrayBuffer(5);
-    var view = new DataView(buf);
-
-    view.setUint8(0, 32, true);
-    view.setUint32(1, this.item.nodeId, true);
-
-    return buf;
+AddNode.prototype.build = function (protocol) {
+    var buffer = new Buffer(5);
+    buffer.writeUInt8(0x20, 0, true);
+    buffer.writeUInt32LE((this.item.nodeId ^ this.playerTracker.scrambleId) >>> 0, 1, true);
+    return buffer;
 };

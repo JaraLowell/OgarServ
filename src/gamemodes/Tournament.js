@@ -76,14 +76,11 @@ Tournament.prototype.prepare = function (gameServer) {
         if (!node) {
             continue;
         }
-
         gameServer.removeNode(node);
     }
 
-    gameServer.bots.loadNames();
-
     // Pauses the server
-    gameServer.run = false;
+    gameServer.run = true;
     this.gamePhase = 0;
 
     // Get config values
@@ -95,7 +92,6 @@ Tournament.prototype.prepare = function (gameServer) {
     // Handles disconnections
     this.dcTime = gameServer.config.playerDisconnectTime;
     gameServer.config.playerDisconnectTime = 0;
-    gameServer.config.playerMinMassDecay = gameServer.config.playerStartMass;
 
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
@@ -121,7 +117,6 @@ Tournament.prototype.formatTime = function (time) {
 };
 
 // Override
-
 Tournament.prototype.onServerInit = function (gameServer) {
     this.prepare(gameServer);
 };
@@ -129,7 +124,7 @@ Tournament.prototype.onServerInit = function (gameServer) {
 Tournament.prototype.onPlayerSpawn = function (gameServer, player) {
     // Only spawn players if the game hasnt started yet
     if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
-        player.color = gameServer.getRandomColor(); // Random color
+        player.setColor(gameServer.getRandomColor()); // Random color
         this.contenders.push(player); // Add to contenders list
         gameServer.spawnPlayer(player);
 
@@ -176,6 +171,7 @@ Tournament.prototype.onCellRemove = function (cell) {
 };
 
 Tournament.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
 
     switch (this.gamePhase) {
@@ -242,7 +238,6 @@ Tournament.prototype.updateLB = function (gameServer) {
                 lb[3] = this.timer.toString();
                 this.timer--;
             }
-            break;
         default:
             break;
     }

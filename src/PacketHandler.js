@@ -1,78 +1,117 @@
 var Packet = require('./packet');
+var BinaryReader = require('./packet/BinaryReader');
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     this.protocol = 0;
+    this.isHandshakePassed = false;
+    this.lastChatTick = 0;
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
+    this.lastStatTime = +new Date;
 }
 
 module.exports = PacketHandler;
 
 PacketHandler.prototype.handleMessage = function (message) {
-    function stobuf(buf) {
-        var length = buf.length;
-        var arrayBuf = new ArrayBuffer(length);
-        var view = new Uint8Array(arrayBuf);
-        for (var i = 0; i < length; i++) {
-            view[i] = buf[i];
-        }
-        return view.buffer;
-    }
-
-    // Discard empty messages
+    // Validation
     if (message.length == 0) {
         return;
     }
+    if (message.length > 256) {
+        // anti-spamming
+        this.socket.close(1009, "Spam");
+        return;
+    }
 
-    var buffer = stobuf(message);
-    var view = new DataView(buffer);
-    var packetId = view.getUint8(0, true);
+    // no handshake?
+    if (!this.isHandshakePassed) {
+        if (message[0] != 254 || message.length != 5) {
+            // wait handshake
+            return;
+        }
+
+        var reader = new BinaryReader(message);
+        reader.skipBytes(1);
+
+        // Handshake request
+        this.protocol = reader.readUInt32();
+        if (this.protocol < 1 || this.protocol > 9) {
+            this.socket.close(1002, "Not supported protocol " + this.protocol);
+            return;
+        }
+
+        // Send handshake response
+        this.socket.sendPacket(new Packet.ClearAll());
+        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "OgarServ " + this.gameServer.version));
+
+        // Send welcome message
+        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Ogar Server version " + this.gameServer.version + " runing game mode " + this.gameServer.gameMode.name);
+        if (this.gameServer.config.serverWelcome1)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome1);
+        if (this.gameServer.config.serverWelcome2)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome2);
+        if (this.gameServer.config.serverChat == 0)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
+        if (this.protocol < 4) {
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client requested protocol " + this.protocol + ", assuming 5!");
+            this.protocol = 5;
+        }
+        this.isHandshakePassed = true;
+        return;
+    }
+    this.socket.lastAliveTime = +new Date;
+
+    if (this.socket.playerTracker.isMinion && this.socket.playerTracker.spawnCounter >= 2) {
+        return;
+    }
+
+    var reader = new BinaryReader(message);
+    var packetId = reader.readUInt8();
 
     switch (packetId) {
         case 0:
-            // Set Nickname
-            var nick = '';
-            for (var i = 1, llen = view.byteLength; i < llen; i += 2) {
-                var charCode = view.getUint16(i, true);
-                if (charCode == 0) {
-                    break;
-                }
-                nick += String.fromCharCode(charCode);
+            if (this.socket.playerTracker.cells.length > 0) {
+                break;
             }
-            this.setNickname(nick);
+            var text = null;
+            if (this.protocol <= 5)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
+            this.setNickname(text);
             break;
         case 1:
             // Spectate mode
             if (this.socket.playerTracker.cells.length <= 0) {
-                this.gameServer.switchSpectator(this.socket.playerTracker);
+                // Make sure client has no cells
                 this.socket.playerTracker.spectate = true;
             }
             break;
         case 16:
-            // Mouse coordinates
+            // Mouse
             var client = this.socket.playerTracker;
             if(!client.freeMouse) break;
 
-            if (view.byteLength == 13) {
+            if (message.length == 13) {
                 // protocol late 5, 6, 7
-                client.mouse.x = view.getInt32(1, true);
-                client.mouse.y = view.getInt32(5, true);
-            } else if (view.byteLength == 9) {
+                client.mouse.x = reader.readInt32() - client.scrambleX;
+                client.mouse.y = reader.readInt32() - client.scrambleY;
+            } else if (message.length == 9) {
                 // early protocol 5
-                client.mouse.x = view.getInt16(1, true);
-                client.mouse.y = view.getInt16(3, true);
-            } else if (view.byteLength == 21) {
+                client.mouse.x = reader.readInt16() - client.scrambleX;
+                client.mouse.y = reader.readInt16() - client.scrambleY;
+            } else if (message.length == 21) {
                 // protocol 4
-                client.mouse.x = view.getFloat64(1, true);
-                client.mouse.y = view.getFloat64(9, true);
+                client.mouse.x = reader.readDouble() - client.scrambleX;
+                client.mouse.y = reader.readDouble() - client.scrambleY;
+                if (isNaN(client.mouse.x))
+                    client.mouse.x = client.centerPos.x;
+                if (isNaN(client.mouse.y))
+                    client.mouse.y = client.centerPos.y;
             }
-
-            if (isNaN(client.mouse.x)) client.mouse.x = client.centerPos.x;
-            if (isNaN(client.mouse.y)) client.mouse.y = client.centerPos.y;
-
             break;
         case 17:
             // Space Press - Split cell
@@ -89,135 +128,94 @@ PacketHandler.prototype.handleMessage = function (message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
-        case 80:
-            // Cookie Code from Agar.io
-            // for (var message = '', i = 1, llen = view.byteLength; i < llen; i++) {
-            //    message += String.fromCharCode(view.getUint8(i, !0));
-            // }
-            break;
-        case 82:
-            // User login access token
-            break;
         case 90:
             // Send Server Info
-            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), this.gameServer.sinfo.humans, this.gameServer.config.borderRight, this.gameServer.nodes.length, this.gameServer.config.serverGamemode));
-            break;
+            this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),
+                                                         this.gameServer.sinfo.humans,
+                                                         this.gameServer.config.borderWidth,
+                                                         this.gameServer.nodes.length,
+                                                         this.gameServer.config.serverGamemode));
         case 99:
             // Chat
-            var message = "",
-                maxLen = this.gameServer.config.chatMaxMessageLength * 2,
-                offset = 2,
-                flags = view.getUint8(1);
-
-            if (flags & 2) {
-                offset += 4;
-            }
-            if (flags & 4) {
-                offset += 8;
-            }
-            if (flags & 8) {
-                offset += 16;
-            }
-
-            for (var i = offset, llen = view.byteLength; i < llen && i <= maxLen; i += 2) {
-                var charCode = view.getUint16(i, true);
-                if (charCode == 0) {
-                    break;
-                }
-                message += String.fromCharCode(charCode);
-            }
-
-            // Remove trailing spaces
-            message = message.trim();
-            if (message == "") {
+            if (message.length < 3)             // first validation
                 break;
-            }
 
-            // Get player name
-            var wname = this.socket.playerTracker.name;
-            if (wname == "") wname = "Spectator";
-
-            // Rcon if enabled
-            if (this.gameServer.config.serverAdminPass != '') {
-                if ( this.rcon(message, wname) == true ) break;
-            }
-
-            // Spam chat delay
-            if ((this.gameServer.time - this.socket.playerTracker.cTime) < this.gameServer.config.chatIntervalTime) {
-                var time = 1 + Math.floor(((this.gameServer.config.chatIntervalTime - (this.gameServer.time - this.socket.playerTracker.cTime)) / 1000) % 60);
-                var packet = new Packet.BroadCast("*** Wait " + time + " seconds more, before you can send a message. ***");
-                this.socket.sendPacket(packet);
+            var flags = reader.readUInt8();    // flags
+            var rvLength = (flags & 2 ? 4:0) + (flags & 4 ? 8:0) + (flags & 8 ? 16:0);
+            if (message.length < 3 + rvLength) // second validation
                 break;
+
+            reader.skipBytes(rvLength);        // reserved
+            var text = null;
+            if (this.protocol < 6)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
+
+            text = text.trim();
+
+            if(text.length > 1)
+            {
+                // Profanity filter
+                text = this.WordScan(text);
+                this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
             }
-            this.socket.playerTracker.cTime = this.gameServer.time;
-
-            // Location to chat
-            if(message == "pos") message = this.MyPos();
-
-            // Repeating chat block
-            if (message == this.socket.playerTracker.lastchat) {
-                this.socket.playerTracker.spam++;
-                if (this.socket.playerTracker.spam > 2)
-                {
-                    console.log("\u001B[35m" + wname + " kicked for spam\u001B[0m");
-                    var packet = new Packet.BroadCast("*** Your kicked for spamming chat! ***");
-                    this.socket.sendPacket(packet);
-                    this.socket.close();
-                    break;
-                }
-            } else {
-                this.socket.playerTracker.lastchat = message;
-                this.socket.playerTracker.spam = 0;
-            }
-
-            // Profanity filter
-            message = this.WordScan(message);
-
-            // Chat logging
-            if (this.gameServer.config.chatToConsole == 1) {
-                console.log("\u001B[36m" + wname + ": \u001B[0m" + message);
-            }
-
-            if (this.gameServer.config.serverLogToFile) {
-                var fs = require('fs');
-                var wstream = fs.createWriteStream('logs/chat.log', {flags: 'a'});
-                wstream.write('[' + this.gameServer.formatTime() + '] ' + wname + ': ' + message + '\n');
-                wstream.end();
-            }
-
-            // Send to all clients (broadcast)
-            var packet = new Packet.Chat(this.socket.playerTracker, message);
-            for (var i = 0, llen = this.gameServer.clients.length; i < llen; i++) {
-                this.gameServer.clients[i].sendPacket(packet);
-            }
-            break;
-        case 102:
-            // Some score stuff it seems send by Agar.io
             break;
         case 254:
-            this.protocol = view.getInt32(1, true);
-            if(this.protocol < 4) this.protocol = 4;
-            this.socket.sendPacket(new Packet.ClearNodes());
-            break;
-        case 255:
-            // Connection Start
-            if (view.byteLength == 5) {
-                var c = this.gameServer.config;
-
-                // Boot Player if Server Full
-                if (this.gameServer.sinfo.players > c.serverMaxConnections) {
-                    this.socket.sendPacket(new Packet.ServerMsg(93));
-                    this.socket.close();
-                    break;
-                }
-                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom, this.gameServer.version));
-                this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0), this.gameServer.sinfo.humans, c.borderRight, c.foodMaxAmount, c.serverGamemode));
-            }
+            // Server stat
+            var time = +new Date;
+            var dt = time - this.lastStatTime;
+            this.lastStatTime = time;
+            if (dt < 1000) break;
+            this.socket.sendPacket(new Packet.ServerStat(this.socket.playerTracker));
             break;
         default:
-            console.log("Unknown Packet ID: " + packetId);
             break;
     }
+};
+
+PacketHandler.prototype.setNickname = function (text) {
+    var name = "";
+    var skin = null;
+    if (text != null && text.length > 0) {
+        var skinName = null;
+        var userName = text;
+        var n = -1;
+        if (text[0] == '<' && (n = text.indexOf('>', 1)) >= 1) {
+            if (n > 1)
+                skinName = "%" + text.slice(1, n);
+            else
+                skinName = "";
+            userName = text.slice(n + 1);
+        }
+        //else if (text[0] == "|" && (n = text.indexOf('|', 1)) >= 0) {
+        //    skinName = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
+        //    userName = text.slice(n + 1);
+        //}
+        if (skinName && !this.gameServer.checkSkinName(skinName)) {
+            skinName = null;
+            userName = text;
+        }
+        skin = skinName;
+        name = userName;
+    }
+    if (name.length > this.gameServer.config.playerMaxNickLength) {
+        name = name.substring(0, this.gameServer.config.playerMaxNickLength);
+    }
+
+    if(name != null) {
+        name = this.WordScan(name)
+        name = name.trim();
+        if(name == '\uD83D\uDCE2') name = 'Noob';
+        // No name or weird name, lets call it Cell + pid Number
+        if (name == "" || name == "Unregistered" || name == "Un Named" || name == "AdBlocker :(") {
+            var s = this.socket.playerTracker.pID.toString();
+            while (s.length < 4) s = "0" + s;
+            name = "Cell" + s;
+        }
+    }
+    if(skin != null) skin = skin.trim();
+    this.socket.playerTracker.joinGame(name, skin);
 };
 
 PacketHandler.prototype.WordScan = function(line) {
@@ -229,6 +227,7 @@ PacketHandler.prototype.WordScan = function(line) {
     line = line.replace(/cock/gi, "broom");
     line = line.replace(/fuck/gi, "meow");
     line = line.replace(/dick/gi, "rose");
+    line = line.replace(/suck/gi, "fly");
     line = line.replace(/bitch/gi, "sweet");
     line = line.replace(/shit/gi, "poo");
     line = line.replace(/cunt/gi, "egad");
@@ -240,7 +239,6 @@ PacketHandler.prototype.WordScan = function(line) {
     line = line.replace(/nigga/gi, "tigger");
     line = line.replace(/porn/gi, "milk");
     line = line.replace(/cocaine/gi, "candy");
-    line = line.replace(/servertime/gi, "time now is " + this.gameServer.formatTime());
 
     // Stop Stealing My BOT's Tags already!
     line = line.replace(/\[(BOT)\]/gi, "[2ch]");
@@ -250,118 +248,4 @@ PacketHandler.prototype.WordScan = function(line) {
     line = line.replace(/.*?:\/\//g, "");
 
     return line;
-};
-
-PacketHandler.prototype.rcon = function(message, wname) {
-    var passkey = "/rcon " + this.gameServer.config.serverAdminPass + " ";
-    if (message.substr(0, passkey.length) == passkey) {
-        var cmd = message.substr(passkey.length, message.length);
-        console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command: " + cmd);
-        var split = cmd.split(" "),
-            first = split[0].toLowerCase(),
-            execute = this.gameServer.commands[first];
-        if (typeof execute != 'undefined') {
-            execute(this.gameServer, split);
-        } else {
-            console.log("Invalid Command!");
-        }
-        return true;
-    } else if (message.substr(0, 6) == "/rcon ") {
-        console.log("\u001B[36m" + wname + ": \u001B[0missued a remote console command but used a wrong pass key!");
-        return true;
-    }
-    return false;
-};
-
-PacketHandler.prototype.MyPos = function() {
-    var clientpos = this.socket.playerTracker.centerPos;
-    var msizex = (this.gameServer.config.borderRight - this.gameServer.config.borderLeft) / 5;
-    var msizey = (this.gameServer.config.borderBottom - this.gameServer.config.borderTop) / 5;
-
-    var pX = "1";
-    var shortX = "left";
-    if( clientpos.x > msizex      ) { pX = "2"; shortX = "left";  }
-    if( clientpos.x > (msizex * 2)) { pX = "3"; shortX = "middle";}
-    if( clientpos.x > (msizex * 3)) { pX = "4"; shortX = "right"; }
-    if( clientpos.x > (msizex * 4)) { pX = "5"; shortX = "right"; }
-
-    var pY = "A";
-    var shortY = "top";
-    if( clientpos.y > msizey      ) { pY = "B"; shortY = "top"; }
-    if( clientpos.y > (msizey * 2)) { pY = "C"; shortY = "middle"; }
-    if( clientpos.y > (msizey * 3)) { pY = "D"; shortY = "bottom"; }
-    if( clientpos.y > (msizey * 4)) { pY = "E"; shortY = "bottom"; }
-
-    var short = "";
-    if(shortY == "middle" && shortX == "middle") {
-        short = "center @ ";
-    } else {
-        short = shortY + " " + shortX + " @ ";
-    }
-
-    return "i am at " + clientpos.x + " : " + clientpos.y + " (" + short + pY + pX + ")";
-};
-
-PacketHandler.prototype.setNickname = function(newNick) {
-    var client = this.socket.playerTracker;
-    if (client.cells.length < 1) {
-        if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') {
-            newNick = this.WordScan(newNick);
-        }
-        // Set name first
-        var newSkin = "";
-        if (newNick != null && newNick.length != 0) {
-            if (newNick[0] == "<") {
-                var n = newNick.indexOf(">", 1);
-                if (n != -1) {
-                    newSkin = "%" + newNick.slice(1, n);
-                    newNick = newNick.slice(n+1);
-                }
-            } else if (newNick[0] == "|") {
-                var n = newNick.indexOf("|", 1);
-                if (n != -1) {
-                    newSkin = ":http://" + newNick.slice(1, n);
-                    newNick = newNick.slice(n+1);
-                }
-            }
-        }
-
-        // Remove spaces incase there where any inbetween skin and name
-        newNick = newNick.trim();
-
-        if (newNick.length > (this.gameServer.config.playerMaxNickLength + 1)) {
-            newNick = newNick.slice(0, (this.gameServer.config.playerMaxNickLength + 1));
-        }
-
-        // No name or weird name, lets call it Cell + pid Number
-        if (newNick == "" || newNick == "Unregistered" || newNick == "Un Named") {
-            newNick = "Cell" + client.pID;
-        }
-
-        if (this.gameServer.gameMode.haveTeams) {
-            client.setName(" "+newNick+" "); //trick to disable skins in teammode
-        } else {
-            client.setName(newNick);
-        }
-
-        if (newSkin) {
-            this.socket.saveSkin = newSkin;
-        } else if (this.socket.saveSkin) {
-            newSkin = this.socket.saveSkin;
-        }
-
-        client.setSkin(newSkin);
-
-        // If client has no cells... then spawn a player
-        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
-
-        // Turn off spectate mode
-        client.spectate = false;
-    }
-};
-
-// Fun functions to reverse a string, for example `OgarServ` to `vreSragO`
-// Used as April's first joke in 2016
-PacketHandler.prototype.ReverseString = function(s) {
-  return s.split('').reverse().join('')
 };

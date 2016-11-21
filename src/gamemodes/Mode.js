@@ -11,7 +11,6 @@ function Mode() {
 module.exports = Mode;
 
 // Override these
-
 Mode.prototype.onServerInit = function (gameServer) {
     // Called when the server starts
     gameServer.run = true;
@@ -26,44 +25,13 @@ Mode.prototype.onChange = function (gameServer) {
 };
 
 Mode.prototype.onPlayerInit = function (player) {
-    player.freeMouse = true;
     // Called after a player object is constructed
 };
 
 Mode.prototype.onPlayerSpawn = function (gameServer, player) {
     // Called when a player is spawned
-    player.color = gameServer.getRandomColor(); // Random color
+    player.setColor(gameServer.getRandomColor()); // Random color
     gameServer.spawnPlayer(player);
-};
-
-Mode.prototype.pressQ = function (gameServer, player) {
-    // Called when the Q key is pressed
-    if (player.spectate) {
-        if(player.freeRoam) {
-            player.centerPos.x = (gameServer.config.borderRight - gameServer.config.borderLeft) / 2;
-            player.centerPos.y = (gameServer.config.borderBottom - gameServer.config.borderTop) / 2;
-            player.mouse.x = player.centerPos.x;
-            player.mouse.y = player.centerPos.y;
-            player.freeMouse =!  player.freeMouse;
-        } else {
-            gameServer.switchSpectator(player);
-            player.freeMouse = true;
-        }
-    }
-};
-
-Mode.prototype.pressW = function (gameServer, player) {
-    // Called when the W key is pressed
-    gameServer.ejectMass(player);
-};
-
-Mode.prototype.pressSpace = function (gameServer, player) {
-    // Called when the Space bar is pressed
-    if (player.spectate) {
-        player.freeRoam =! player.freeRoam;
-        player.freeMouse = true;
-    } else
-        gameServer.splitCells(player);
 };
 
 Mode.prototype.onCellAdd = function (cell) {
@@ -74,10 +42,11 @@ Mode.prototype.onCellRemove = function (cell) {
     // Called when a player cell is removed
 };
 
-Mode.prototype.onCellMove = function (x1, y1, cell) {
+Mode.prototype.onCellMove = function (cell, gameServer) {
     // Called when a player cell is moved
 };
 
 Mode.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     // Called when the leaderboard update function is called
 };
