@@ -204,7 +204,7 @@ PacketHandler.prototype.setNickname = function (text) {
     }
 
     if(name != null) {
-        name = this.WordScan(name)
+        name = this.WordScan(name);
         name = name.trim();
         if(name == '\uD83D\uDCE2') name = 'Noob';
         // No name or weird name, lets call it Cell + pid Number

@@ -253,10 +253,13 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
             return;
         }
     }
-    if(ws.upgradeReq.headers.origin == 'http://agar.io') {
-        ws.close(1000, "No agar.io clients!");
-        return;
-    }
+
+    // Want no agar.io client connections due to bots used there, uncomment the next four lines
+    // if(ws.upgradeReq.headers.origin == 'http://agar.io') {
+    //     ws.close(1000, "No agar.io clients!");
+    //     return;
+    // }
+
     ws.isConnected = true;
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
@@ -1439,73 +1442,26 @@ GameServer.prototype.ejectBoom = function (pos, color) {
 GameServer.prototype.ejectMass = function (client) {
     if (!this.canEjectMass(client))
         return;
-    if(!this.config.ejectVirus) {
-        for (var i = 0, len = client.cells.length; i < len; i++) {
-            var cell = client.cells[i];
 
-            if (!cell) {
-                continue;
-            }
+    for (var i = 0, len = client.cells.length; i < len; i++) {
+        var cell = client.cells[i];
 
-            if (cell.getSize() < this.config.playerMinSplitSize) {
-                continue;
-            }
-            var size2 = this.config.ejectSize;
-            var sizeLoss = this.config.ejectSizeLoss;
-            var sizeSquared = cell.getSizeSquared() - sizeLoss * sizeLoss;
-            if (sizeSquared < this.config.playerMinSize * this.config.playerMinSize) {
-                continue;
-            }
-            var size1 = Math.sqrt(sizeSquared);
-
-            var dx = client.mouse.x - cell.position.x;
-            var dy = client.mouse.y - cell.position.y;
-            var dl = dx * dx + dy * dy;
-            if (dl < 1) {
-                dx = 1;
-                dy = 0;
-            } else {
-                dl = Math.sqrt(dl);
-                dx /= dl;
-                dy /= dl;
-            }
-
-            // Remove mass from parent cell first
-            cell.setSize(size1);
-
-            // Get starting position
-            var pos = {
-                x: cell.position.x + dx * cell.getSize(),
-                y: cell.position.y + dy * cell.getSize()
-            };
-
-            var angle = Math.atan2(dx, dy);
-            if (isNaN(angle)) angle = Math.PI / 2;
-
-            // Randomize angle
-            angle += (Math.random() * 0.6) - 0.3;
-
-            // Create cell
-            var ejected = new Entity.EjectedMass(this, null, pos, size2);
-            ejected.ejector = cell;
-            ejected.setColor(cell.getColor());
-            ejected.setBoost(this.config.ejectDistance, angle);
-
-            this.addNode(ejected);
+        if (!cell) {
+            continue;
         }
-    } else {
-        var cell = client.cells[0];
 
         if (cell.getSize() < this.config.playerMinSplitSize) {
-            return;
+            continue;
         }
-
-        var sizeLoss = this.config.virusMinSize;
+        var size2 = this.config.ejectSize;
+        var sizeLoss = this.config.ejectSizeLoss;
+        if(this.config.ejectVirus) sizeLoss = this.config.virusMinSize
         var sizeSquared = cell.getSizeSquared() - sizeLoss * sizeLoss;
         if (sizeSquared < this.config.playerMinSize * this.config.playerMinSize) {
-            return;
+            continue;
         }
         var size1 = Math.sqrt(sizeSquared);
+
         var dx = client.mouse.x - cell.position.x;
         var dy = client.mouse.y - cell.position.y;
         var dl = dx * dx + dy * dy;
@@ -1517,6 +1473,8 @@ GameServer.prototype.ejectMass = function (client) {
             dx /= dl;
             dy /= dl;
         }
+
+        // Remove mass from parent cell first
         cell.setSize(size1);
 
         // Get starting position
@@ -1530,7 +1488,20 @@ GameServer.prototype.ejectMass = function (client) {
 
         // Randomize angle
         angle += (Math.random() * 0.6) - 0.3;
-        this.shootVirus(pos, angle);
+
+        // Create cell
+        if(!this.config.ejectVirus) {
+            var ejected = new Entity.EjectedMass(this, null, pos, size2);
+            ejected.ejector = cell;
+            ejected.setColor(cell.getColor());
+            ejected.setBoost(this.config.ejectDistance, angle);
+
+            this.addNode(ejected);
+        } else {
+            this.shootVirus(pos, angle);
+            // Lets shoot only ONE virus :3
+            return;
+        }
     }
 };
 
