@@ -4,7 +4,6 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var fs = require("fs");
 var os = require('os');
 var EOL = require('os').EOL;
-var path = require('path');
 var ini = require('./modules/ini.js');
 var QuadNode = require('quad-node');
 var PlayerCommand = require('./modules/PlayerCommand');
@@ -83,7 +82,7 @@ function GameServer() {
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
         serverViewBaseY: 1080,      // min value is 1920x1080
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
-        serverStatsPort: -88,        // Port for stats server. Having a negative number will disable the stats server.
+        serverStatsPort: -88,       // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Update interval of server stats in seconds
         serverLiveStats: 0,         // Live stats in console screen
         serverScrambleLevel: 2,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
@@ -326,8 +325,6 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
     //ws.playerTracker.cells.forEach(function (cell) {
     //    cell.setColor(color);
     //}, this);
-
-    // setTimeout(function () { ws = null; delete ws; }.bind(this), 15000);
 };
 
 GameServer.prototype.onClientSocketError = function (ws, error) {
@@ -486,9 +483,9 @@ GameServer.prototype.removeNode = function (node) {
 GameServer.prototype.updateClients = function () {
     // check minions
     var dateTime = new Date,
-        len,
+        len = this.minionTest.length,
         checker;
-    len = this.minionTest.length;
+
     for (var i = 0; i < len; ) {
         if(typeof this.minionTest[i] == 'undefined') {
             i++;
@@ -502,6 +499,7 @@ GameServer.prototype.updateClients = function () {
             i++;
         }
     }
+
     // check dead clients
     len = this.clients.length;
     for (var i = 0; i < len; ) {
@@ -519,6 +517,7 @@ GameServer.prototype.updateClients = function () {
             i++;
         }
     }
+
     // update
     for (var i = 0; i < len; i++) {
         if(typeof this.clients[i] == 'undefined')
@@ -647,11 +646,13 @@ GameServer.prototype.MyPos = function(clientpos) {
 };
 
 GameServer.prototype.sendChatMessage = function (from, to, message) {
+    var msg = null;
     for (var i = 0, len = this.clients.length; i < len; i++) {
         var client = this.clients[i];
         if (client == null) continue;
         if (to == null || to == client.playerTracker) {
-            client.sendPacket(new Packet.ChatMessage(from, message));
+            if(msg == null) msg = new Packet.ChatMessage(from, message);
+            client.sendPacket(msg);
         }
     }
     if(to == null && from == null)
