@@ -6,5 +6,6 @@ module.exports = {
     MovingVirus: require('./MovingVirus'),
     MotherCell: require('./MotherCell'),
     Beacon: require('./Beacon'),
-    EjectedMass: require('./EjectedMass')
+    EjectedMass: require('./EjectedMass'),
+    SurpriseCell: require('./SurpriseCell')
 };

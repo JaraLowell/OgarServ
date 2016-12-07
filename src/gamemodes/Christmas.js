@@ -18,12 +18,9 @@ function Christmas() {
     this.tickMotherSpawn = 0;
     this.tickMotherUpdate = 0;
 
-    // Sticky Cell
-    this.nodesSticky = []; // we dont have a sticky cell no more
-    this.tickSticky = 0;
-    this.stickyMass = 75;
-    this.stickyMinAmount = 3;
-    this.stickyUpdateInterval = 3;
+    // Surprise Cell
+    this.nodesSurprise = []; // we dont have a sticky cell no more
+    this.SurpriseCellMinAmount = 3;
 }
 
 module.exports = Christmas;
@@ -47,34 +44,7 @@ Christmas.prototype.spawnMotherCell = function (gameServer) {
     gameServer.addNode(mother);
 };
 
-Christmas.prototype.spawnStickyCell = function(gameServer) {
-    // Checks if there are enough mother cells on the map
-    if (this.nodesSticky.length >= this.stickyMinAmount) {
-        return
-    }
-
-    // Spawns a mother cell
-    var pos =  gameServer.getRandomPosition();
-    if (gameServer.willCollide(pos, 149)) {
-        // cannot find safe position => do not spawn
-        return;
-    }
-
-    // Spawn if no cells are colliding
-    var sticky = new Entity.StickyCell(gameServer, null, pos, this.stickyMass);
-    gameServer.addNode(sticky);
-};
-
-Christmas.prototype.updateStickyCells = function(gameServer) {
-    for (var i in this.nodesSticky) {
-        var sticky = this.nodesSticky[i];
-
-        sticky.update(gameServer);
-    }
-};
-
 // Override
-
 Christmas.prototype.onServerInit = function (gameServer) {
     // Called when the server starts
     gameServer.run = true;
@@ -163,9 +133,18 @@ Christmas.prototype.onTick = function (gameServer) {
     if (this.tickMotherSpawn >= this.motherSpawnInterval) {
         this.tickMotherSpawn = 0;
         this.spawnMotherCell(gameServer);
+
+        // Lets check Surprise Cells
+        if( this.nodesSurprise.length < this.SurpriseCellMinAmount )
+        {
+            var pos =  gameServer.getRandomPosition();
+            var Surprise = new Entity.SurpriseCell(gameServer, null, pos, 75);
+            gameServer.addNode(Surprise);
+        }
     } else {
         this.tickMotherSpawn++;
     }
+
     if (this.tickMotherUpdate >= this.motherUpdateInterval) {
         this.tickMotherUpdate = 0;
         for (var i = 0; i < this.nodesMother.length; i++) {
