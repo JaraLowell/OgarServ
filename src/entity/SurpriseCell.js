@@ -33,11 +33,14 @@ SurpriseCell.prototype.onEaten = function (consumer) {
     var dice = Math.random();
     var splitMass = Math.min(myMass/(numSplits + 1), throwSize);
 
+    // Lucky Player Double Cell Mass
     if(dice > 0.75) {
         this.gameServer.sendChatMessage(null, null, '\u26EF ' + client.getName() + ' was lucky!');
         consumer.setSize(size * 2);
         return;
     }
+
+    // Bad Luck, reduce Cell mass by 2
     if(dice < 0.25) {
         if(myMass > 100) {
             this.gameServer.sendChatMessage(null, null, '\u26EF ' + client.getName() + ' was unlucky!');
@@ -51,34 +54,16 @@ SurpriseCell.prototype.onEaten = function (consumer) {
         return;
     }
 
-    // Big cells will split into cells larger than 36 mass (1/4 of their mass)
-    var bigSplits = 0;
-    var endMass = consumer.mass - (numSplits * splitMass);
-    if ((endMass > 300) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-    if ((endMass > 1200) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-    if ((endMass > 3000) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
+    // Warp Player~
+    var pos = this.gameServer.getRandomPosition();
+    for (var j in client.cells) {
+        client.cells[j].setPosition(pos);
+        this.gameServer.updateNodeQuad(client.cells[j]);
     }
 
-    // Splitting
-    var angle = 0; // Starting angle
+    var angle = 0;
     for (var k = 0; k < numSplits; k++) {
-        angle += 6/numSplits; // Get directions of splitting cells
-        if (!this.gameServer.splitPlayerCell(client, consumer, angle, splitMass)) {
-            break;
-        }
-    }
-
-    for (var k = 0; k < bigSplits; k++) {
-        angle = Math.random() * 6.28; // Random directions
-        splitMass = consumer.mass / 4;
+        angle += 6/numSplits;
         if (!this.gameServer.splitPlayerCell(client, consumer, angle, splitMass)) {
             break;
         }
