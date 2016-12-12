@@ -23,8 +23,9 @@ If you have memory issues, run OgarServ with `--nouse-idle-notification --expose
 * Added auto shutdown server (for auto resets) this by default is set to 24 hours, but can be changed trough `serverResetTime: 24` in your gameserver.ini. Setting it to 0 (zero) disables auto shutdown.
 * Added remote commands!, you can now issue commands to the server from your chat in the client (that be if you use an client that has chat support) by default this is set off.
 
-* ![Language](https://img.shields.io/badge/Chat-99-green.svg) This Server supports Chat for both ogar and agar (Package 99)
+* ![Language](https://img.shields.io/badge/Chat-24-green.svg) This Server supports Minimap info for whole map (Package 24)
 * ![Language](https://img.shields.io/badge/Info-90-green.svg) This Server supports Server Info for both ogar and agar (Package 90)
+* ![Language](https://img.shields.io/badge/Chat-99-green.svg) This Server supports Chat for both ogar and agar (Package 99)
 
 ![Image of Ogar](http://i375.photobucket.com/albums/oo195/Jara_Lowell/OgarServ_zpslhvqljpp.jpg)
 OgarServ in LiveStats Mode and Auto Pause
