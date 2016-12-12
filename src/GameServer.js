@@ -942,8 +942,8 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var invd = 1 / d;
 
     // normal
-    var nx = manifold.dx * invd;
-    var ny = manifold.dy * invd;
+    var nx = ~~manifold.dx * invd;
+    var ny = ~~manifold.dy * invd;
 
     // body penetration distance
     var penetration = manifold.r - d;
@@ -961,10 +961,11 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var impulse2 = manifold.cell1.getSizeSquared() * invTotalMass;
 
     // apply extrusion force
-    manifold.cell1.position.x -= px * impulse1;
-    manifold.cell1.position.y -= py * impulse1;
-    manifold.cell2.position.x += px * impulse2;
-    manifold.cell2.position.y += py * impulse2;
+    manifold.cell1.position.x -= ~~(px * impulse1);
+    manifold.cell1.position.y -= ~~(py * impulse1);
+    manifold.cell2.position.x += ~~(px * impulse2);
+    manifold.cell2.position.y += ~~(py * impulse2);
+
     // clip to border bounds
     manifold.cell1.checkBorder(border);
     manifold.cell2.checkBorder(border);
@@ -1348,31 +1349,27 @@ GameServer.prototype.splitMass = function (mass, count) {
 
 GameServer.prototype.splitCells = function (client) {
     // it seems that vanilla uses order by cell age
-    var cellToSplit = [];
-    for (var i = 0, len = client.cells.length; i < len; i++) {
-        var cell = client.cells[i];
-        if (cell.getSize() < this.config.playerMinSplitSize) {
-            continue;
-        }
-        cellToSplit.push(cell);
-        if (cellToSplit.length + client.cells.length >= this.config.playerMaxCells)
-            break;
-    }
-    var splitCells = 0; // How many cells have been split
-    for (var i = 0, len = cellToSplit.length; i < len; i++) {
-        var cell = cellToSplit[i];
-        var dx = client.mouse.x - cell.position.x;
-        var dy = client.mouse.y - cell.position.y;
-        var dl = dx * dx + dy * dy;
-        if (dl < 1) {
-            dx = 1;
-            dy = 0;
-        }
-        var angle = Math.atan2(dx, dy);
-        if (isNaN(angle)) angle = Math.PI / 2;
+    var len = client.cells.length;
+    if (len < this.config.playerMaxCells) {
+        for (var i = 0; i < len; i++) {
+            if (client.cells.length >= this.config.playerMaxCells) break;
 
-        if (this.splitPlayerCell(client, cell, angle, null)) {
-            splitCells++;
+            var cell = client.cells[i];
+            if (!cell) continue;
+
+            if (cell.getSize() < this.config.playerMinSplitSize) continue;
+
+            var dx = ~~(client.mouse.x - cell.position.x);
+            var dy = ~~(client.mouse.y - cell.position.y);
+            var dl = dx * dx + dy * dy;
+            if (dl < 1) {
+                dx = 1;
+                dy = 0;
+            }
+            var angle = Math.atan2(dx, dy);
+            if (isNaN(angle)) angle = Math.PI / 2;
+
+            if (!this.splitPlayerCell(client, cell, angle, null)) break;
         }
     }
 };
@@ -1404,8 +1401,8 @@ GameServer.prototype.splitPlayerCell = function (client, parent, angle, mass) {
 
     // make a small shift to the cell position to prevent extrusion in wrong direction
     var pos = {
-        x: parent.position.x + 40 * Math.sin(angle),
-        y: parent.position.y + 40 * Math.cos(angle)
+        x: ~~(parent.position.x + 40 * Math.sin(angle)),
+        y: ~~(parent.position.y + 40 * Math.cos(angle))
     };
 
     // Create cell
