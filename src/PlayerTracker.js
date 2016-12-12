@@ -25,6 +25,7 @@ function PlayerTracker(gameServer, socket) {
     this._scale = 1.0;
     this.isMassChanged = true;
     this.borderCounter = 0;
+    this.MiniMap = false;
 
     this.mouse = {
         x: 0,
@@ -433,7 +434,7 @@ PlayerTracker.prototype.sendUpdate = function () {
             this.socket.sendPacket(packet);
 
             // Send Minimap Update
-            if(this.gameServer.leaderboard.length > 0) {
+            if(this.gameServer.leaderboard.length > 0 && this.MiniMap) {
                 var Players = [];
 
                 for (var i = 0, len = this.gameServer.clients.length; i < len; i++) {

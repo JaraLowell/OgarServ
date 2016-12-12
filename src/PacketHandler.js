@@ -128,6 +128,10 @@ PacketHandler.prototype.handleMessage = function (message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
+        case 24:
+            // Tunr on/off Minimap
+            var a = reader.readUInt8();
+            this.socket.playerTracker.MiniMap = a;
         case 90:
             // Send Server Info
             this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),

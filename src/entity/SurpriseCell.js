@@ -34,14 +34,14 @@ SurpriseCell.prototype.onEaten = function (consumer) {
     var splitMass = Math.min(myMass/(numSplits + 1), throwSize);
 
     // Lucky Player Double Cell Mass
-    if(dice > 0.75) {
+    if(dice > 0.85) {
         this.gameServer.sendChatMessage(null, null, '\u26EF ' + client.getName() + ' was lucky!');
         consumer.setSize(size * 2);
         return;
     }
 
     // Bad Luck, reduce Cell mass by 2
-    if(dice < 0.25) {
+    if(dice < 0.20) {
         if(myMass > 100) {
             this.gameServer.sendChatMessage(null, null, '\u26EF ' + client.getName() + ' was unlucky!');
             consumer.setSize(size / 2);
@@ -56,6 +56,7 @@ SurpriseCell.prototype.onEaten = function (consumer) {
 
     // Warp Player~
     var pos = this.gameServer.getRandomPosition();
+    this.gameServer.sendChatMessage(null, null, '\u26EF ' + client.getName() + ' found their cells moved somewhere else!');
     for (var j in client.cells) {
         client.cells[j].setPosition(pos);
         this.gameServer.updateNodeQuad(client.cells[j]);
