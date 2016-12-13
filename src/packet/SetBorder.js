@@ -32,6 +32,6 @@ SetBorder.prototype.build = function (protocol) {
     writer.writeUInt32(this.gameType >> 0);
     var name = this.serverName;
     if (name == null) name = "";
-    writer.writeStringZeroUtf8(name);
+    writer.writeStringZeroUnicode(name);
     return writer.toBuffer();
 };
