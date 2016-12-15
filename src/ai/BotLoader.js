@@ -18,9 +18,9 @@ BotLoader.prototype.getName = function () {
     // Picks a random name for the bot
     if (this.randomNames.length > 0) {
         var index = (this.randomNames.length * Math.random()) >>> 0;
-        name = this.randomNames[index];
+        name = '[BOT] ' + this.randomNames[index];
     } else {
-        name = "[BOT] " + ++this.nameIndex;
+        name = '[BOT] ' + ++this.nameIndex;
     }
 
     return name;
@@ -48,5 +48,5 @@ BotLoader.prototype.addBot = function () {
     this.gameServer.clients.push(s);
 
     // Add to world
-    s.packetHandler.setNickname(this.getName());
+    s.packetHandler.setNickname('<bot>'+this.getName());
 };

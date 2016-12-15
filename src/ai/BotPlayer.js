@@ -40,6 +40,11 @@ BotPlayer.prototype.checkConnection = function () {
 
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
+        if(this.gameServer.sinfo.humans >= this.gameServer.config.serverBots) {
+            this.gameServer.onChatMessage(this.socket.playerTracker, null, 'Fine be that way, See if you have fun without me! Bye!');
+            this.socket.close();
+            return;
+        }
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
         if (this.cells.length == 0) {
             // If the bot cannot spawn any cells, then disconnect it
@@ -50,6 +55,8 @@ BotPlayer.prototype.checkConnection = function () {
 
 BotPlayer.prototype.sendUpdate = function () { // Overrides the update function from player tracker
     if (this.splitCooldown > 0) this.splitCooldown--;
+
+    if (this.gameServer.sinfo.humans == 0 ) return;
 
     // Calc predators/prey
     var cell = this.getLowestCell();
@@ -72,6 +79,7 @@ BotPlayer.prototype.decide = function (cell) {
     for (var i = 0; i < this.viewNodes.length; i++) {
         var check = this.viewNodes[i];
         if (check.owner == this) continue;
+        var checksize = check.getSize();
 
         // Get attraction of the cells - avoid larger cells, viruses and same team cells
         var influence = 0;
@@ -81,42 +89,52 @@ BotPlayer.prototype.decide = function (cell) {
                 // Same team cell
                 influence = 0;
             }
-            else if (cell.getSize() > (check.getSize() + 4) * 1.15) {
+            else if (cell.getSize() > (checksize + 4) * 1.15) {
                 // Can eat it
-                influence = check.getSize() * 2.5;
+                influence = checksize * 2.5;
             }
-            else if (check.getSize() + 4 > cell.getSize() * 1.15) {
+            else if (checksize + 4 > cell.getSize() * 1.15) {
                 // Can eat me
-                influence = -check.getSize();
+                influence = -checksize;
             } else {
-                influence = -(check.getSize() / cell.getSize()) / 3;
+                influence = -(checksize / cell.getSize()) / 3;
             }
         } else if (check.cellType == 1) {
             // Food
-            influence = 1;
+            influence = 5;
         } else if (check.cellType == 2) {
             // Virus
-            if (cell.getSize() > check.getSize() * 1.15) {
+            if ((cell.getSize() > checksize * 1.15) && !check.isMotherCell) {
                 // Can eat it
                 if (this.cells.length == this.gameServer.config.playerMaxCells) {
                     // Won't explode
-                    influence = check.getSize() * 2.5;
+                    influence = checksize * 2.5;
                 }
                 else {
                     // Can explode
-                    influence = -1;
+                    if(Math.random() > 0.15)
+                        influence = -1;
+                    else
+                        influence = checksize * 1.15;
                 }
-            } else if (check.isMotherCell && check.getSize() > cell.getSize() * 1.15) {
-                // can eat me
-                influence = -1;
+            } else if (check.isMotherCell) {
+                if (this.cells.length > 1) {
+                    influence = -(checksize * 1.15);
+                    threats.push(check);
+                } else if(cell.getSize() > checksize * 1.15)
+                    influence = checksize * 1.15;
+                else
+                    influence = -1;
             }
-        } else if (check.cellType == 3) {
+        } else if (check.cellType == 3 || check.cellType == 4) {
             // Ejected mass
-            if (cell.getSize() > check.getSize() * 1.15)
+            if (cell.getSize() > checksize * 1.15)
                 // can eat
-                influence = check.getSize();
+                influence = checksize;
+        } else if (check.cellType == 5 ) {
+            influence = 0;
         } else {
-            influence = check.getSize(); // Might be TeamZ
+            influence = checksize; // Might be TeamZ
         }
 
         // Apply influence if it isn't 0 or my cell
@@ -131,7 +149,7 @@ BotPlayer.prototype.decide = function (cell) {
         var distance = displacement.length();
         if (influence < 0) {
             // Get edge distance
-            distance -= cell.getSize() + check.getSize();
+            distance -= cell.getSize() + checksize;
             if (check.cellType == 0) threats.push(check);
         }
 
@@ -143,14 +161,14 @@ BotPlayer.prototype.decide = function (cell) {
         var force = displacement.normalize().scale(influence);
 
         // Splitting conditions
-        if (check.cellType == 0 && 
-            cell.getSize() > (check.getSize() + 4) * 1.15 &&
-            cell.getSize() < check.getSize() * 5 &&
-            (!split) && 
-            this.splitCooldown == 0 && 
+        if (check.cellType == 0 &&.
+            cell.getSize() > (checksize + 4) * 1.15 &&
+            cell.getSize() < checksize * 5 &&
+            (!split) &&.
+            this.splitCooldown == 0 &&.
             this.cells.length < 3) {
 
-            var endDist = 780 + 40 - cell.getSize() / 2 - check.getSize();
+            var endDist = 780 + 40 - cell.getSize() / 2 - checksize;
 
             if (endDist > 0 && distance < endDist) {
                 splitTarget = check;
@@ -187,21 +205,19 @@ BotPlayer.prototype.decide = function (cell) {
                 x: splitTarget.position.x,
                 y: splitTarget.position.y
             };
-            this.splitCooldown = 16;
+            this.splitCooldown = 9;
             this.socket.packetHandler.pressSpace = true;
             //this.gameServer.splitCells(this);
             return;
         }
     }
     this.mouse = {
-        x: cellPos.x + result.x * 800,
-        y: cellPos.y + result.y * 800
+        x: ~~(cellPos.x + result.x * 800),
+        y: ~~(cellPos.y + result.y * 800)
     };
 };
 
-
 // Subfunctions
-
 BotPlayer.prototype.largest = function (list) {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = list.valueOf();

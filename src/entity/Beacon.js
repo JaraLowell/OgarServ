@@ -163,7 +163,6 @@ Beacon.prototype.onAdd = function(gameServer) {
     this.setColor(color);
     this.startcolor = color;
     gameServer.sendChatMessage(null, null, '\u26EF Beacon, cell spawned!');
-    //gameServer.gameMode.beacon = this;
     this.spawnEjected(gameServer, color);
 };
 

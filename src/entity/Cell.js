@@ -145,7 +145,7 @@ Cell.prototype.onRemove = function (gameServer) {
 };
 
 // Functions
-// Note: maxSpeed > 78 may leads to bug when cell can fly 
+// Note: maxSpeed > 78 may leads to bug when cell can fly.
 //       through other cell due to high speed
 Cell.prototype.setBoost = function (distance, angle, maxSpeed) {
     if (isNaN(angle)) angle = Math.PI / 2;
@@ -175,7 +175,7 @@ Cell.prototype.move = function (border) {
     if (this.boostDistance < 1) this.boostDistance = 0;
 
     var v = this.clipVelocity(
-        { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed }, 
+        { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed },.
         border);
     this.position.x += v.x;
     this.position.y += v.y;
@@ -281,4 +281,4 @@ function findLineIntersection(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
     var py = p2y + w2 * k2;
     if (isNaN(px) || isNaN(py)) return null;
     return { x: px, y: py };
-}
+};
