@@ -241,7 +241,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.on('error', function (err) {
         Logger.writeError("[" + logip + "] " + err.stack);
     });
-    if (this.config.serverMaxConnections > 0 && this.socketCount >= this.config.serverMaxConnections) {
+    if (this.socketCount >= this.config.serverMaxConnections) {
         ws.close(1000, "No slots");
         return;
     }
@@ -853,6 +853,7 @@ GameServer.prototype.updateClients = function () {
             i++;
         }
     }
+
     // check dead clients
     len = this.clients.length;
     for (var i = 0; i < len; ) {
@@ -968,39 +969,34 @@ GameServer.prototype.updateMoveEngine = function () {
     var tick = this.getTick();
 
     // Move player cells
-    if(this.clients.length) {
-        for (var i in this.clients) {
-            var client = this.clients[i].playerTracker;
-            var checkSize = !client.mergeOverride || client.cells.length == 1;
-            for (var j = 0, len = client.cells.length; j < len; j++) {
+    for (var i in this.clients) {
+        var client = this.clients[i].playerTracker;
+        var checkSize = !client.mergeOverride || client.cells.length == 1;
+        for (var j = 0, len = client.cells.length; j < len; j++) {
+            if(client.cells[j]) {
                 var cell1 = client.cells[j];
-                if (!cell1)
-                    continue;
-                if (cell1.isRemoved)
-                    continue;
-
-                this.moveUser(cell1);
-                this.moveCell(cell1);
-                this.autoSplit(cell1, client);
-                this.updateNodeQuad(cell1);
+                if (!cell1.isRemoved) {
+                    this.moveUser(cell1);
+                    this.moveCell(cell1);
+                    this.autoSplit(cell1, client);
+                    this.updateNodeQuad(cell1);
+                }
             }
         }
     }
 
     // Move moving cells
-    if(this.movingNodes.length) {
-        for (var i = 0, len = this.movingNodes.length; i < len; ) {
-            if(this.movingNodes[i]) {
-                var cell1 = this.movingNodes[i];
-                if (!cell1.isRemoved) {
-                    this.moveCell(cell1);
-                    this.updateNodeQuad(cell1);
-                    if (!cell1.isMoving)
-                        this.movingNodes.splice(i, 1);
-                }
+    for (var i = 0, len = this.movingNodes.length; i < len; ) {
+        if(this.movingNodes[i]) {
+            var cell1 = this.movingNodes[i];
+            if (!cell1.isRemoved) {
+                this.moveCell(cell1);
+                this.updateNodeQuad(cell1);
+                if (!cell1.isMoving)
+                    this.movingNodes.splice(i, 1);
             }
-            i++;
         }
+        i++;
     }
 
     // Scan for player cells collisions
@@ -1011,41 +1007,33 @@ GameServer.prototype.updateMoveEngine = function () {
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
         for (var j = 0, len = client.cells.length; j < len; j++) {
-            var cell1 = client.cells[j];
-            if (!cell1)
-                continue;
+            if(client.cells[j]) {
+                var cell1 = client.cells[j];
 
-            this.quadTree.find(cell1.quadItem.bound, function (item) {
-                var cell2 = item.cell;
-                if (cell2 == cell1) return;
-                var manifold = self.checkCellCollision(cell1, cell2);
-                if (manifold == null) return;
-                if (self.checkRigidCollision(manifold))
-                    rigidCollisions.push({ cell1: cell1, cell2: cell2 });
-                else
-                    eatCollisions.push({ cell1: cell1, cell2: cell2 });
-            });
+                this.quadTree.find(cell1.quadItem.bound, function (item) {
+                    var cell2 = item.cell;
+                    if (cell2 == cell1) return;
+                    var manifold = self.checkCellCollision(cell1, cell2);
+                    if (manifold == null) return;
+                    if (self.checkRigidCollision(manifold))
+                        rigidCollisions.push({ cell1: cell1, cell2: cell2 });
+                    else
+                        eatCollisions.push({ cell1: cell1, cell2: cell2 });
+                });
+            }
         }
     }
 
     // resolve rigid body collisions
-    for (var z = 0; z < 2; z++) { // loop for better rigid body resolution quality (slow)
-        for (var k = 0; k < rigidCollisions.length; k++) {
-            var c = rigidCollisions[k];
-            var manifold = this.checkCellCollision(c.cell1, c.cell2);
-            if (manifold == null) continue;
-            this.resolveRigidCollision(manifold, this.border);
-            // position changed! don't forgot to update quad-tree
-        }
-    }
-
-    // Update quad tree
-    for (var k = 0, len = rigidCollisions.length; k < len; k++) {
+    for (var k = 0; k < rigidCollisions.length; k++) {
         var c = rigidCollisions[k];
+        var manifold = this.checkCellCollision(c.cell1, c.cell2);
+        if (manifold == null) continue;
+        this.resolveRigidCollision(manifold, this.border);
+
         this.updateNodeQuad(c.cell1);
         this.updateNodeQuad(c.cell2);
     }
-    rigidCollisions = null;
 
     // resolve eat collisions
     for (var k = 0, len = eatCollisions.length; k < len; k++) {
@@ -1054,11 +1042,11 @@ GameServer.prototype.updateMoveEngine = function () {
         if (manifold == null) continue;
         this.resolveCollision(manifold);
     }
-    eatCollisions = null;
 
-    // Scan for ejected cell collisions (scan for ejected or virus only)
     rigidCollisions = [];
     eatCollisions = [];
+
+    // Scan for ejected cell collisions (scan for ejected or virus only)
     var self = this;
     for (var i = 0, len = this.movingNodes.length; i < len; i++) {
         var cell1 = this.movingNodes[i];
@@ -1097,16 +1085,11 @@ GameServer.prototype.updateMoveEngine = function () {
         var manifold = this.checkCellCollision(c.cell1, c.cell2);
         if (manifold == null) continue;
         this.resolveRigidCollision(manifold, this.border);
-        // position changed! don't forgot to update quad-tree
-    }
 
-    // Update quad tree
-    for (var k = 0, len = rigidCollisions.length; k < len; k++) {
-        var c = rigidCollisions[k];
+        // position changed! don't forgot to update quad-tree
         this.updateNodeQuad(c.cell1);
         this.updateNodeQuad(c.cell2);
     }
-    rigidCollisions = null;
 
     // resolve eat collisions
     for (var k = 0, len = eatCollisions.length; k < len; k++) {
@@ -1115,6 +1098,9 @@ GameServer.prototype.updateMoveEngine = function () {
         if (manifold == null) continue;
         this.resolveCollision(manifold);
     }
+
+    rigidCollisions = [];
+    eatCollisions = [];
 };
 
 GameServer.prototype.moveUser = function (check) {
@@ -1127,10 +1113,15 @@ GameServer.prototype.moveUser = function (check) {
         return;
     }
 
+    if (age < 15) check._canRemerge = false;
+
     // distance
     var d = Math.sqrt(squared);
     var speed = Math.min(d, check.getSpeed());
     if (speed <= 0) return;
+
+    // Speed up a little if we can merge
+    if (check._canRemerge) speed *= 1.25;
 
     // move player cells
     check.position.x += dx / d * speed;
@@ -1140,7 +1131,6 @@ GameServer.prototype.moveUser = function (check) {
     var age = check.getAge(this.tickCounter);
     var baseTtr = this.config.playerRecombineTime;
     var ttr = Math.max(baseTtr, (check._size * 0.2) >> 0);
-    if (age < 15) check._canRemerge = false;
     if (baseTtr == 0) {
         // instant merge
         check._canRemerge = check.boostDistance < 100;
@@ -2078,7 +2068,7 @@ GameServer.prototype.exitserver = function () {
     if(this.config.serverMaxConnections != 0) {
         this.sendChatMessage(null, null, "*** Automatic Server Restart in 30 seconds to clean connections and memory ***");
         // console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
-        this.config.serverMaxConnections = 1;
+        this.config.serverMaxConnections = 0;
         this.config.LBextraLine = ("\u2002\u2002\u2002\u2002» Restarting now! «\u2002\u2002\u2002\u2002\u2002\u2002");
         this.config.serverResetTime = 0;
         var temp = setTimeout(function () {
