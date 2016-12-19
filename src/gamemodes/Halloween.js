@@ -20,7 +20,7 @@ function Halloween() {
 
     // Surprise Cell
     this.nodesSurprise = []; // we dont have a sticky cell no more
-    this.SurpriseCellMinAmount = 3;
+    this.SurpriseCellMinAmount = 4;
 }
 
 module.exports = Halloween;

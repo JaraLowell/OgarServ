@@ -1,4 +1,4 @@
-﻿// Import
+// Import
 var BinaryWriter = require("./BinaryWriter");
 
 function UpdateNodes(playerTracker, Nodes) {
@@ -12,7 +12,8 @@ UpdateNodes.prototype.build = function (protocol) {
     if (!protocol) return null;
 
     var writer = new BinaryWriter();
-    writer.writeUInt8(23);
+    writer.writeUInt8(104);
+
     this.writeUpdateItems(writer);
 
     return writer.toBuffer();

@@ -33,7 +33,7 @@ Virus.prototype.onEaten = function (consumer) {
     if (client == null) return;
 
     var maxSplit = this.gameServer.config.playerMaxCells - consumer.owner.cells.length;
-    var masses = this.gameServer.splitMass(consumer.getMass(), maxSplit + 1);
+    var masses = this.gameServer.getSplitMass(consumer.getMass(), maxSplit + 1);
     if (masses.length < 2) {
         return;
     }

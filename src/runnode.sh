@@ -2,7 +2,7 @@
 clear
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  npm install ws http fs sys mysql url underscore quad-node vector2-node xmlhttprequest
+  npm install ws http fs sys mysql url underscore quad-node vector2-node xmlhttprequest punycode
   sleep 2
 fi
 

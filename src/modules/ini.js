@@ -213,15 +213,3 @@ function unsafe(val, doUnesc) {
 var isInt = function (n) {
     return parseInt(n) == n;
 };
-
-function getLagMessage(updateTimeAvg) {
-    if (updateTimeAvg < 20)
-        return "perfectly smooth";
-    if (updateTimeAvg < 35)
-        return "good";
-    if (updateTimeAvg < 40)
-        return "tiny lag";
-    if (updateTimeAvg < 50)
-        return "lag";
-    return "extremely high lag";
-}

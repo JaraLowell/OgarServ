@@ -19,15 +19,14 @@ function Christmas() {
     this.tickMotherUpdate = 0;
 
     // Surprise Cell
-    this.nodesSurprise = []; // we dont have a sticky cell no more
-    this.SurpriseCellMinAmount = 3;
+    this.nodesSurprise = [];
+    this.SurpriseCellMinAmount = 4;
 }
 
 module.exports = Christmas;
 Christmas.prototype = new FFA();
 
 // Gamemode Specific Functions
-
 Christmas.prototype.spawnMotherCell = function (gameServer) {
     // Checks if there are enough mother cells on the map
     if (this.nodesMother.length >= this.motherMinAmount) {

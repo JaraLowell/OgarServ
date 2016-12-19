@@ -26,6 +26,7 @@ function PlayerTracker(gameServer, socket) {
     this.isMassChanged = true;
     this.borderCounter = 0;
     this.MiniMap = false;
+    this.origen;
 
     this.mouse = {
         x: 0,
@@ -68,6 +69,15 @@ function PlayerTracker(gameServer, socket) {
     this.cTime = 0;
     this.cLast = '';
     this.isMuted = false;
+
+    // Minions
+    this.miQ = 0;
+    this.isMi = false;
+    this.minionSplit = false;
+    this.minionEject = false;
+    this.minionFrozen = false;
+    this.minionControl = false;
+    this.collectPellets = false;
 
     // Gamemode function
     if (gameServer) {
@@ -131,7 +141,7 @@ PlayerTracker.prototype.setName = function (name) {
 };
 
 PlayerTracker.prototype.getName = function () {
-    return this._name;
+    return this._name.replace(/\[(BOT)\] /gi, "");
 };
 
 PlayerTracker.prototype.setSkin = function (skin) {
@@ -203,7 +213,7 @@ PlayerTracker.prototype.updateMass = function () {
         this._score = 0;
     } else {
         this._score = totalScore;
-        this._scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
+        this._scale = Math.pow(Math.min(128 / totalSize, 1), 0.4); //64
     }
     this.isMassChanged = false;
 };
@@ -495,8 +505,8 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
 
 PlayerTracker.prototype.updateViewBox = function () {
     var scale = this.getScale();
-    var width = (this.gameServer.config.serverViewBaseX + 100) / scale;
-    var height = (this.gameServer.config.serverViewBaseY + 100) / scale;
+    var width = (this.gameServer.config.serverViewBaseX + 100) / (scale / 1.1);
+    var height = (this.gameServer.config.serverViewBaseY + 100) / (scale / 1.1);
     var halfWidth = width / 2;
     var halfHeight = height / 2;
     this.viewBox = {

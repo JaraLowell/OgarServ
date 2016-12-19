@@ -9,7 +9,7 @@ fi
 
 if [ ! -d "node_modules" ]; then
   echo module files not found, installing them now...
-  jx install ws http fs sys mysql url underscore vector2-node
+  jx install ws http fs sys mysql url underscore quad-node vector2-node xmlhttprequest punycode
   sleep 2
 fi
 

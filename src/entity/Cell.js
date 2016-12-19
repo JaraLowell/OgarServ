@@ -162,26 +162,6 @@ Cell.prototype.setBoost = function (distance, angle, maxSpeed) {
     }
 };
 
-Cell.prototype.move = function (border) {
-    if (this.isMoving && this.boostDistance <= 0) {
-        this.boostDistance = 0;
-        this.isMoving = false;
-        return;
-    }
-    var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
-    var speed = Math.min(speed, this.boostMaxSpeed);// limit max speed with sqrt(780*780/100)
-    speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
-    this.boostDistance -= speed;
-    if (this.boostDistance < 1) this.boostDistance = 0;
-
-    var v = this.clipVelocity(
-        { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed },
-        border);
-    this.position.x += v.x;
-    this.position.y += v.y;
-    this.checkBorder(border);
-}
-
 Cell.prototype.clipVelocity = function (v, border) {
     if (isNaN(v.x) || isNaN(v.y)) {
         throw new TypeError("Cell.clipVelocity: NaN");
@@ -256,16 +236,10 @@ Cell.prototype.clipVelocity = function (v, border) {
 };
 
 Cell.prototype.checkBorder = function (border) {
-    var r = this.getSize() / 2;
-    var x = this.position.x;
-    var y = this.position.y;
-    x = Math.max(x, border.minx + r);
-    y = Math.max(y, border.miny + r);
-    x = Math.min(x, border.maxx - r);
-    y = Math.min(y, border.maxy - r);
-    if (x != this.position.x || y != this.position.y) {
-        this.setPosition({ x: x, y: y });
-    }
+    this.position.x = Math.max(this.position.x, border.minx + this._size / 2);
+    this.position.y = Math.max(this.position.y, border.miny + this._size / 2);
+    this.position.x = Math.min(this.position.x, border.maxx - this._size / 2);
+    this.position.y = Math.min(this.position.y, border.maxy - this._size / 2);
 };
 
 // Lib

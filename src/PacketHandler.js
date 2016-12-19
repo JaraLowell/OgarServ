@@ -48,7 +48,7 @@ PacketHandler.prototype.handleMessage = function (message) {
         this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "OgarServ " + this.gameServer.version));
 
         // Send welcome message
-        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Ogar Server version " + this.gameServer.version + " runing game mode " + this.gameServer.gameMode.name);
+        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Ogar Server version " + this.gameServer.version + " running game mode " + this.gameServer.gameMode.name);
         if (this.gameServer.config.serverWelcome1)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome1);
         if (this.gameServer.config.serverWelcome2)
@@ -128,7 +128,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
-        case 24:
+        case 104:
             // Tunr on/off Minimap
             var a = reader.readUInt8();
             this.socket.playerTracker.MiniMap = a;
@@ -208,14 +208,18 @@ PacketHandler.prototype.setNickname = function (text) {
     }
 
     if(name != null) {
-        name = this.WordScan(name);
+        if(this.socket.isConnected != null) name = this.WordScan(name);
         name = name.trim();
         if(name == '\uD83D\uDCE2') name = 'Noob';
         // No name or weird name, lets call it Cell + pid Number
-        if (name == "" || name == "Unregistered" || name == "Un Named" || name == "AdBlocker :(") {
-            var s = this.socket.playerTracker.pID.toString();
-            while (s.length < 4) s = "0" + s;
-            name = "Cell" + s;
+        if (name == "" || 
+            name.toLowerCase() == "unregistered" || 
+            name.toLowerCase() == "un named" || 
+            name.toLowerCase() == "adblock! :(" || 
+            name.toLowerCase() == "adblocker :(") {
+                var s = this.socket.playerTracker.pID.toString();
+                while (s.length < 4) s = "0" + s;
+                name = "Cell" + s;
         }
     }
     if(skin != null) skin = skin.trim();

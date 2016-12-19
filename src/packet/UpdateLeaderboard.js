@@ -99,6 +99,7 @@ UpdateLeaderboard.prototype.buildFfa6 = function () {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x31);                                // Packet ID
     writer.writeUInt32(this.leaderboard.length >>> 0);      // Number of elements
+
     for (var i = 0, len = this.leaderboard.length; i < len; i++) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
@@ -112,6 +113,7 @@ UpdateLeaderboard.prototype.buildFfa6 = function () {
         else
             writer.writeUInt8(0);
     }
+
     return writer.toBuffer();
 };
 

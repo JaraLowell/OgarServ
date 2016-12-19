@@ -81,12 +81,12 @@ function prompt() {
 }
 
 function parseCommands(str) {
-    // Log the string
-    Logger.write(str);
-
     // Don't process ENTER
     if (str === '')
         return;
+
+    // Log the string
+    Logger.write(str);
 
     // Splits the string
     var split = str.split(" ");
@@ -99,6 +99,6 @@ function parseCommands(str) {
     if (typeof execute != 'undefined') {
         execute(gameServer, split);
     } else {
-        Logger.warn("Invalid Command!");
+        gameServer.sendChatMessage(null , null, str);
     }
 }
