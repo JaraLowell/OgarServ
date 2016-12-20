@@ -17,22 +17,19 @@ var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var Logger = require('./modules/Logger');
 var UserRoleEnum = require('./enum/UserRoleEnum');
-var pjson = require('./package.json');
 
 // GameServer implementation
 function GameServer() {
     this.httpServer = null;
     this.wsServer = null;
 
-    // Startup
-    this.version = pjson.version;
+    // Global Variables
     this.run = true;
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
-    this.clients = [];
     this.socketCount = 0;
-    this.largestClient; // Required for spectators
-
+    this.largestClient;
+    this.clients = [];
     this.nodes = [];
     this.nodesVirus = [];   // Virus nodes
     this.movingNodes = [];  // For move engine
@@ -40,16 +37,9 @@ function GameServer() {
     this.quadTree = null;
     this.pcells = 0;
     this.currentFood = 0;
-
     this.leaderboard = [];
     this.leaderboardType = -1; // no type
-    this.sinfo = {
-        players: 0,
-        humans: 0,
-        spectate: 0,
-        bots: 0,
-        death: 0
-    }
+    this.sinfo = {players: 0, humans: 0, spectate: 0, bots: 0, death: 0}
     this.master = new Date().getTime();
     this.bots;
     this.commands; // Command handler
@@ -67,100 +57,9 @@ function GameServer() {
     this.mempeek = 0;
 
     // Config
-    this.config = {
-        logVerbosity: 4,            // Console log level (0=NONE; 1=FATAL; 2=ERROR; 3=WARN; 4=INFO; 5=DEBUG)
-        logFileVerbosity: 5,        // File log level
+    this.config = require('./modules/default.json');
 
-        serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
-        serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
-        serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
-        serverMinionIgnoreTime: 30, // minion detection disable time on server startup [seconds]
-        serverMinionThreshold: 10,  // max connections within serverMinionInterval time period, which will not be marked as minion
-        serverMinionInterval: 1000, // minion detection interval [milliseconds]
-        serverPort: 443,            // Server port
-        serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
-        serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
-        serverBots: -1,             // Number of player bots to spawn
-        serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
-        serverViewBaseY: 1080,      // min value is 1920x1080
-        serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
-        serverStatsPort: -88,        // Port for stats server. Having a negative number will disable the stats server.
-        serverStatsUpdate: 60,      // Update interval of server stats in seconds
-        serverLiveStats: 0,         // Live stats in console screen
-        serverScrambleLevel: 2,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
-        serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
-        serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
-        serverChatAscii: 1,         // Set to 1 to disable non-ANSI letters in the chat (english only mode)
-        serverResetTime: 24,
-
-        LBextraLine: '',
-
-        serverName: 'Unnamed Server', // Server name
-        serverURL: '',
-        serverWelcome1: 'Welcome',  // First server welcome message
-        serverWelcome2: '',         // Second server welcome message (for info, etc)
-
-        borderWidth: 14142,         // Map border size (Vanilla value: 14142)
-        borderHeight: 14142,        // Map border size (Vanilla value: 14142)
-
-        foodMinSize: 10,            // Minimum food size (vanilla 10)
-        foodMaxSize: 20,            // Maximum food size (vanilla 20)
-        foodMinAmount: 1000,        // Minimum food cells on the map
-        foodMaxAmount: 2000,        // Maximum food cells on the map
-        foodSpawnAmount: 30,        // The number of food to spawn per interval
-        foodMassGrow: 1,            // Enable food mass grow ?
-        spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
-
-        virusMinSize: 100,          // Minimum virus size (vanilla 100)
-        virusMaxSize: 140,          // Maximum virus size (vanilla 140)
-        virusMinAmount: 50,         // Minimum number of viruses on the map.
-        virusMaxAmount: 100,        // Maximum number of viruses on the map. If this number is reached, then ejected cells will pass through viruses.
-        virusSpirals: 0,            // Spawn the famous virus spirals
-        virusMoving: 0,             // Swawm also moving virus
-        virusColor: {r: 10,
-                     g:200,
-                     b: 10},
-
-        ejectSize: 38,              // Size of ejected cells (vanilla 38)
-        ejectSizeLoss: 43,          // Eject size which will be substracted from player cell (vanilla 43?)
-        ejectDistance: 780,         // vanilla 780
-        ejectCooldown: 3,           // min ticks between ejects
-        ejectVirus: 0,
-        ejectSpawnPlayer: 1,        // if 1 then player may be spawned from ejected mass
-
-        playerMinSize: 32,          // Minimym size of the player cell (mass = 32*32/100 = 10.24)
-        playerMaxSize: 1500,        // Maximum size of the player cell (mass = 1500*1500/100 = 22500)
-        playerMinSplitSize: 60,     // Minimum player cell size allowed to split (mass = 60*60/100 = 36)
-        playerStartSize: 64,        // Start size of the player cell (mass = 64*64/100 = 41)
-        playerMaxCells: 16,         // Max cells the player is allowed to have
-        playerSpeed: 1,             // Player speed multiplier
-        playerDecayRate: .002,      // Amount of player cell size lost per second
-        playerRecombineTime: 30,    // Base time in seconds before a cell is allowed to recombine
-        playerMaxNickLength: 15,    // Maximum nick length
-        playerDisconnectTime: 60,   // The time in seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        playerDisconnectBoom: 1,    // Ejected Mass when explode
-
-        minionStartSize: 32,        // Start size of minions (mass = 32*32/100 = 10.24)
-        minionMaxStartSize: 32,     // Maximum value of random start size for minions (set value higher than minionStartSize to enable)
-        disableERTP: 1,             // Whether or not to disable ERTP controls for minions. (must use ERTPcontrol script in /scripts) (Set to 0 to enable)
-        disableQ: 0,                // Whether or not to disable Q controls for minions. (Set 0 to enable)
-        serverMinions: 0,           // Amount of minions each player gets once they spawn
-        defaultName: "minion",      // Default name for all minions if name is not specified using command
-        collectPellets: 0,          // Enable collect pellets mode. To use just press P or Q. (Warning: this disables Q controls, so make sure that disableERT is 0)
-
-        tourneyMaxPlayers: 12,      // Maximum number of participants for tournament style game modes
-        tourneyPrepTime: 10,        // Number of ticks to wait after all players are ready (1 tick = 1000 ms)
-        tourneyEndTime: 30,         // Number of ticks to wait after a player wins (1 tick = 1000 ms)
-        tourneyTimeLimit: 20,       // Time limit of the game, in minutes.
-        tourneyAutoFill: 0,         // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
-        tourneyAutoFillPlayers: 1,  // The timer for filling the server with bots will not count down unless there is this amount of real players
-
-        lMSShortest: 60,            // Shortest amount of time possible before LMS happens in minutes
-        lMSLongest: 120,            // Longest amount of time possible before LMS happens in minutes
-        lMSKickShortest: 30,        //Shortest amount of minutes till kicking time
-        lMSKickLongest: 60,         //Longest amount of minutes till kicking time
-    };
-
+    this.version = this.config.version;
     this.ipBanList = [];
     this.minionTest = [];
     this.userList = [];
@@ -200,7 +99,7 @@ GameServer.prototype.start = function () {
         disableHixie: true,
         clientTracking: false,
         perMessageDeflate: false,
-        maxPayload: 1024
+        maxPayload: 2048
     };
 
     this.wsServer = new WebSocket.Server(wsOptions, function () {
@@ -739,6 +638,7 @@ GameServer.prototype.willCollide = function (pos, size) {
 
 // ****************************************** ENGINE ****************************************** //
 
+/*
 GameServer.prototype.timerLoop = function () {
     var timeStep = this.updateTimeAvg >> 0;
     timeStep += 5;
@@ -770,6 +670,26 @@ GameServer.prototype.timerLoop = function () {
         this.timeStamp = ts;
     this.timeStamp += timeStep;
 
+    setTimeout(this.mainLoopBind, 0);
+    setTimeout(this.timerLoopBind, 0);
+};
+*/
+
+GameServer.prototype.timerLoop = function() {
+    var timeStep = 40;
+    var ts = Date.now();
+    var dt = ts - this.timeStamp;
+    if (dt < timeStep - 5) {
+        setTimeout(this.timerLoopBind, ((timeStep - 5) - dt) >> 0);
+        return;
+    }
+    if (dt > 120) this.timeStamp = ts - timeStep;
+    // update average
+    this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
+    // calculate next
+    if (this.timeStamp == 0)
+        this.timeStamp = ts;
+    this.timeStamp += timeStep;
     setTimeout(this.mainLoopBind, 0);
     setTimeout(this.timerLoopBind, 0);
 };
@@ -1970,12 +1890,13 @@ GameServer.prototype.livestats = function () {
     var line3 = "food    : " + this.fillChar(this.numberWithCommas(this.nodes.length), ' ', 27, true) + " │ moving :  " + this.fillChar(this.numberWithCommas(this.movingNodes.length), ' ', 27, true) + " ";
     var line4 = "virus   : " + this.fillChar(this.numberWithCommas(this.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + rcolor + this.fillChar(this.updateTime + "ms",' ', 27, true) + "\u001B[36m ";
     var line5 = "uptime  : " + this.fillChar(this.seconds2time(process.uptime().toFixed(0)), ' ', 27, true) + " │ memory :  " + this.fillChar(this.numberWithCommas(rss) + ' ▲' + this.numberWithCommas(this.mempeek), ' ', 27, true) + " \u001B[24m";
-    process.stdout.write("\u001B[s\u001B[H\u001B[6r");
+    process.stdout.write("\u001B[s\u001B[H\u001B[7r");
     process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
     process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
     process.stdout.write(" | (_) / _` / _` | '_|  " + line3 + EOL);
     process.stdout.write("  \\___/\\__, \\__,_|_|    " + line4 + EOL);
     process.stdout.write("\u001B[4m       |   / server     " + line5 + EOL);
+    process.stdout.write(grphtxt);
     process.stdout.write("\u001B[0m");
     process.stdout.write("\u001B[u"); // Restore Cursor
 };

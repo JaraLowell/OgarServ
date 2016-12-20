@@ -1,5 +1,5 @@
 // Imports
-var pjson = require('./package.json');
+var version = require('./modules/default.json').version
 var Logger = require('./modules/Logger');
 var Commands = require('./modules/CommandList');
 var GameServer = require('./GameServer');
@@ -26,7 +26,7 @@ process.on('uncaughtException', function (err) {
     process.exit(1);
 });
 
-Logger.info("\u001B[1m\u001B[32mOgar Server v" + pjson.version + "\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
+Logger.info("\u001B[1m\u001B[32mOgar Server v" + version + "\u001B[37m - An open source multi-protocol Agar.IO server emulator\u001B[0m");
 Logger.info("\u001B[33mNode.js v" + process.versions.node + " (" + process.platform + " " + process.arch + ")\u001B[0m");
 Logger.info("\u001B[33mChrome's V8 JavaScript engine v" + process.versions.v8 + "\u001B[0m");
 Logger.info("\u001B[33mLibrary HTTP v" + process.versions.http_parser + "\u001B[0m");
