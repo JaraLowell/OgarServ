@@ -492,10 +492,10 @@ GameServer.prototype.spawnCells = function() {
             continue;
         }
 
-        if(1 * Math.random() < 0.75) {
+        if (1 * Math.random() < 0.75) {
             var v = new Entity.Virus(this, null, pos, this.config.virusMinSize);
             this.addNode(v);
-        } else {
+        } else if (this.config.virusMoving) {
             // Moving Virus Test
             var v = new Entity.MovingVirus(this, null, pos, this.config.virusMinSize);
             this.movingNodes.push(v);

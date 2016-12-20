@@ -14,6 +14,20 @@ module.exports = Virus;
 Virus.prototype = new Cell();
 
 // Main Functions
+Virus.prototype.canEat = function (cell) {
+    return cell.cellType == 3; // virus can eat ejected mass only
+};
+
+Virus.prototype.onEat = function (prey) {
+    // Called to eat prey cell
+    this.setSize(Math.sqrt(this.getSizeSquared() + prey.getSizeSquared()));
+
+    if (this.getSize() >= this.gameServer.config.virusMaxSize) {
+        this.setSize(this.gameServer.config.virusMinSize); // Reset mass
+        this.gameServer.shootVirus(this, prey.getAngle());
+    }
+};
+
 Virus.prototype.onEaten = function (consumer) {
     var client = consumer.owner;
     if (client == null) return;
