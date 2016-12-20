@@ -157,9 +157,11 @@ Beacon.prototype.spawnEjected = function(gameServer, color) {
 
 Beacon.prototype.onAdd = function(gameServer) {
     var random = Math.floor(Math.random() * 21) - 10;
-    var color = { r: gameServer.config.virusColor.r + random,
-                  g: gameServer.config.virusColor.g + random,
-                  b: gameServer.config.virusColor.b + random };
+    var color = {
+        r: (gameServer.config.virusColor.r + random > 255 ? 255 : gameServer.config.virusColor.r + random),
+        g: (gameServer.config.virusColor.g + random > 255 ? 255 : gameServer.config.virusColor.g + random),
+        b: (gameServer.config.virusColor.b + random > 255 ? 255 : gameServer.config.virusColor.b + random)
+    };
     this.setColor(color);
     this.startcolor = color;
     gameServer.sendChatMessage(null, null, '\u26EF Beacon, cell spawned!');

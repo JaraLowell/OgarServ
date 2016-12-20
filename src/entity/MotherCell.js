@@ -106,9 +106,9 @@ MotherCell.prototype.onUpdate = function () {
 MotherCell.prototype.onAdd = function (gameServer) {
     var random = Math.floor(Math.random() * 21) - 10;
     this.setColor({
-        r: gameServer.config.virusColor.r + random,
-        g: gameServer.config.virusColor.g + random,
-        b: gameServer.config.virusColor.b + random
+        r: (gameServer.config.virusColor.r + random > 255 ? 255 : gameServer.config.virusColor.r + random),
+        g: (gameServer.config.virusColor.g + random > 255 ? 255 : gameServer.config.virusColor.g + random),
+        b: (gameServer.config.virusColor.b + random > 255 ? 255 : gameServer.config.virusColor.b + random)
     });
     gameServer.nodesVirus.push(this);
 };
