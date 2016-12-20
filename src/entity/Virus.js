@@ -14,16 +14,6 @@ module.exports = Virus;
 Virus.prototype = new Cell();
 
 // Main Functions
-Virus.prototype.canEat = function (cell) {
-    return cell.cellType == 3; // virus can eat ejected mass only
-};
-
-Virus.prototype.onEat = function (prey) {
-    // Pushes the virus
-    var angle = prey.isMoving ? prey.getAngle() : this.getAngle();
-    this.setBoost(16 * 20, angle);
-};
-
 Virus.prototype.onEaten = function (consumer) {
     var client = consumer.owner;
     if (client == null) return;
