@@ -19,13 +19,9 @@ Virus.prototype.canEat = function (cell) {
 };
 
 Virus.prototype.onEat = function (prey) {
-    // Called to eat prey cell
-    this.setSize(Math.sqrt(this.getSizeSquared() + prey.getSizeSquared()));
-
-    if (this.getSize() >= this.gameServer.config.virusMaxSize) {
-        this.setSize(this.gameServer.config.virusMinSize); // Reset mass
-        this.gameServer.shootVirus(this, prey.getAngle());
-    }
+    // Pushes the virus
+    var angle = prey.isMoving ? prey.getAngle() : this.getAngle();
+    this.setBoost(16 * 20, angle);
 };
 
 Virus.prototype.onEaten = function (consumer) {
