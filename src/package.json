@@ -14,7 +14,7 @@
         "fs": "latest",
         "sys": "latest",
         "mysql": "latest",
-        "xmlhttprequest": "latest"
+        "xmlhttprequest": "latest",
         "punycode": "latest"
     },
     "devDependencies": {},

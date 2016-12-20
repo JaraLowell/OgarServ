@@ -3,7 +3,6 @@ exports.stringify = exports.encode = encode;
 
 exports.safe = safe;
 exports.unsafe = unsafe;
-exports.getLagMessage = getLagMessage;
 
 var eol = process.platform === "win32" ? "\r\n" : "\n";
 
