@@ -1890,13 +1890,12 @@ GameServer.prototype.livestats = function () {
     var line3 = "food    : " + this.fillChar(this.numberWithCommas(this.nodes.length), ' ', 27, true) + " │ moving :  " + this.fillChar(this.numberWithCommas(this.movingNodes.length), ' ', 27, true) + " ";
     var line4 = "virus   : " + this.fillChar(this.numberWithCommas(this.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + rcolor + this.fillChar(this.updateTime + "ms",' ', 27, true) + "\u001B[36m ";
     var line5 = "uptime  : " + this.fillChar(this.seconds2time(process.uptime().toFixed(0)), ' ', 27, true) + " │ memory :  " + this.fillChar(this.numberWithCommas(rss) + ' ▲' + this.numberWithCommas(this.mempeek), ' ', 27, true) + " \u001B[24m";
-    process.stdout.write("\u001B[s\u001B[H\u001B[7r");
+    process.stdout.write("\u001B[s\u001B[H\u001B[6r");
     process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
     process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
     process.stdout.write(" | (_) / _` / _` | '_|  " + line3 + EOL);
     process.stdout.write("  \\___/\\__, \\__,_|_|    " + line4 + EOL);
     process.stdout.write("\u001B[4m       |   / server     " + line5 + EOL);
-    process.stdout.write(grphtxt);
     process.stdout.write("\u001B[0m");
     process.stdout.write("\u001B[u"); // Restore Cursor
 };
