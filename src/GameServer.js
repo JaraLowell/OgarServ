@@ -132,7 +132,7 @@ GameServer.prototype.start = function () {
             maxPayload: 1024
         };
         this.wsAdmin = new WebSocket.Server(wsOptions, function () {
-            Logger.info("Remote Admin on port " + adminport);
+            Logger.info("Remote Admin on port " + this.config.serverRconPort);
         }.bind(this));
 
         this.wsAdmin.on('connection', this.onAdminSocketOpen.bind(this));
