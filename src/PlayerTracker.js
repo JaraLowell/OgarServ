@@ -289,6 +289,7 @@ PlayerTracker.prototype.checkConnection = function () {
                 } else this.gameServer.removeNode(node);
             }
             this.cells = [];
+            this._score = 0;
             // Mark to remove
             this.isRemoved = true;
             return;
@@ -307,6 +308,7 @@ PlayerTracker.prototype.checkConnection = function () {
         if (dt >= this.gameServer.config.serverTimeout) {
             this.socket.close(1000, "Connection timeout");
             this.isCloseRequested = true;
+            this._score = 0;
         }
     }
 };

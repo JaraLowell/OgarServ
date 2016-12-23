@@ -1,5 +1,4 @@
-﻿// A fake socket for bot players
-
+// A fake socket for bot players
 function FakeSocket(gameServer) {
     this.server = gameServer;
     this.isCloseRequest = false;

@@ -17,11 +17,16 @@ var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var Logger = require('./modules/Logger');
 var UserRoleEnum = require('./enum/UserRoleEnum');
+var BinaryReader = require('./packet/BinaryReader');
 
 // GameServer implementation
 function GameServer() {
     this.httpServer = null;
     this.wsServer = null;
+
+    // RCon Add-on
+    this.wsAdmin = null;
+    this.ConnectedAdmins = [];
 
     // Global Variables
     this.run = true;
@@ -117,6 +122,22 @@ GameServer.prototype.start = function () {
 
     this.wsServer.on('error', this.onServerSocketError.bind(this));
     this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
+
+    if(this.config.serverRconPort > 0) {
+        var adminport = this.config.serverPort + 1024;
+        var wsOptions = {
+            port: this.config.serverRconPort,
+            disableHixie: true,
+            clientTracking: false,
+            perMessageDeflate: false,
+            maxPayload: 1024
+        };
+        this.wsAdmin = new WebSocket.Server(wsOptions, function () {
+            Logger.info("Remote Admin on port " + adminport);
+        }.bind(this));
+
+        this.wsAdmin.on('connection', this.onAdminSocketOpen.bind(this));
+    }
 };
 
 // ******************************************** WS ******************************************** //
@@ -133,6 +154,62 @@ GameServer.prototype.onServerSocketError = function (error) {
             break;
     }
     process.exit(1); // Exits the program
+};
+
+GameServer.prototype.onAdminSocketOpen = function (ws) {
+    ws.isConnected = true;
+    ws.remoteAddress = ws._socket.remoteAddress;
+    ws.remotePort = ws._socket.remotePort;
+    ws.admin = false;
+    var pwd = null;
+    for (var i = 0, len = this.userList.length; i < len; i++) {
+        var user = this.userList[i];
+        if (user.ip == ws.remoteAddress) {
+            pwd = user.password;
+            break;
+        }
+    }
+
+    Logger.warn("\u001B[32mRCon connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.upgradeReq.headers.origin + "\"]");
+    var self = this;
+    var onMessage = function (message, admin) {
+        var reader = new BinaryReader(message);
+        var packetId = reader.readUInt8();
+        if(packetId == 78) {
+            var flags = reader.readUInt8();
+            var str = reader.readStringZeroUnicode();
+            if(flags == 0 && admin) {
+                var split = str.split(" ");
+                var first = split[0].toLowerCase();
+                var execute = self.commands[first];
+                if (typeof execute != 'undefined') {
+                    execute(self, split);
+                } else {
+                    self.sendChatMessage(null , null, str);
+                }
+            } else if(flags == 1 && str == pwd && pwd != null) {
+                ws.admin = true;
+                ws.send(JSON.stringify({"Package":2,"Account":"Admin"}));
+            } else if(flags == 1 && str != "" && str.toLowerCase() != "guest")
+                ws.send(JSON.stringify({"Package":3,"from":"\uD83D\uDCE2","color":"#FF0000","msg":"Password is incorrect, setting role to Guest"}));
+        } else ws.close();
+    };
+    var onClose = function (reason) {
+        ws.isConnected = false;
+        ws.sendPacket = function (data) { };
+        var index = self.ConnectedAdmins.indexOf(this);
+        if (index != -1) {
+            Logger.warn("\u001B[31mRCon disconected " + self.ConnectedAdmins[index].remoteAddress);
+            self.ConnectedAdmins.splice(index);
+        }
+    };
+    var onError = function (error) {
+        ws.sendPacket = function (data) { };
+    };
+    ws.on('message', onMessage, ws.admin);
+    ws.on('error', onError);
+    ws.on('close', onClose);
+    this.ConnectedAdmins.push(ws);
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
@@ -334,12 +411,9 @@ GameServer.prototype.getPlayers = function () {
         spectate = 0;
     for (var i = 0; i < players; i++) {
         var socket = this.clients[i];
+        this.pcells += socket.playerTracker.cells.length;
         if (socket.isConnected == null) { bots++; continue; }
-        if (socket.playerTracker.cells.length > 0) {
-            humans++;
-            this.pcells += socket.playerTracker.cells.length;
-        } else if(socket.playerTracker.spectate)
-            spectate++;
+        if (socket.playerTracker.cells.length > 0) { humans++; } else if(socket.playerTracker.spectate) spectate++;
     }
     this.sinfo.players = players;
     this.sinfo.humans = humans;
@@ -492,10 +566,10 @@ GameServer.prototype.spawnCells = function() {
             continue;
         }
 
-        if (1 * Math.random() < 0.75) {
+        if(1 * Math.random() < 0.75) {
             var v = new Entity.Virus(this, null, pos, this.config.virusMinSize);
             this.addNode(v);
-        } else if (this.config.virusMoving) {
+        } else if(this.config.virusMoving) {
             // Moving Virus Test
             var v = new Entity.MovingVirus(this, null, pos, this.config.virusMinSize);
             this.movingNodes.push(v);
@@ -638,43 +712,6 @@ GameServer.prototype.willCollide = function (pos, size) {
 
 // ****************************************** ENGINE ****************************************** //
 
-/*
-GameServer.prototype.timerLoop = function () {
-    var timeStep = this.updateTimeAvg >> 0;
-    timeStep += 5;
-    timeStep = Math.max(timeStep, 40);
-
-    var ts = new Date().getTime();
-    var dt = ts - this.timeStamp;
-    if (dt < timeStep - 5) {
-        setTimeout(this.timerLoopBind, ((timeStep - 5) - dt) >> 0);
-        return;
-    }
-    if (dt < timeStep - 1) {
-        setTimeout(this.timerLoopBind, 0);
-        return;
-    }
-    if (dt < timeStep) {
-        //process.nextTick(this.timerLoopBind);
-        setTimeout(this.timerLoopBind, 0);
-        return;
-    }
-    if (dt > 400) {
-        // too high lag => resynchronize
-        this.timeStamp = ts - 40;
-    }
-    // update average
-    this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
-    // calculate next
-    if (this.timeStamp == 0)
-        this.timeStamp = ts;
-    this.timeStamp += timeStep;
-
-    setTimeout(this.mainLoopBind, 0);
-    setTimeout(this.timerLoopBind, 0);
-};
-*/
-
 GameServer.prototype.timerLoop = function() {
     var timeStep = 40;
     var ts = Date.now();
@@ -708,13 +745,21 @@ GameServer.prototype.mainLoop = function () {
             // once per second
             this.getPlayers();
             this.updateMassDecay();
+
             if(this.config.serverLiveStats)
                 this.livestats();
         }
     }
 
     this.updateClients();
-    if (((this.getTick() + 7) % 25) == 0) this.updateLeaderboard();
+    if (((this.getTick() + 7) % 25) == 0) {
+        this.updateLeaderboard();
+    }
+
+    if(this.ConnectedAdmins.length) {
+        if (((this.getTick() + 3) % 25) == 0) this.AdminSendInfo();
+        if (((this.getTick() + 3) % 40) == 0) this.AdminSendPlayers();
+    }
 
     if ((this.getTick() % 750) == 0) {
         // once per 30 seconds
@@ -1026,8 +1071,8 @@ GameServer.prototype.updateMoveEngine = function () {
 GameServer.prototype.moveUser = function (check) {
     if (check == null || check.owner == null || check.owner.socket.isConnected === false) return;
 
-    var dx = ~~(check.owner.mouse.x - check.position.x);
-    var dy = ~~(check.owner.mouse.y - check.position.y);
+    var dx = check.owner.mouse.x - check.position.x;
+    var dy = check.owner.mouse.y - check.position.y;
     var squared = dx * dx + dy * dy;
     if (squared < 1 || isNaN(dx) || isNaN(dy)) {
         return;
@@ -1569,8 +1614,13 @@ GameServer.prototype.sendChatMessage = function (from, to, message) {
             client.sendPacket(msg);
         }
     }
-    if(to == null && from == null)
+    if(to == null && from == null) {
         Logger.info("\u001B[36mServer\u001B[37m: " + message);
+        this.AdminSendChat('\uD83D\uDCE2', {r:255,g:0,b:0}, message);
+    }
+
+    if(from)
+        this.AdminSendChat(from._name, from.color, message);
 };
 
 // ***************************************** LOAD/SAFE ***************************************** //
@@ -1879,12 +1929,10 @@ GameServer.prototype.seconds2time = function (seconds) {
 
 GameServer.prototype.livestats = function () {
     var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
-    if (rss > this.mempeek) {
-        this.mempeek = rss;
-    }
     var rcolor = "\u001B[32m";
     if(this.updateTime > 20.0) rcolor = "\u001B[33m";
     if(this.updateTime > 40.0) rcolor = "\u001B[31m";
+
     var line1 = "\u001B[4mPlaying :   " + this.fillChar(this.sinfo.humans, ' ', 5, true) + " │ Dead/Conn : " + this.fillChar(this.sinfo.death, ' ', 5, true) + " │ Spectator:  " + this.fillChar(this.sinfo.spectate, ' ', 5, true) + " │ Bot:        " + this.fillChar(this.sinfo.bots, ' ', 5, true) + " \u001B[24m";
     var line2 = "ejected : " + this.fillChar(this.numberWithCommas(this.nodesEjected.length), ' ', 27, true) + " │ cells  :  " + this.fillChar(this.numberWithCommas(this.pcells), ' ', 27, true) + " ";
     var line3 = "food    : " + this.fillChar(this.numberWithCommas(this.nodes.length), ' ', 27, true) + " │ moving :  " + this.fillChar(this.numberWithCommas(this.movingNodes.length), ' ', 27, true) + " ";
@@ -1898,6 +1946,101 @@ GameServer.prototype.livestats = function () {
     process.stdout.write("\u001B[4m       |   / server     " + line5 + EOL);
     process.stdout.write("\u001B[0m");
     process.stdout.write("\u001B[u"); // Restore Cursor
+};
+
+GameServer.prototype.AdminSendInfo = function() {
+    var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
+    if (rss > this.mempeek) {
+        this.mempeek = rss;
+    }
+    var admins = this.ConnectedAdmins.length;
+    if(admins) {
+        var result = {
+            "Package": 1,
+            "players": (this.sinfo.players - this.sinfo.bots),
+            "admins": admins,
+            "humans": this.sinfo.humans,
+            "spectate": this.sinfo.spectate,
+            "bots": this.sinfo.bots,
+            "death": this.sinfo.death,
+            "ejected": this.numberWithCommas(this.nodesEjected.length),
+            "food": this.numberWithCommas(this.currentFood),
+            "virus": this.numberWithCommas(this.nodesVirus.length),
+            "uptime": this.seconds2time(process.uptime().toFixed(0)),
+            "cells": this.numberWithCommas(this.pcells),
+            "moving": this.numberWithCommas(this.movingNodes.length),
+            "tick": this.updateTime,
+            "memory": this.numberWithCommas(rss) + 'Kb',
+            "memorypeek": this.numberWithCommas(this.mempeek) + 'Kb',
+            "version": 'OgarServ ' + this.version,
+            "gamemode": this.gameMode.name,
+            "max_players": this.config.serverMaxConnections
+        };
+        for(var i = 0; i < admins; i++)
+        {
+            var who = this.ConnectedAdmins[i];
+            if(who.readyState != who.OPEN) continue;
+            who.send(JSON.stringify(result));
+        }
+    }
+};
+
+GameServer.prototype.AdminSendPlayers = function() {
+    var admins = this.ConnectedAdmins.length;
+    if(admins) {
+        var aplayers = [];
+        var dplayers = [];
+        var user = 0;
+        var sockets = this.clients.slice(0);
+        var result1={"Package":4};
+        var result2={"Package":4};
+        sockets.sort(function (b, a) { return a.playerTracker._score - b.playerTracker._score; });
+        for (var i = 0, len = sockets.length; i < len; i++) {
+            if (sockets[i] == null)
+                continue;
+
+            var player = sockets[i].playerTracker;
+            if (player.isRemoved)
+                continue;
+
+            var color = "#" + ((1 << 24) + (player.color.r << 16) + (player.color.g << 8) + player.color.b).toString(16).slice(1);
+            var name = player._name;
+            var score = this.numberWithCommas((player._score / 100).toFixed(0));
+
+            if(!name && sockets[i].isConnected) { color = '#000000'; name = 'Connecting'; score = 0; }
+            if(sockets[i].isConnected != null && !sockets[i].isConnected) { color = '#000000'; name = 'Disconected'; score = 0; }
+            if (player.cells.length <= 0) { score = 0; color = '#000000'; }
+
+            result1[user]=[player.pID, name, score, color, sockets[i].remoteAddress];
+            result2[user]=[player.pID, name, score, color];
+            user++;
+            result1["Users"]=user;
+            result2["Users"]=user;
+        }
+        for(var i = 0; i < admins; i++)
+        {
+            var who = this.ConnectedAdmins[i];
+            if(who.readyState != who.OPEN) continue;
+            if(who.admin)
+                who.send(JSON.stringify(result1));
+            else
+                who.send(JSON.stringify(result2));
+        }
+    }
+};
+
+GameServer.prototype.AdminSendChat = function(from, color, msg) {
+    var admins = this.ConnectedAdmins.length;
+    if(admins) {
+        var apcolor = "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
+        var temp = {"Package": 3, "from": from, "color": apcolor, "msg": msg};
+        for(var i = 0; i < admins; i++)
+        {
+            var who = this.ConnectedAdmins[i];
+            if(who.readyState != who.OPEN) continue;
+            who.send(JSON.stringify(temp));
+        }
+    }
 };
 
 // ***************************************** STATS SERV **************************************** //

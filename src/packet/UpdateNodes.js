@@ -103,14 +103,6 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
     var scrambleX = this.playerTracker.scrambleX;
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
-
-    var temp = new BinaryWriter();
-    temp.writeStringZeroUtf8('%gas');
-    var gasskin = temp.toBuffer();
-    temp = new BinaryWriter();
-    temp.writeStringZeroUtf8('%proton');
-    var ejectskin = temp.toBuffer();
-
     for (var i = 0, len = this.updNodes.length; i < len; i++) {
         var node = this.updNodes[i];
         if (node.nodeId == 0)
@@ -151,11 +143,19 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         if (node.owner) {
             skinName = node.owner.getSkinUtf8();
             cellName = node.owner.getNameUnicode();
+        } else if (typeof node.skinName == 'object') {
+            skinName = node.skinName;
+        } else {
+            if (node.cellType == 2 || node.cellType == 5) {
+                var temp = new BinaryWriter();
+                temp.writeStringZeroUtf8('%gas');
+                skinName = node.skinName = temp.toBuffer();
+            } else if(node.cellType == 3) {
+                var temp = new BinaryWriter();
+                temp.writeStringZeroUtf8('%proton');
+                skinName = node.skinName = temp.toBuffer();
+            }
         }
-        if (node.cellType == 2 || node.cellType == 5)
-            skinName = gasskin;
-        else if(node.cellType == 3)
-            skinName = ejectskin;
 
         // Write update record
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
