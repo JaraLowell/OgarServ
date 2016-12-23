@@ -124,7 +124,6 @@ GameServer.prototype.start = function () {
     this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
 
     if(this.config.serverRconPort > 0) {
-        var adminport = this.config.serverPort + 1024;
         var wsOptions = {
             port: this.config.serverRconPort,
             disableHixie: true,
