@@ -1,3 +1,6 @@
+## Ask Questions and or sugestions
+[Join us on Skype group by clicking this!](https://join.skype.com/bWtHKFC5DhTt)
+
 ## Downloads
 See the [releases](https://github.com/JaraLowell/OgarServ/releases) section for downloads (Current Version 1.6.5)
 
@@ -31,6 +34,10 @@ If you have memory issues, run OgarServ with `--nouse-idle-notification --expose
 OgarServ in LiveStats Mode and Auto Pause
 
 ## We working on
+* Remote Admin Page:
+  - Client almost done!
+* Game Modes:
+  - While most game modes work, some right now do now. We will work on that as soon as we can!
 * MySQL   : Adding MySQL Highscore system 
   - Currently being tested!
 
