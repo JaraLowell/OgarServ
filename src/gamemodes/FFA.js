@@ -32,7 +32,11 @@ FFA.prototype.leaderboardAddSort = function (player, leaderboard) {
 
 // Override
 FFA.prototype.onPlayerSpawn = function (gameServer, player) {
-    player.setColor(player.isMinion ? { r: 240, g: 240, b: 255 } : gameServer.getRandomColor());
+    if(!player.socket.isConnected) {
+        player.setColor(gameServer.getGrayColor(gameServer.getRandomColor()));
+    } else {
+        player.setColor(player.isMinion ? { r: 240, g: 240, b: 255 } : gameServer.getRandomColor());
+    }
     // Spawn player
     gameServer.spawnPlayer(player);
 };

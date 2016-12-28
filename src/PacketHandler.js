@@ -88,6 +88,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             if (this.socket.playerTracker.cells.length <= 0) {
                 // Make sure client has no cells
                 this.socket.playerTracker.spectate = true;
+                this.socket.playerTracker.color = this.gameServer.getGrayColor(this.gameServer.getRandomColor());
             }
             break;
         case 16:

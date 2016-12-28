@@ -85,6 +85,8 @@ function PlayerTracker(gameServer, socket) {
         this.centerPos.y = gameServer.border.centery;
         // Player id
         this.pID = gameServer.getNewPlayerID();
+        // Login Grey Color
+        this.color = gameServer.getGrayColor(gameServer.getRandomColor());
         // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
         // Only scramble if enabled in config
@@ -444,24 +446,6 @@ PlayerTracker.prototype.sendUpdate = function () {
         if (this.gameServer.leaderboardType >= 0) {
             var packet = new Packet.UpdateLeaderboard(this, this.gameServer.leaderboard, this.gameServer.leaderboardType, this.gameServer.config.LBextraLine);
             this.socket.sendPacket(packet);
-
-            // Send Minimap Update
-            if(this.gameServer.leaderboard.length > 0 && this.MiniMap) {
-                var Players = [];
-
-                for (var i = 0, len = this.gameServer.clients.length; i < len; i++) {
-                    var player = this.gameServer.clients[i].playerTracker;
-                    if (player.cells.length > 0) {
-                        for (var n = 0, len2 = player.cells.length; n < len2; n++) {
-                            Players.push(player.cells[n]);
-                        }
-                    }
-                }
-                if(Players.length) {
-                    packet = new Packet.MiniMap(this, Players);
-                    this.socket.sendPacket(packet);
-                }
-            }
         }
     }
 };

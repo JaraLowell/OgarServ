@@ -1061,16 +1061,13 @@ Commands.list = {
 
 // functions from GameServer
 function relayconsole(gameServer, level, msg) {
-    // Logger.warn(  => relayconsole(gameServer,1,
-    // Logger.print( => relayconsole(gameServer,0,
-    // console.log(  => relayconsole(gameServer,0,
     if(level) {
         Logger.warn(msg);
     }
     else {
         Logger.print(msg);
     }
-    gameServer.AdminSendChat("\uD83D\uDCE2", {r:255,g:0,b:0}, msg);
+    gameServer.AdminSendChat("\uD83D\uDCE2", {r:255,g:0,b:0}, msg.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''));
 };
 
 function playerById (id, gameServer) {

@@ -1,5 +1,6 @@
 {
-    "version": "1.7.0.367",
+    "Package": 7,
+    "version": "1.7.0.370",
 
     "logVerbosity":4,
     "logFileVerbosity":5,

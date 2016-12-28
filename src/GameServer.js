@@ -160,6 +160,7 @@ GameServer.prototype.onAdminSocketOpen = function (ws) {
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.admin = false;
+    ws.sendconfig = false;
     var pwd = null;
     for (var i = 0, len = this.userList.length; i < len; i++) {
         var user = this.userList[i];
@@ -189,6 +190,7 @@ GameServer.prototype.onAdminSocketOpen = function (ws) {
             } else if(flags == 1 && str == pwd && pwd != null) {
                 ws.admin = true;
                 ws.send(JSON.stringify({"Package":2,"Account":"Admin"}));
+                ws.sendconfig = true;
             } else if(flags == 1 && str != "" && str.toLowerCase() != "guest")
                 ws.send(JSON.stringify({"Package":3,"from":"\uD83D\uDCE2","color":"#FF0000","msg":"Password is incorrect, setting role to Guest"}));
         } else ws.close();
@@ -399,6 +401,15 @@ GameServer.prototype.getRandomColor = function () {
         r: ~~((colorRGB[0] + 210) / 2),
         b: ~~((colorRGB[1] + 210) / 2),
         g: ~~((colorRGB[2] + 210) / 2)
+    };
+};
+
+GameServer.prototype.getGrayColor = function (rgb) {
+    var luminance = Math.min(255, (rgb.r * 0.2125 + rgb.g * 0.7154 + rgb.b * 0.0721)) >>> 0;
+    return {
+        r: luminance,
+        g: luminance,
+        b: luminance
     };
 };
 
@@ -753,6 +764,7 @@ GameServer.prototype.mainLoop = function () {
     this.updateClients();
     if (((this.getTick() + 7) % 25) == 0) {
         this.updateLeaderboard();
+        this.SendMiniMap();
     }
 
     if(this.ConnectedAdmins.length) {
@@ -1920,7 +1932,7 @@ GameServer.prototype.seconds2time = function (seconds) {
         time += minutes + ":";
     }
 
-    if (time === "") time = seconds + " seconds";
+    if (time === "") time = seconds;
     else time += (seconds < 10) ? "0" + seconds : String(seconds);
 
     return time;
@@ -1928,6 +1940,8 @@ GameServer.prototype.seconds2time = function (seconds) {
 
 GameServer.prototype.livestats = function () {
     var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
+    if (rss > this.mempeek) this.mempeek = rss;
+
     var rcolor = "\u001B[32m";
     if(this.updateTime > 20.0) rcolor = "\u001B[33m";
     if(this.updateTime > 40.0) rcolor = "\u001B[31m";
@@ -1949,9 +1963,8 @@ GameServer.prototype.livestats = function () {
 
 GameServer.prototype.AdminSendInfo = function() {
     var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
-    if (rss > this.mempeek) {
-        this.mempeek = rss;
-    }
+    if (rss > this.mempeek) this.mempeek = rss;
+
     var admins = this.ConnectedAdmins.length;
     if(admins) {
         var result = {
@@ -1980,6 +1993,10 @@ GameServer.prototype.AdminSendInfo = function() {
             var who = this.ConnectedAdmins[i];
             if(who.readyState != who.OPEN) continue;
             who.send(JSON.stringify(result));
+            if(who.sendconfig) {
+                who.sendconfig = false;
+                who.send(JSON.stringify(this.config));
+            }
         }
     }
 };
@@ -2010,7 +2027,10 @@ GameServer.prototype.AdminSendPlayers = function() {
             if(sockets[i].isConnected != null && !sockets[i].isConnected) { color = '#000000'; name = 'Disconected'; score = 0; }
             if (player.cells.length <= 0) { score = 0; color = '#000000'; }
 
-            result1[user]=[player.pID, name, score, color, sockets[i].remoteAddress];
+            var myip = sockets[i].remoteAddress;
+            if(myip == '192.168.178.29') myip = '94.212.26.90';
+
+            result1[user]=[player.pID, name, score, color, myip, player.origen];
             result2[user]=[player.pID, name, score, color];
             user++;
             result1["Users"]=user;
@@ -2038,6 +2058,31 @@ GameServer.prototype.AdminSendChat = function(from, color, msg) {
             var who = this.ConnectedAdmins[i];
             if(who.readyState != who.OPEN) continue;
             who.send(JSON.stringify(temp));
+        }
+    }
+};
+
+GameServer.prototype.SendMiniMap = function() {
+    // Send Minimap Update
+    var len = this.clients.length;
+    if(this.leaderboard.length > 0 && (len - this.sinfo.bots) > 0) {
+        var Players = [];
+        for (var i = 0; i < len; i++) {
+            var player = this.clients[i].playerTracker;
+            if (player.cells.length > 0) {
+                for (var n = 0, len2 = player.cells.length; n < len2; n++) {
+                    Players.push(player.cells[n]);
+                }
+            }
+        }
+        if(Players.length) {
+            packet2 = new Packet.MiniMap(Players);
+            for (var i = 0; i < len; i++) {
+                var player = this.clients[i].playerTracker;
+                if(player.socket.isConnected && player.MiniMap) {
+                    player.socket.sendPacket(packet2);
+                }
+            }
         }
     }
 };
