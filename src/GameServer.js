@@ -390,15 +390,15 @@ GameServer.prototype.getRandomPosition = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    var colorRGB = [0xFF, 0x07, 10 + ~~(Math.random() * 82) + ~~(Math.random() * 82) + ~~(Math.random() * 82)];
+    var colorRGB = [0xFF, 0x07, ((Math.random() * (256 - 7)) >> 0) + 7];
     colorRGB.sort(function () {
         return 0.5 - Math.random()
     });
 
     return {
-        r: ~~((colorRGB[0] + 210) / 2),
-        b: ~~((colorRGB[1] + 210) / 2),
-        g: ~~((colorRGB[2] + 210) / 2)
+        r: colorRGB[0],
+        b: colorRGB[1],
+        g: colorRGB[2]
     };
 };
 
