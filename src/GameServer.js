@@ -2163,7 +2163,7 @@ GameServer.prototype.pingServerTracker = function () {
         };
         var data = JSON.stringify(jsondata);
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://localhost/masterjs", !0);
+        xhr.open("POST", "http://ogar.mivabe.nl/masterjs", !0);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.send(data);
     }
