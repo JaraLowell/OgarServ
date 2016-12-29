@@ -60,6 +60,7 @@ function GameServer() {
     this.tickCounter = 0;
     this.setBorder(10000, 10000);
     this.mempeek = 0;
+    this.memrss = 0;
 
     // Config
     this.config = require('./modules/default.json');
@@ -88,6 +89,7 @@ function GameServer() {
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
+    this.config.engine = "Node.js v" + process.versions.node + " (V8 " + process.versions.v8 + ")";
 }
 
 module.exports = GameServer;
@@ -103,9 +105,10 @@ GameServer.prototype.start = function () {
         port: this.config.serverPort,
         disableHixie: true,
         clientTracking: false,
-        perMessageDeflate: false,
-        maxPayload: 2048
+        perMessageDeflate: false
     };
+
+    // maxPayload: 1024
 
     this.wsServer = new WebSocket.Server(wsOptions, function () {
         // Spawn starting food
@@ -129,7 +132,6 @@ GameServer.prototype.start = function () {
             disableHixie: true,
             clientTracking: false,
             perMessageDeflate: false,
-            maxPayload: 1024
         };
         this.wsAdmin = new WebSocket.Server(wsOptions, function () {
             Logger.info("Remote Admin on port " + this.config.serverRconPort);
@@ -168,6 +170,7 @@ GameServer.prototype.onAdminSocketOpen = function (ws) {
             pwd = user.password;
             break;
         }
+        else if(user.ip == "*") pwd = user.password;
     }
 
     Logger.warn("\u001B[32mRCon connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.upgradeReq.headers.origin + "\"]");
@@ -392,15 +395,15 @@ GameServer.prototype.getRandomPosition = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    var colorRGB = [0xFF, 0x07, 10 + ~~(Math.random() * 82) + ~~(Math.random() * 82) + ~~(Math.random() * 82)];
+    var colorRGB = [0xFF, 0x07, 10 + (Math.random() * 82) + (Math.random() * 82) + (Math.random() * 82)];
     colorRGB.sort(function () {
         return 0.5 - Math.random()
     });
 
     return {
-        r: ~~((colorRGB[0] + 210) / 2),
-        b: ~~((colorRGB[1] + 210) / 2),
-        g: ~~((colorRGB[2] + 210) / 2)
+        r: ~~((colorRGB[0] + 180) / 2),
+        b: ~~((colorRGB[1] + 180) / 2),
+        g: ~~((colorRGB[2] + 180) / 2)
     };
 };
 
@@ -586,6 +589,7 @@ GameServer.prototype.spawnCells = function() {
             this.addNode(v);
         }
     }
+    this.spawnMinions();
 };
 
 GameServer.prototype.spawnSpiral = function(position, mycolor) {
@@ -660,7 +664,7 @@ GameServer.prototype.spawnPlayer = function (player, pos, size) {
         x: pos.x,
         y: pos.y
     };
-
+    player.minionControl = false;
     var info = "" // (Protocol:" + player.packetHandler.protocol + ")";
     if (player._skin) {
         info += " (Skin:" + player._skin.slice(1) + ")";
@@ -668,6 +672,22 @@ GameServer.prototype.spawnPlayer = function (player, pos, size) {
 
     if(player.origen) this.sendChatMessage(null, null, player._name + ' from ' + player.origen + ' joined the game!');
 };
+
+GameServer.prototype.spawnMinions = function() {
+    if (this.config.serverMinions > 0) {
+        for (var i in this.clients) {
+            var client = this.clients[i].playerTracker;
+            if (client.socket.isConnected != null && client.minionControl == false && client.cells.length > 0) {
+                client.minionControl = true;
+                client.collectPellets = this.config.collectPellets;
+                for (var i = 0; i < this.config.serverMinions; i++) {
+                    this.bots.addMinion(client, '');
+                }
+                break;
+            }
+        }
+    }
+}
 
 GameServer.prototype.splitPlayerCell = function (client, parent, angle, mass) {
     // TODO: replace mass with size (Virus)
@@ -731,14 +751,16 @@ GameServer.prototype.timerLoop = function() {
         return;
     }
     if (dt > 120) this.timeStamp = ts - timeStep;
+
     // update average
     this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
+
     // calculate next
-    if (this.timeStamp == 0)
-        this.timeStamp = ts;
+    if (this.timeStamp == 0) this.timeStamp = ts;
     this.timeStamp += timeStep;
-    setTimeout(this.mainLoopBind, 0);
-    setTimeout(this.timerLoopBind, 0);
+
+    setTimeout(this.mainLoopBind, 3);
+    setTimeout(this.timerLoopBind, 3);
 };
 
 GameServer.prototype.mainLoop = function () {
@@ -747,32 +769,37 @@ GameServer.prototype.mainLoop = function () {
     // Loop main functions
     if (this.run) {
         this.updateMoveEngine();
-        if ((this.getTick() % this.config.spawnInterval) == 0) {
+        if ((this.tickCounter % this.config.spawnInterval) == 0) {
             this.spawnCells();
         }
         this.gameMode.onTick(this);
-        if (((this.getTick() + 3) % 25) == 0) {
+        if (((this.tickCounter + 3) % 25) == 0) {
             // once per second
-            this.getPlayers();
             this.updateMassDecay();
-
-            if(this.config.serverLiveStats)
-                this.livestats();
         }
     }
 
     this.updateClients();
-    if (((this.getTick() + 7) % 25) == 0) {
+
+    if (((this.tickCounter + 7) % 25) == 0) {
         this.updateLeaderboard();
         this.SendMiniMap();
     }
 
-    if(this.ConnectedAdmins.length) {
-        if (((this.getTick() + 3) % 25) == 0) this.AdminSendInfo();
-        if (((this.getTick() + 3) % 40) == 0) this.AdminSendPlayers();
+    if(((this.tickCounter + 3) % 25) == 0) {
+        this.getPlayers();
+        this.memrss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
+        if (this.memrss > this.mempeek) this.mempeek = this.memrss;
+        if(this.config.serverLiveStats)
+            this.livestats();
     }
 
-    if ((this.getTick() % 750) == 0) {
+    if(this.ConnectedAdmins.length) {
+        if (((this.tickCounter + 3) % 25) == 0) this.AdminSendInfo();
+        if (((this.tickCounter + 3) % 40) == 0) this.AdminSendPlayers();
+    }
+
+    if ((this.tickCounter % 750) == 0) {
         // once per 30 seconds
         if(this.config.serverResetTime) {
             // Add hours coutdown till reset to the LB
@@ -804,10 +831,10 @@ GameServer.prototype.mainLoop = function () {
 
     }
 
-    if (this.run) this.tickCounter++;
+    this.tickCounter++;
 
     var diff = process.hrtime(tStart);
-    this.updateTime = ((diff[0] * 1e9 + diff[1])/1000000+0.1).toFixed(3);
+    this.updateTime = ((diff[0] * 1e9 + diff[1])/1000000).toFixed(3);
 };
 
 GameServer.prototype.updateClients = function () {
@@ -852,6 +879,7 @@ GameServer.prototype.updateClients = function () {
         if(typeof this.clients[i] == 'undefined')
             continue;
         this.clients[i].playerTracker.updateTick();
+
     }
     for (var i = 0; i < len; i++) {
         if(typeof this.clients[i] == 'undefined')
@@ -942,7 +970,7 @@ GameServer.prototype.removeNode = function (node) {
 // ****************************************** PHYSICS ****************************************** //
 
 GameServer.prototype.updateMoveEngine = function () {
-    var tick = this.getTick();
+    var tick = this.tickCounter;
 
     // Move player cells
     for (var i in this.clients) {
@@ -1215,8 +1243,8 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var invd = 1 / d;
 
     // normal
-    var nx = ~~manifold.dx * invd;
-    var ny = ~~manifold.dy * invd;
+    var nx = manifold.dx * invd;
+    var ny = manifold.dy * invd;
 
     // body penetration distance
     var penetration = manifold.r - d;
@@ -1234,10 +1262,10 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var impulse2 = manifold.cell1.getSizeSquared() * invTotalMass;
 
     // apply extrusion force
-    manifold.cell1.position.x -= ~~(px * impulse1);
-    manifold.cell1.position.y -= ~~(py * impulse1);
-    manifold.cell2.position.x += ~~(px * impulse2);
-    manifold.cell2.position.y += ~~(py * impulse2);
+    manifold.cell1.position.x -= (px * impulse1);
+    manifold.cell1.position.y -= (py * impulse1);
+    manifold.cell2.position.x += (px * impulse2);
+    manifold.cell2.position.y += (py * impulse2);
 
     // clip to border bounds
     manifold.cell1.checkBorder(border);
@@ -1255,7 +1283,7 @@ GameServer.prototype.checkRigidCollision = function (manifold) {
     // The same owner
     if (manifold.cell1.owner.mergeOverride)
         return false;
-    var tick = this.getTick();
+    var tick = this.tickCounter;
     if (manifold.cell1.getAge(tick) < 15 || manifold.cell2.getAge(tick) < 15) {
         // just splited => ignore
         return false;
@@ -1284,7 +1312,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
 
     if (minCell.owner && minCell.owner == maxCell.owner) {
         // collision owned/owned => ignore or resolve or remerge
-        var tick = this.getTick();
+        var tick = this.tickCounter;
         if (minCell.getAge(tick) < 15 || maxCell.getAge(tick) < 15) {
             // just splited => ignore
             return;
@@ -1348,7 +1376,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
 // ****************************************** EJECTING ****************************************** //
 
 GameServer.prototype.canEjectMass = function (client) {
-    var tick = this.getTick();
+    var tick = this.tickCounter;
     if (client.lastEject == null) {
         // first eject
         client.lastEject = tick;
@@ -1939,9 +1967,6 @@ GameServer.prototype.seconds2time = function (seconds) {
 };
 
 GameServer.prototype.livestats = function () {
-    var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
-    if (rss > this.mempeek) this.mempeek = rss;
-
     var rcolor = "\u001B[32m";
     if(this.updateTime > 20.0) rcolor = "\u001B[33m";
     if(this.updateTime > 40.0) rcolor = "\u001B[31m";
@@ -1950,7 +1975,7 @@ GameServer.prototype.livestats = function () {
     var line2 = "ejected : " + this.fillChar(this.numberWithCommas(this.nodesEjected.length), ' ', 27, true) + " │ cells  :  " + this.fillChar(this.numberWithCommas(this.pcells), ' ', 27, true) + " ";
     var line3 = "food    : " + this.fillChar(this.numberWithCommas(this.nodes.length), ' ', 27, true) + " │ moving :  " + this.fillChar(this.numberWithCommas(this.movingNodes.length), ' ', 27, true) + " ";
     var line4 = "virus   : " + this.fillChar(this.numberWithCommas(this.nodesVirus.length), ' ', 27, true) + " │ tick   :  " + rcolor + this.fillChar(this.updateTime + "ms",' ', 27, true) + "\u001B[36m ";
-    var line5 = "uptime  : " + this.fillChar(this.seconds2time(process.uptime().toFixed(0)), ' ', 27, true) + " │ memory :  " + this.fillChar(this.numberWithCommas(rss) + ' ▲' + this.numberWithCommas(this.mempeek), ' ', 27, true) + " \u001B[24m";
+    var line5 = "uptime  : " + this.fillChar(this.seconds2time(process.uptime().toFixed(0)), ' ', 27, true) + " │ memory :  " + this.fillChar(this.numberWithCommas(this.memrss) + ' ▲' + this.numberWithCommas(this.mempeek), ' ', 27, true) + " \u001B[24m";
     process.stdout.write("\u001B[s\u001B[H\u001B[6r");
     process.stdout.write("\u001B[8;36;44m   ___                  " + line1 + EOL);
     process.stdout.write("  / _ \\ __ _ __ _ _ _   " + line2 + EOL);
@@ -1962,9 +1987,6 @@ GameServer.prototype.livestats = function () {
 };
 
 GameServer.prototype.AdminSendInfo = function() {
-    var rss = parseInt((process.memoryUsage().rss / 1024 ).toFixed(0));
-    if (rss > this.mempeek) this.mempeek = rss;
-
     var admins = this.ConnectedAdmins.length;
     if(admins) {
         var result = {
@@ -1982,7 +2004,7 @@ GameServer.prototype.AdminSendInfo = function() {
             "cells": this.numberWithCommas(this.pcells),
             "moving": this.numberWithCommas(this.movingNodes.length),
             "tick": this.updateTime,
-            "memory": this.numberWithCommas(rss) + 'Kb',
+            "memory": this.numberWithCommas(this.memrss) + 'Kb',
             "memorypeek": this.numberWithCommas(this.mempeek) + 'Kb',
             "version": 'OgarServ ' + this.version,
             "gamemode": this.gameMode.name,

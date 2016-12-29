@@ -78,15 +78,6 @@ Cell.prototype.getMass = function () {
     return this._mass;
 };
 
-Cell.prototype.getSpeed = function () {
-    if (this._speed == null) {
-        var speed = 2.1106 / Math.pow(this.getSize(), 0.449);
-        // tickStep=40ms
-        this._speed = speed * 40 * this.gameServer.config.playerSpeed;
-    }
-    return this._speed;
-};
-
 Cell.prototype.setAngle = function (angle) {
     this.boostDirection = {
         x: Math.sin(angle),
@@ -130,7 +121,7 @@ Cell.prototype.canEat = function (cell) {
 
 Cell.prototype.onEat = function (prey) {
     // Cant grow from cells under 17 mass (vanilla)
-    if (this.gameServer.config.playerBotGrow == 0) {
+    if (!this.gameServer.config.playerBotGrow) {
         if (this._mass >= 625 && prey._mass <= 17 && prey.cellType != 3)
             prey._sizeSquared = 0;
     }

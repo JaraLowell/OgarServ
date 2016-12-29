@@ -33,7 +33,8 @@ FFA.prototype.leaderboardAddSort = function (player, leaderboard) {
 // Override
 FFA.prototype.onPlayerSpawn = function (gameServer, player) {
     if(!player.socket.isConnected) {
-        player.setColor(gameServer.getGrayColor(gameServer.getRandomColor()));
+        if(!player.isMi)
+            player.setColor(gameServer.getGrayColor(gameServer.getRandomColor()));
     } else {
         player.setColor(player.isMinion ? { r: 240, g: 240, b: 255 } : gameServer.getRandomColor());
     }
@@ -50,6 +51,8 @@ FFA.prototype.updateLB = function (gameServer) {
             continue;
 
         var player = gameServer.clients[i].playerTracker;
+        if ( player.isMi )
+            continue;
 
         if (player.isRemoved)
             continue;

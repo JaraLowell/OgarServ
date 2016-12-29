@@ -331,6 +331,8 @@ PlayerTracker.prototype.updateTick = function () {
         this.socket.packetHandler.pressQ = false;
     }
 
+    
+
     if (this.spectate) {
         if (this.freeRoam || this.getSpectateTarget() == null) {
             // free roam

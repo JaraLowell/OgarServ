@@ -33,6 +33,7 @@ SetBorder.prototype.build = function (protocol) {
 
     var name = this.serverName;
     if (name == null) name = "";
+    // writer.writeStringZeroUtf8(name);
     writer.writeStringZeroUnicode(name);
     return writer.toBuffer();
 };

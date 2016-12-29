@@ -55,6 +55,9 @@ BotLoader.prototype.addMinion = function(owner, name) {
     s.playerTracker = new MinionPlayer(this.gameServer, s, owner);
     s.packetHandler = new PacketHandler(this.gameServer, s);
     s.playerTracker.owner = owner;
+    s.playerTracker.setColor(owner.color);
+
+    if(owner._skin != '') s.playerTracker.setSkin(owner._skin);
 
     // Add to client list
     this.gameServer.clients.push(s);

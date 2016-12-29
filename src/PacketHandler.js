@@ -115,19 +115,32 @@ PacketHandler.prototype.handleMessage = function (message) {
             }
             break;
         case 17:
-            // Space Press - Split cell
+            // Pressed Spacebar - Split Cells
             this.pressSpace = true;
             break;
         case 18:
-            // Q Key Pressed
+            // Pressed Q - Switch Spectator
             this.pressQ = true;
             break;
-        case 19:
-            // Q Key Released
-            break;
         case 21:
-            // W Press - Eject mass
+            // Predded W - Eject Mass
             this.pressW = true;
+            break;
+        case 22:
+            // Pressed E - Minion Split Cells
+            client.minionSplit = true;
+            break;
+        case 23:
+            // Pressed R - Minion Eject Mass
+            client.minionEject = true;
+            break;
+        case 24:
+            // Pressed T - Minion stop moving
+            client.minionFrozen =! client.minionFrozen;
+            break;
+        case 25:
+            // Pressed P - Minion go collect food
+            client.collectPellets =! client.collectPellets;
             break;
         case 104:
             // Tunr on/off Minimap

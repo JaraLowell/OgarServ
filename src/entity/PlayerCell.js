@@ -24,8 +24,14 @@ PlayerCell.prototype.getSplitSize = function () {
     return this.getSize() * splitMultiplier;
 };
 
-var splitMultiplier = 1 / Math.sqrt(2);
+Cell.prototype.getSpeed = function () {
+    var speed = 2.1106 / Math.pow(this.getSize(), 0.449);
+    this._speed = speed * 40 * this.gameServer.config.playerSpeed;
 
+    return this._speed;
+};
+
+var splitMultiplier = 1 / Math.sqrt(2);
 // Override
 
 PlayerCell.prototype.onAdd = function (gameServer) {
