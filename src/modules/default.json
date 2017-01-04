@@ -1,6 +1,6 @@
 {
     "Package": 7,
-    "version": "1.7.0.374",
+    "version": "1.7.0.375",
     "engine": "",
 
     "logVerbosity":4,
@@ -13,6 +13,7 @@
     "serverMinionThreshold":10,
     "serverMinionInterval":1000,
     "serverPort":443,
+    "serverDeflate":1,
     "serverRconPort":-1,
     "serverTracker":0,
     "serverGamemode":0,

@@ -115,9 +115,6 @@ Commands.list = {
         while (gameServer.nodesEjected.length > 0) {
             gameServer.removeNode(gameServer.nodesEjected[0]);
         }
-        while (gameServer.nodesFood.length > 0) {
-            gameServer.removeNode(gameServer.nodesFood[0]);
-        }
         while (gameServer.nodesVirus.length > 0) {
             gameServer.removeNode(gameServer.nodesVirus[0]);
         }

@@ -105,10 +105,8 @@ GameServer.prototype.start = function () {
         port: this.config.serverPort,
         disableHixie: true,
         clientTracking: false,
-        perMessageDeflate: false
+        perMessageDeflate: this.config.serverDeflate
     };
-
-    // maxPayload: 1024
 
     this.wsServer = new WebSocket.Server(wsOptions, function () {
         // Spawn starting food
@@ -131,7 +129,7 @@ GameServer.prototype.start = function () {
             port: this.config.serverRconPort,
             disableHixie: true,
             clientTracking: false,
-            perMessageDeflate: false,
+            perMessageDeflate: this.config.serverDeflate
         };
         this.wsAdmin = new WebSocket.Server(wsOptions, function () {
             Logger.info("Remote Admin on port " + this.config.serverRconPort);
@@ -249,6 +247,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     }
 
     ws.isConnected = true;
+    this.socketCount++;
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = +new Date;
@@ -270,15 +269,11 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.on('message', onMessage);
     ws.on('error', onError);
     ws.on('close', onClose);
-    this.socketCount++;
     this.clients.push(ws);
 
     ws.playerTracker.origen = punycode.toUnicode(ws.upgradeReq.headers.origin.replace(/^https?\:\/\//i, ""));
 
     Logger.warn("\u001B[32mClient connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.playerTracker.origen + "\"]");
-    // Logger.warn("\u001B[32m" + JSON.stringify(ws.upgradeReq.headers) );
-
-    if('192.168.178.29' == ws.remoteAddress) ws.playerTracker.setName('\u2728\u2726 \uD835\uDCD9\uD835\uDCEA\uD835\uDCFB\uD835\uDCEA \u2728\u2726');
 
     //Anti Bot
     if (!ws.upgradeReq.headers['user-agent']) {
@@ -395,15 +390,18 @@ GameServer.prototype.getRandomPosition = function () {
 };
 
 GameServer.prototype.getRandomColor = function () {
-    var colorRGB = [0xFF, 0x07, 10 + (Math.random() * 82) + (Math.random() * 82) + (Math.random() * 82)];
+    var colorRGB = [Math.floor(Math.random() * 256),
+                    Math.floor(Math.random() * 256),
+                    Math.floor(Math.random() * 256)];
+
     colorRGB.sort(function () {
         return 0.5 - Math.random()
     });
 
     return {
-        r: ~~((colorRGB[0] + 180) / 2),
-        b: ~~((colorRGB[1] + 180) / 2),
-        g: ~~((colorRGB[2] + 180) / 2)
+        r: Math.floor((colorRGB[0] + 180) / 2),
+        b: Math.floor((colorRGB[1] + 180) / 2),
+        g: Math.floor((colorRGB[2] + 180) / 2)
     };
 };
 
@@ -972,6 +970,20 @@ GameServer.prototype.removeNode = function (node) {
 GameServer.prototype.updateMoveEngine = function () {
     var tick = this.tickCounter;
 
+    // Move moving cells
+    for (var i = 0, len = this.movingNodes.length; i < len; ) {
+        if(this.movingNodes[i]) {
+            var cell1 = this.movingNodes[i];
+            if (!cell1.isRemoved) {
+                this.moveCell(cell1);
+                this.updateNodeQuad(cell1);
+                if (!cell1.isMoving)
+                    this.movingNodes.splice(i, 1);
+            }
+        }
+        i++;
+    }
+
     // Move player cells
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
@@ -987,20 +999,6 @@ GameServer.prototype.updateMoveEngine = function () {
                 }
             }
         }
-    }
-
-    // Move moving cells
-    for (var i = 0, len = this.movingNodes.length; i < len; ) {
-        if(this.movingNodes[i]) {
-            var cell1 = this.movingNodes[i];
-            if (!cell1.isRemoved) {
-                this.moveCell(cell1);
-                this.updateNodeQuad(cell1);
-                if (!cell1.isMoving)
-                    this.movingNodes.splice(i, 1);
-            }
-        }
-        i++;
     }
 
     // Scan for player cells collisions
