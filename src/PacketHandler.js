@@ -128,19 +128,19 @@ PacketHandler.prototype.handleMessage = function (message) {
             break;
         case 22:
             // Pressed E - Minion Split Cells
-            client.minionSplit = true;
+            this.socket.playerTracker.minionSplit = true;
             break;
         case 23:
             // Pressed R - Minion Eject Mass
-            client.minionEject = true;
+            this.socket.playerTracker.minionEject = true;
             break;
         case 24:
             // Pressed T - Minion stop moving
-            client.minionFrozen =! client.minionFrozen;
+            this.socket.playerTracker.minionFrozen =! this.socket.playerTracker.minionFrozen;
             break;
         case 25:
             // Pressed P - Minion go collect food
-            client.collectPellets =! client.collectPellets;
+            this.socket.playerTracker.collectPellets =! this.socket.playerTracker.collectPellets;
             break;
         case 104:
             // Tunr on/off Minimap
