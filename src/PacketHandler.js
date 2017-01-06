@@ -146,6 +146,7 @@ PacketHandler.prototype.handleMessage = function (message) {
             // Tunr on/off Minimap
             var a = reader.readUInt8();
             this.socket.playerTracker.MiniMap = a;
+            break;
         case 90:
             // Send Server Info
             this.socket.sendPacket(new Packet.ServerInfo(process.uptime().toFixed(0),
@@ -153,6 +154,7 @@ PacketHandler.prototype.handleMessage = function (message) {
                                                          this.gameServer.config.borderWidth,
                                                          this.gameServer.nodes.length,
                                                          this.gameServer.config.serverGamemode));
+            break;
         case 99:
             // Chat
             if (message.length < 3)             // first validation
@@ -228,7 +230,7 @@ PacketHandler.prototype.setNickname = function (text) {
         // No name or weird name, lets call it Cell + pid Number
         if (name == "" || 
             name.toLowerCase() == "unregistered" || 
-            name.toLowerCase() == "un named" || 
+            name.toLowerCase() == "an unnamed cell" || 
             name.toLowerCase() == "adblock! :(" || 
             name.toLowerCase() == "adblocker :(") {
                 var s = this.socket.playerTracker.pID.toString();

@@ -20,15 +20,11 @@ function Cell(gameServer, owner, position, size) {
     this.boostMaxSpeed = 78;    // boost speed limit, sqrt(780*780/100)
     this.ejector = null;
 
-    if (this.gameServer != null) {
-        this.nodeId = this.gameServer.getNextNodeId();
-        this.tickOfBirth = this.gameServer.getTick();
-        if (size != null) {
-            this.setSize(size);
-        }
-        if (position != '') {
-            this.setPosition(position);
-        }
+    if (this.gameServer) {
+        this.nodeId = this.gameServer.lastNodeId++ >> 0;
+        this.tickOfBirth = this.gameServer.tickCounter;
+        if (size) this.setSize(size);
+        if (position) this.setPosition(position);
     }
 }
 
@@ -122,7 +118,7 @@ Cell.prototype.canEat = function (cell) {
 Cell.prototype.onEat = function (prey) {
     // Cant grow from cells under 17 mass (vanilla)
     if (!this.gameServer.config.playerBotGrow) {
-        if (this._mass >= 625 && prey._mass <= 17 && prey.cellType != 3)
+        if (this._mass >= 625 && prey._mass <= 17 && prey.cellType == 0)
             prey._sizeSquared = 0;
     }
     this.setSize(Math.sqrt(this._sizeSquared + prey._sizeSquared));

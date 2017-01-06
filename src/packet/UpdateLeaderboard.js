@@ -1,6 +1,4 @@
-// Import
 var BinaryWriter = require("./BinaryWriter");
-
 
 function UpdateLeaderboard(playerTracker, leaderboard, leaderboardType, packetLB) {
     this.playerTracker = playerTracker;
@@ -98,7 +96,11 @@ UpdateLeaderboard.prototype.buildFfa6 = function () {
     }
     var writer = new BinaryWriter();
     writer.writeUInt8(0x31);                                // Packet ID
-    writer.writeUInt32(this.leaderboard.length >>> 0);      // Number of elements
+
+    if(this.packetLB == '')
+        writer.writeUInt32(this.leaderboard.length >>> 0);
+    else
+        writer.writeUInt32(1 + this.leaderboard.length >>> 0);
 
     for (var i = 0, len = this.leaderboard.length; i < len; i++) {
         var item = this.leaderboard[i];
@@ -112,6 +114,11 @@ UpdateLeaderboard.prototype.buildFfa6 = function () {
             writer.writeBytes(name);
         else
             writer.writeUInt8(0);
+    }
+
+    if(this.packetLB != '') {
+        writer.writeUInt32(4294967295);
+        writer.writeStringZeroUtf8(this.packetLB);
     }
 
     return writer.toBuffer();

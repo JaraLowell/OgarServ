@@ -1,4 +1,3 @@
-// Import
 var BinaryWriter = require("./BinaryWriter");
 
 function ServerStat(playerTracker) {

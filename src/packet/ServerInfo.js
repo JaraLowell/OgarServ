@@ -1,4 +1,3 @@
-// Import
 var BinaryWriter = require("./BinaryWriter");
 
 function ServerInfo(uptime, players, msize, mfood, smode) {

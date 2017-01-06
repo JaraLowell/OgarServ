@@ -186,9 +186,9 @@ GameServer.prototype.onAdminSocketOpen = function (ws) {
                 if (typeof execute != 'undefined') {
                     execute(self, split);
                 } else {
-                    self.sendChatMessage(null , null, str);
+                    self.sendChatMessage('\uD83D\uDCE2' , null, str);
                 }
-            } else if(flags == 1 && str == pwd && pwd != null) {
+            } else if(flags == 1 && str == pwd && pwd != '') {
                 ws.admin = true;
                 ws.send(JSON.stringify({"Package":2,"Account":"Admin"}));
                 ws.sendconfig = true;
@@ -245,9 +245,9 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
         ws.close(1000, "No agar.io clients!");
         return;
     }
-
-    ws.isConnected = true;
     this.socketCount++;
+    ws.isConnected = true;
+
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = +new Date;
@@ -275,7 +275,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 
     Logger.warn("\u001B[32mClient connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.playerTracker.origen + "\"]");
 
-    //Anti Bot
+    // Anti Bot
     if (!ws.upgradeReq.headers['user-agent']) {
         ws.playerTracker.isMinion = true;
         console.log( JSON.stringify(ws.upgradeReq.headers) );
@@ -356,22 +356,6 @@ GameServer.prototype.setBorder = function (width, height) {
         centerx: 0,
         centery: 0
     };
-};
-
-GameServer.prototype.getTick = function () {
-    return this.tickCounter;
-};
-
-GameServer.prototype.getMode = function () {
-    return this.gameMode;
-};
-
-GameServer.prototype.getNextNodeId = function () {
-    // Resets integer
-    if (this.lastNodeId > 2147483647) {
-        this.lastNodeId = 1;
-    }
-    return this.lastNodeId++ >>> 0;
 };
 
 GameServer.prototype.getNewPlayerID = function () {
@@ -456,6 +440,7 @@ GameServer.prototype.getNearestVirus = function (cell) {
 };
 
 GameServer.prototype.getDist = function (pos, check) {
+    // Some old distance thingy used in Zombie and ZeamZ, proberbly need fix that in those two
     var deltaX = Math.abs(pos.x - check.x),
         deltaY = Math.abs(pos.y - check.y);
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -969,7 +954,6 @@ GameServer.prototype.removeNode = function (node) {
 
 GameServer.prototype.updateMoveEngine = function () {
     var tick = this.tickCounter;
-
     // Move moving cells
     for (var i = 0, len = this.movingNodes.length; i < len; ) {
         if(this.movingNodes[i]) {
@@ -1651,6 +1635,8 @@ GameServer.prototype.sendChatMessage = function (from, to, message) {
             client.sendPacket(msg);
         }
     }
+    if(from == '\uD83D\uDCE2') from = null;
+
     if(to == null && from == null) {
         Logger.info("\u001B[36mServer\u001B[37m: " + message);
         this.AdminSendChat('\uD83D\uDCE2', {r:255,g:0,b:0}, message);
@@ -2046,9 +2032,7 @@ GameServer.prototype.AdminSendPlayers = function() {
             if(!name && sockets[i].isConnected) { color = '#000000'; name = 'Connecting'; score = 0; }
             if(sockets[i].isConnected != null && !sockets[i].isConnected) { color = '#000000'; name = 'Disconected'; score = 0; }
             if (player.cells.length <= 0) { score = 0; color = '#000000'; }
-
             var myip = sockets[i].remoteAddress;
-            if(myip == '192.168.178.29') myip = '94.212.26.90';
 
             result1[user]=[player.pID, name, score, color, myip, player.origen];
             result2[user]=[player.pID, name, score, color];

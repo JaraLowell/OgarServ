@@ -1,4 +1,3 @@
-// Import
 var BinaryWriter = require("./BinaryWriter");
 
 function UpdateNodes(Nodes) {
@@ -18,20 +17,15 @@ UpdateNodes.prototype.build = function (protocol) {
 UpdateNodes.prototype.writeUpdateItems = function (writer) {
     for (var i = 0, len = this.Nodes.length; i < len; i++) {
         var node = this.Nodes[i];
-        if (node.nodeId == 0)
-            continue;
-
-        var cellX = node.position.x;
-        var cellY = node.position.y;
+        if (!node || !node.nodeId) continue;
 
         writer.writeUInt32(node.nodeId >>> 0);
-        writer.writeInt32(cellX >> 0);
-        writer.writeInt32(cellY >> 0);
-        writer.writeUInt16(node.getSize() >>> 0);
-        var color = node.getColor();
-        writer.writeUInt8(color.r >>> 0);
-        writer.writeUInt8(color.g >>> 0);
-        writer.writeUInt8(color.b >>> 0);
+        writer.writeInt32(node.position.x >> 0);
+        writer.writeInt32(node.position.y >> 0);
+        writer.writeUInt16(node._size >>> 0);
+        writer.writeUInt8(node.color.r >>> 0);
+        writer.writeUInt8(node.color.g >>> 0);
+        writer.writeUInt8(node.color.b >>> 0);
 
         var flags = 0;
         if (node.isSpiked)
@@ -41,7 +35,6 @@ UpdateNodes.prototype.writeUpdateItems = function (writer) {
         if (node.cellType == 3)
             flags |= 0x20;
         writer.writeUInt8(flags >>> 0);
-
         writer.writeUInt16(0);
     }
     writer.writeUInt32(0 >> 0);

@@ -4,6 +4,7 @@ var Vector = require('vector2-node');
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
     this.splitCooldown = 0;
+    this.moverand = {x:null,y:null};
 }
 module.exports = BotPlayer;
 BotPlayer.prototype = new PlayerTracker();
@@ -146,9 +147,18 @@ BotPlayer.prototype.decide = function (cell) {
     }
     // Normalize the resulting vector
     result.normalize();
+
     // Set bot's mouse position
-    this.mouse = {
-        x: cell.position.x + result.x * 800,
-        y: cell.position.y + result.y * 800
-    };
+    if(!result.x && !result.y) {
+        // Meep no food, lets move about aimlessly
+        if( this.moverand.x == null )this.moverand = this.gameServer.getRandomPosition();
+        this.mouse = this.moverand;
+        if(Math.random() < 0.10) this.moverand.x = null;
+    } else {
+        this.moverand.x = null;
+        this.mouse = {
+            x: cell.position.x + result.x * 800,
+            y: cell.position.y + result.y * 800
+        };
+    }
 };

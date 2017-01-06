@@ -512,7 +512,7 @@ PlayerTracker.prototype.updateViewBox = function () {
 PlayerTracker.prototype.pressQ = function () {
     if (this.spectate) {
         // Check for spam first (to prevent too many add/del updates)
-        var tick = this.gameServer.getTick();
+        var tick = this.gameServer.tickCounter;
         if (tick - this.lastSpectateSwitchTick < 40)
             return;
         this.lastSpectateSwitchTick = tick;
@@ -544,7 +544,7 @@ PlayerTracker.prototype.pressW = function () {
 PlayerTracker.prototype.pressSpace = function () {
     if (this.spectate) {
         // Check for spam first (to prevent too many add/del updates)
-        var tick = this.gameServer.getTick();
+        var tick = this.gameServer.tickCounter;
         if (tick - this.lastSpectateSwitchTick < 40)
             return;
         this.lastSpectateSwitchTick = tick;
