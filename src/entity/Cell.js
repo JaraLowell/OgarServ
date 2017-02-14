@@ -139,7 +139,7 @@ Cell.prototype.onRemove = function (gameServer) {
 // Note: maxSpeed > 78 may leads to bug when cell can fly
 //       through other cell due to high speed
 Cell.prototype.setBoost = function (distance, angle, maxSpeed) {
-    if (isNaN(angle)) angle = Math.PI / 2;
+    if (isNaN(angle)) angle = 1.57075;
     if (!maxSpeed) maxSpeed = 78;
 
     this.boostDistance = distance;
@@ -220,9 +220,11 @@ Cell.prototype.clipVelocity = function (v, border) {
     // update velocity and add rest to the boostDistance
     v.x = lx;
     v.y = ly;
+
     this.boostDistance += Math.sqrt(ldx * ldx + ldy * ldy);
     if (this.boostDistance < 1) this.boostDistance = 0;
     this.isMoving = true;
+
     return v;
 };
 

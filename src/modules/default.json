@@ -54,6 +54,8 @@
     "virusMoving":0,
     "virusColor":{"r":10,"g":200,"b":10},
 
+    "SurpriseCell":0,
+
     "ejectSize":38,
     "ejectSizeLoss":43,
     "ejectDistance":780,

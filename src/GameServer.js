@@ -36,9 +36,10 @@ function GameServer() {
     this.largestClient;
     this.clients = [];
     this.nodes = [];
-    this.nodesVirus = [];   // Virus nodes
-    this.movingNodes = [];  // For move engine
-    this.nodesEjected = []; // Ejected mass nodes
+    this.nodesVirus = [];    // Virus nodes
+    this.movingNodes = [];   // For move engine
+    this.nodesEjected = [];  // Ejected mass nodes
+    this.nodesSurprise = []; // Surprice Cells
     this.quadTree = null;
     this.pcells = 0;
     this.currentFood = 0;
@@ -113,7 +114,7 @@ GameServer.prototype.start = function () {
         this.spawnCells();
 
         // Start Main Loop
-        setTimeout(this.timerLoopBind, 2);
+        setTimeout(this.timerLoopBind, 3);
 
         // Done
         Logger.info("Listening on port " + this.config.serverPort);
@@ -258,6 +259,11 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 
     var self = this;
     var onMessage = function (message) {
+        if (!message.length) return;
+        if (message.length > 256) {
+            ws.close(1009, "Spam");
+            return;
+        }
         self.onClientSocketMessage(ws, message);
     };
     var onError = function (error) {
@@ -274,6 +280,9 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.playerTracker.origen = punycode.toUnicode(ws.upgradeReq.headers.origin.replace(/^https?\:\/\//i, ""));
 
     Logger.warn("\u001B[32mClient connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.playerTracker.origen + "\"]");
+
+    // Do not put this on Git!
+    if('192.168.178.29' == ws.remoteAddress) ws.playerTracker.setName('\u2728\u2726 \uD835\uDCD9\uD835\uDCEA\uD835\uDCFB\uD835\uDCEA \u2728\u2726');
 
     // Anti Bot
     if (!ws.upgradeReq.headers['user-agent']) {
@@ -326,7 +335,7 @@ GameServer.prototype.onClientSocketMessage = function (ws, message) {
 };
 
 WebSocket.prototype.sendPacket = function (packet) {
-    if (packet == null) return;
+    if (!packet) return;
     if (this.readyState == WebSocket.OPEN) {
         if (!this._socket.writable) {
             return;
@@ -572,6 +581,16 @@ GameServer.prototype.spawnCells = function() {
             this.addNode(v);
         }
     }
+
+    if( this.nodesSurprise.length < this.config.SurpriseCell )
+    {
+        var pos =  this.getRandomPosition();
+        if (!this.willCollide(pos, 75)) {
+            var Surprise = new Entity.SurpriseCell(this, null, pos, 75);
+            this.addNode(Surprise);
+        }
+    }
+
     this.spawnMinions();
 };
 
@@ -742,7 +761,7 @@ GameServer.prototype.timerLoop = function() {
     if (this.timeStamp == 0) this.timeStamp = ts;
     this.timeStamp += timeStep;
 
-    setTimeout(this.mainLoopBind, 3);
+    setTimeout(this.mainLoopBind, 0);
     setTimeout(this.timerLoopBind, 3);
 };
 
@@ -755,7 +774,9 @@ GameServer.prototype.mainLoop = function () {
         if ((this.tickCounter % this.config.spawnInterval) == 0) {
             this.spawnCells();
         }
+
         this.gameMode.onTick(this);
+
         if (((this.tickCounter + 3) % 25) == 0) {
             // once per second
             this.updateMassDecay();
@@ -874,62 +895,49 @@ GameServer.prototype.updateClients = function () {
 // ****************************************** QUAD TREE ****************************************** //
 
 GameServer.prototype.updateNodeQuad = function (node) {
-    var quadItem = node.quadItem;
-    if (quadItem == null) {
-        throw new TypeError("GameServer.updateNodeQuad: quadItem is null!");
-    }
+    var item = node.quadItem;
+    var x = node.position.x;
+    var y = node.position.y;
+    var size = node._size;
+
     // check for change
-    if (node.position.x == quadItem.x &&
-        node.position.y == quadItem.y &&
-        node._size == quadItem.size) {
-        // no change
+    if (item.x === x && item.y === y && item.size === size) {
         return;
     }
-    // update quadTree
-    quadItem.x = node.position.x;
-    quadItem.y = node.position.y;
-    quadItem.size = node._size;
-    quadItem.bound = {
-        minx: node.quadItem.x - node.quadItem.size,
-        miny: node.quadItem.y - node.quadItem.size,
-        maxx: node.quadItem.x + node.quadItem.size,
-        maxy: node.quadItem.y + node.quadItem.size
-    };
-    this.quadTree.update(quadItem);
+
+    // update quad tree
+    item.x = x;
+    item.y = y;
+    item.size = size;
+    item.bound.minx = x - size;
+    item.bound.miny = y - size;
+    item.bound.maxx = x + size;
+    item.bound.maxy = y + size;
+    this.quadTree.update(item);
 };
 
 GameServer.prototype.addNode = function (node) {
+    var x = node.position.x;
+    var y = node.position.y;
+    var size = node._size;
     node.quadItem = {
-        cell: node,
-        x: node.position.x,
-        y: node.position.y,
-        size: node._size
+        cell: node, // update viewbox for players
+        bound: { minx: x-size, miny: y-size, maxx: x+size, maxy: y+size }
     };
-    node.quadItem.bound = {
-        minx: node.quadItem.x - node.quadItem.size,
-        miny: node.quadItem.y - node.quadItem.size,
-        maxx: node.quadItem.x + node.quadItem.size,
-        maxy: node.quadItem.y + node.quadItem.size
-    };
-    this.quadTree.insert(node.quadItem);
 
+    this.quadTree.insert(node.quadItem);
     this.nodes.push(node);
 
     // Adds to the owning player's screen
     if (node.owner) {
-        node.setColor(node.owner.getColor());
+        node.setColor(node.owner.color);
         node.owner.cells.push(node);
         node.owner.socket.sendPacket(new Packet.AddNode(node.owner, node));
     }
-
-    // Special on-add actions
-    node.onAdd(this);
+    node.onAdd(this); // Special on-add actions
 };
 
 GameServer.prototype.removeNode = function (node) {
-    if (node.quadItem == null) {
-        throw new TypeError("GameServer.removeNode: attempt to remove invalid node!");
-    }
     node.isRemoved = true;
     this.quadTree.remove(node.quadItem);
     node.quadItem = null;
@@ -1094,6 +1102,7 @@ GameServer.prototype.moveUser = function (check) {
 
     var dx = check.owner.mouse.x - check.position.x;
     var dy = check.owner.mouse.y - check.position.y;
+
     var squared = dx * dx + dy * dy;
     if (squared < 1 || isNaN(dx) || isNaN(dy)) {
         return;
@@ -1194,7 +1203,7 @@ GameServer.prototype.splitCells = function (client) {
                 dy = 0;
             }
             var angle = Math.atan2(dx, dy);
-            if (isNaN(angle)) angle = Math.PI / 2;
+            if (isNaN(angle)) angle = 1.57075;
 
             if (!this.splitPlayerCell(client, cell, angle, null)) break;
         }
@@ -1240,6 +1249,7 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var totalMass = manifold.cell1.getSizeSquared() + manifold.cell2.getSizeSquared();
     if (totalMass <= 0) return;
     var invTotalMass = 1 / totalMass;
+
     var impulse1 = manifold.cell2.getSizeSquared() * invTotalMass;
     var impulse2 = manifold.cell1.getSizeSquared() * invTotalMass;
 
@@ -2030,8 +2040,8 @@ GameServer.prototype.AdminSendPlayers = function() {
             var score = this.numberWithCommas((player._score / 100).toFixed(0));
 
             if(!name && sockets[i].isConnected) { color = '#000000'; name = 'Connecting'; score = 0; }
-            if(sockets[i].isConnected != null && !sockets[i].isConnected) { color = '#000000'; name = 'Disconected'; score = 0; }
-            if (player.cells.length <= 0) { score = 0; color = '#000000'; }
+            if(sockets[i].isConnected != null && !sockets[i].isConnected) { color = '#000000'; name = 'Disconected'; score = 0; player._score = 0; }
+            if (player.cells.length < 1) { score = 0; color = '#000000'; player._score = 0; }
             var myip = sockets[i].remoteAddress;
 
             result1[user]=[player.pID, name, score, color, myip, player.origen];

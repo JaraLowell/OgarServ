@@ -19,7 +19,7 @@ ChatMessage.prototype.build = function (protocol) {
     if (this.sender == '\uD83D\uDCE2') {
         flags = 0x40;
     } else if (this.sender != null) {
-        name = this.sender.getName();
+        name = this.sender._name.replace(/\[(BOT)\] /gi, "");
         if (name == null || name.length == 0) {
             if (this.sender.cells.length > 0)
                 name = "An unnamed cell";

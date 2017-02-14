@@ -17,10 +17,6 @@ function Halloween() {
     this.motherMaxAmount = 30;
     this.tickMotherSpawn = 0;
     this.tickMotherUpdate = 0;
-
-    // Surprise Cell
-    this.nodesSurprise = []; // we dont have a sticky cell no more
-    this.SurpriseCellMinAmount = 4;
 }
 
 module.exports = Halloween;
@@ -127,14 +123,6 @@ Halloween.prototype.onTick = function (gameServer) {
     if (this.tickMotherSpawn >= this.motherSpawnInterval) {
         this.tickMotherSpawn = 0;
         this.spawnMotherCell(gameServer);
-
-        // Lets check Surprise Cells
-        if( this.nodesSurprise.length < this.SurpriseCellMinAmount )
-        {
-            var pos =  gameServer.getRandomPosition();
-            var Surprise = new Entity.SurpriseCell(gameServer, null, pos, 75);
-            gameServer.addNode(Surprise);
-        }
     } else {
         this.tickMotherSpawn++;
     }

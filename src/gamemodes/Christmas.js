@@ -17,10 +17,6 @@ function Christmas() {
     this.motherMaxAmount = 30;
     this.tickMotherSpawn = 0;
     this.tickMotherUpdate = 0;
-
-    // Surprise Cell
-    this.nodesSurprise = [];
-    this.SurpriseCellMinAmount = 4;
 }
 
 module.exports = Christmas;
@@ -80,11 +76,11 @@ Christmas.prototype.onServerInit = function (gameServer) {
             g: 200 + random,
             b: 200 + random,
         });
-        if(random > 18) {
-            this.angle = 3.14*Math.random();
-            this.speed = (0.15 + 3*Math.random());
-            this.setBoost(Infinity, this.angle, this.speed);
-        }
+//        if(random > 18) {
+//            this.angle = 3.14*Math.random();
+//            this.speed = (0.15 + 3*Math.random());
+//            this.setBoost(Infinity, this.angle, this.speed);
+//        }
         gameServer.currentFood++;
     };
     Entity.MotherCell.prototype.onAdd = function () {
@@ -132,14 +128,6 @@ Christmas.prototype.onTick = function (gameServer) {
     if (this.tickMotherSpawn >= this.motherSpawnInterval) {
         this.tickMotherSpawn = 0;
         this.spawnMotherCell(gameServer);
-
-        // Lets check Surprise Cells
-        if( this.nodesSurprise.length < this.SurpriseCellMinAmount )
-        {
-            var pos =  gameServer.getRandomPosition();
-            var Surprise = new Entity.SurpriseCell(gameServer, null, pos, 75);
-            gameServer.addNode(Surprise);
-        }
     } else {
         this.tickMotherSpawn++;
     }

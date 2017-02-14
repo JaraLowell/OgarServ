@@ -19,7 +19,7 @@ UpdateNodes.prototype.build = function (protocol) {
 
     if (protocol < 5) this.writeUpdateItems4(writer);
     else if (protocol == 5) this.writeUpdateItems5(writer);
-    else this.writeUpdateItems6(writer);
+    else this.writeUpdateItems6(writer, protocol);
 
     this.writeRemoveItems(writer, protocol);
     return writer.toBuffer();
@@ -65,7 +65,7 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
         var cellY = node.position.y + scrambleY;
         var cellName = null;
         if (node.owner) {
-            cellName = node.owner.getNameUnicode();
+            cellName = node.owner._nameUnicode;
         }
 
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);
@@ -133,8 +133,8 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         var skinName = null;
         var cellName = null;
         if (node.owner) {
-            skinName = node.owner.getSkinUtf8();
-            cellName = node.owner.getNameUnicode();
+            skinName = node.owner._skinUtf8;
+            cellName = node.owner._nameUnicode;
         } else if (typeof node.skinName == 'object') {
             skinName = node.skinName;
         } else {
@@ -178,7 +178,7 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
 };
 
 // protocol 6
-UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
+UpdateNodes.prototype.writeUpdateItems6 = function (writer, protocol) {
     var scrambleX = this.playerTracker.scrambleX;
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
@@ -220,8 +220,20 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         var skinName = null;
         var cellName = null;
         if (node.owner) {
-            skinName = node.owner.getSkinUtf8();
-            cellName = node.owner.getNameUtf8();
+            skinName = node.owner._skinUtf8;
+            if(protocol == 7) cellName = node.owner._nameUnicode; else cellName = node.owner._nameUtf8;
+        } else if (typeof node.skinName == 'object') {
+            skinName = node.skinName;
+        } else {
+            if (node.cellType == 2 || node.cellType == 5) {
+                var temp = new BinaryWriter();
+                temp.writeStringZeroUtf8('%gas');
+                skinName = node.skinName = temp.toBuffer();
+            } else if(node.cellType == 3) {
+                var temp = new BinaryWriter();
+                temp.writeStringZeroUtf8('%proton');
+                skinName = node.skinName = temp.toBuffer();
+            }
         }
 
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);
@@ -242,6 +254,9 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
             flags |= 0x10;
         if (node.cellType == 3)
             flags |= 0x20;
+        if (protocol == 7)
+            flags |= 0x40;
+
         writer.writeUInt8(flags >>> 0);
 
         if (flags & 0x02) {

@@ -72,12 +72,12 @@ SurpriseCell.prototype.onEaten = function (consumer) {
 };
 
 SurpriseCell.prototype.onAdd = function(gameServer) {
-    gameServer.gameMode.nodesSurprise.push(this);
+    gameServer.nodesSurprise.push(this);
 };
 
 SurpriseCell.prototype.onRemove = function(gameServer) {
-    var index = gameServer.gameMode.nodesSurprise.indexOf(this);
+    var index = gameServer.nodesSurprise.indexOf(this);
     if (index != -1) {
-        gameServer.gameMode.nodesSurprise.splice(index,1);
+        gameServer.nodesSurprise.splice(index,1);
     }
 };

@@ -38,7 +38,7 @@ PacketHandler.prototype.handleMessage = function (message) {
 
         // Handshake request
         this.protocol = reader.readUInt32();
-        if (this.protocol < 1 || this.protocol > 9) {
+        if (this.protocol < 1 || this.protocol > 11) {
             this.socket.close(1002, "Not supported protocol " + this.protocol);
             return;
         }
@@ -212,10 +212,10 @@ PacketHandler.prototype.setNickname = function (text) {
         //    skinName = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
         //    userName = text.slice(n + 1);
         //}
-        if (skinName && !this.gameServer.checkSkinName(skinName)) {
-            skinName = null;
-            userName = text;
-        }
+        //if (skinName && !this.gameServer.checkSkinName(skinName)) {
+        //    skinName = null;
+        //    userName = text;
+        //}
         skin = skinName;
         name = userName;
     }
@@ -223,20 +223,24 @@ PacketHandler.prototype.setNickname = function (text) {
         name = name.substring(0, this.gameServer.config.playerMaxNickLength);
     }
 
-    if(name != null) {
-        if(this.socket.isConnected != null) name = this.WordScan(name);
-        name = name.trim();
-        if(name == '\uD83D\uDCE2') name = 'Noob';
-        // No name or weird name, lets call it Cell + pid Number
-        if (name == "" || 
-            name.toLowerCase() == "unregistered" || 
-            name.toLowerCase() == "an unnamed cell" || 
-            name.toLowerCase() == "adblock! :(" || 
-            name.toLowerCase() == "adblocker :(") {
-                var s = this.socket.playerTracker.pID.toString();
-                while (s.length < 4) s = "0" + s;
-                name = "Cell" + s;
+    name = name.trim();
+    if(name != "") {
+        if(this.socket.isConnected != null)
+            name = this.WordScan(name);
+        if(name == '\uD83D\uDCE2')
+            name = 'Noob';
+
+        // Weird name, lets call it Cell + pid Number
+        if (name.toLowerCase() == "unregistered" || name.toLowerCase() == "an unnamed cell" || name.toLowerCase() == "adblock! :(" || name.toLowerCase() == "adblocker :(") {
+            var s = this.socket.playerTracker.pID.toString();
+            while (s.length < 4) s = "0" + s;
+            name = "Cell" + s;
         }
+    } else {
+        // No name
+        var s = this.socket.playerTracker.pID.toString();
+        while (s.length < 4) s = "0" + s;
+        name = "Cell" + s;
     }
     if(skin != null) skin = skin.trim();
     this.socket.playerTracker.joinGame(name, skin);
