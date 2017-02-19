@@ -486,7 +486,7 @@ Commands.list = {
                     gameServer.removeNode(client.cells[0]);
                     count++;
                 }
-
+                client.resetstats();
                 relayconsole(gameServer,0,"Killed " + client.getFriendlyName() + " and removed " + count + " cells");
                 break;
             }
@@ -500,6 +500,7 @@ Commands.list = {
                 gameServer.removeNode(playerTracker.cells[0]);
                 count++;
             }
+            playerTracker.resetstats();
         }
         if (this.id) relayconsole(gameServer,0,"Removed " + count + " cells");
     },
@@ -675,6 +676,47 @@ Commands.list = {
                 break;
             }
         }
+    },
+    playerinfo: function (gameServer, split) {
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            relayconsole(gameServer,1,"Please specify a valid player ID!");
+            return;
+        }
+        var foundplayer = false;
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                if(client._name) {
+                    var socket = gameServer.clients[i];
+                    var time = +new Date;
+                    var playtime = (time - client.connectedTime) / 1000 >> 0;
+                    relayconsole(gameServer,0,"Player ID:" + id + " (" + client._name + ") bin connected for " + gameServer.seconds2time(playtime));
+                    if(!client.spectate) {
+                        playtime = (time - client.stats.playstart) / 1000 >> 0;
+                        relayconsole(gameServer,0,"-----------------------------------------------------");
+                        relayconsole(gameServer,0,"Bin playing for " + gameServer.seconds2time(playtime));
+                        relayconsole(gameServer,0,"Current Score : " + (client._score / 100 >> 0) + " (Highest was: " + (client.stats.score / 100 >> 0) + ")");
+                        relayconsole(gameServer,0,"-----------------------------------------------------");
+                        relayconsole(gameServer,0,"ate food     : " + client.stats.foodeat + " cells");
+                        relayconsole(gameServer,0,"    players  : " + client.stats.playereat + " cells");
+                        relayconsole(gameServer,0,"    virus    : " + client.stats.viruseat + " cells");
+                        relayconsole(gameServer,0,"    surprice : " + client.stats.surpeat + " cells");
+                        relayconsole(gameServer,0,"spawned      : " + client.spawnCounter + " times");
+                        relayconsole(gameServer,0,"-----------------------------------------------------");
+                    } else relayconsole(gameServer,0,"Currently spectating");
+
+                    if (socket.isConnected) {
+                        relayconsole(gameServer,0,"Connected trough " + socket.remoteAddress + " from " + client.origen);
+                        relayconsole(gameServer,0,"Using protocol " + socket.packetHandler.protocol);
+                    } else relayconsole(gameServer,0,"This is a Local BOT or disconnected player");
+
+                } else relayconsole(gameServer,0,"Player ID:" + id + " has no playerinfo yet");
+                foundplayer = true;
+                break;
+            }
+        }
+        if(!foundplayer) relayconsole(gameServer,0,"Player ID:" + id + " was not found in the playerlist");
     },
     name: function (gameServer, split) {
         // Validation checks

@@ -59,6 +59,11 @@ PacketHandler.prototype.handleMessage = function (message) {
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client requested protocol " + this.protocol + ", assuming 5!");
             this.protocol = 5;
         }
+
+        if (this.protocol == 5 && this.socket.playerTracker.origen == 'ogar.mivabe.nl') {
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "New Beta Client active! See main page for the link and give it a try.");
+        }
+
         this.isHandshakePassed = true;
         return;
     }

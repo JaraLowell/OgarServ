@@ -27,7 +27,14 @@ function PlayerTracker(gameServer, socket) {
     this.borderCounter = 0;
     this.MiniMap = false;
     this.origen;
-
+    this.stats = {
+        score: 0,
+        playereat: 0,
+        viruseat: 0,
+        foodeat: 0,
+        surpeat: 0,
+        playstart: 0
+    };
     this.mouse = {
         x: 0,
         y: 0
@@ -62,7 +69,6 @@ function PlayerTracker(gameServer, socket) {
     this.scrambleId = 0;
 
     this.connectedTime = new Date;
-    this.isMinion = false;
     this.spawnCounter = 0;
 
     // Chat functions
@@ -71,6 +77,7 @@ function PlayerTracker(gameServer, socket) {
     this.isMuted = false;
 
     // Minions
+    this.isMinion = false;
     this.miQ = 0;
     this.isMi = false;
     this.minionSplit = false;
@@ -215,6 +222,7 @@ PlayerTracker.prototype.updateMass = function () {
         this._score = 0;
     } else {
         this._score = totalScore;
+        if(totalScore > this.stats.score) this.stats.score = totalScore;
         this._scale = Math.pow(Math.min(128 / totalSize, 1), 0.4); //64
     }
     this.isMassChanged = false;
@@ -225,6 +233,19 @@ PlayerTracker.prototype.massChanged = function () {
 };
 
 // Functions
+PlayerTracker.prototype.resetstats = function () {
+    if(this.stats.score > 0) {
+        // If we have MySQL dump it to MySQL
+        var ip = "BOT";
+        if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') ip = this.socket.remoteAddress;
+
+        if(ip != "BOT" && (this.stats.score / 100) > 500 ) {
+            this.gameServer.mysql.writeScore(this._name, this._skin.substring(1), ip, this.stats, this.gameServer.sqlconfig.table);
+        }
+        // And Reset it
+        this.stats = {score: 0, playereat: 0, viruseat: 0, foodeat: 0, surpeat: 0, playstart: 0};
+    }
+};
 
 PlayerTracker.prototype.joinGame = function (name, skin) {
     if (this.cells.length > 0) return;
@@ -232,6 +253,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.setName(name);
     if (skin != null)
         this.setSkin(skin);
+    this.stats.playstart = +new Date;
     this.spectate = false;
     this.freeRoam = false;
     this.freeMouse = true;
@@ -272,6 +294,7 @@ PlayerTracker.prototype.checkConnection = function () {
         var time = +new Date;
         var dt = (time - this.socket.closeTime) / 1000;
         var loss = this.gameServer.config.ejectSizeLoss;
+        this.resetstats();
         if (this.cells.length || dt >= this.gameServer.config.playerDisconnectTime) {
             // Remove all client cells
             var cells = this.cells;
@@ -330,8 +353,6 @@ PlayerTracker.prototype.updateTick = function () {
         this.pressQ();
         this.socket.packetHandler.pressQ = false;
     }
-
-    
 
     if (this.spectate) {
         if (this.freeRoam || this.getSpectateTarget() == null) {
@@ -526,7 +547,7 @@ PlayerTracker.prototype.pressQ = function () {
 
 PlayerTracker.prototype.pressW = function () {
     if (this.spectate) {
-        if(this.freeRoam) {
+        if(this.freeMouse) {
             this.centerPos.x = 0;
             this.centerPos.y = 0;
             this.mouse.x = this.centerPos.x;

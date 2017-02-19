@@ -1,0 +1,5 @@
+host = localhost
+user = mysqlusername
+password = mysqlpassword
+database = mysqldatabase
+table = score

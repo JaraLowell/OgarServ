@@ -90,6 +90,7 @@ var playerCommands = {
                 this.gameServer.ejectBoom(pos,color);
             }
         }
+        this.playerTracker.resetstats();
         this.writeLine("You killed yourself");
     },
     login: function (args) {

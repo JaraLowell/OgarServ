@@ -66,6 +66,14 @@ function GameServer() {
     // Config
     this.config = require('./modules/default.json');
 
+    this.sqlconfig = {
+        host: '',
+        user: '',
+        password: '',
+        database: '',
+        table: ''
+    };
+
     this.version = this.config.version;
     this.ipBanList = [];
     this.minionTest = [];
@@ -137,6 +145,16 @@ GameServer.prototype.start = function () {
         }.bind(this));
 
         this.wsAdmin.on('connection', this.onAdminSocketOpen.bind(this));
+    }
+
+    // My SQL erver
+    if (this.sqlconfig.host != '') {
+        Logger.info("MySQL config loaded Database set to " + this.sqlconfig.database + "." + this.sqlconfig.table);
+        var MySQL = require("./modules/mysql");
+        this.mysql = new MySQL();
+        this.mysql.init(this.sqlconfig);
+        this.mysql.connect();
+        this.mysql.createTable(this.sqlconfig.table, this.sqlconfig.database);
     }
 };
 
@@ -279,7 +297,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 
     ws.playerTracker.origen = punycode.toUnicode(ws.upgradeReq.headers.origin.replace(/^https?\:\/\//i, ""));
 
-    Logger.warn("\u001B[32mClient connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: \"" + ws.playerTracker.origen + "\"]");
+    Logger.warn("\u001B[32mClient connected " + ws.remoteAddress + ":" + ws.remotePort + " [origin: " + ws.playerTracker.origen + "]");
 
     // Do not put this on Git!
     if('192.168.178.29' == ws.remoteAddress) ws.playerTracker.setName('\u2728\u2726 \uD835\uDCD9\uD835\uDCEA\uD835\uDCFB\uD835\uDCEA \u2728\u2726');
@@ -825,16 +843,19 @@ GameServer.prototype.mainLoop = function () {
                 this.config.LBextraLine = ("\u2002\u2002\u2002\u2002» Restart" + local + " «\u2002\u2002\u2002\u2002\u2002\u2002");
             }
         }
+
         // ping server tracker
-        if(this.config.serverTracker) {
+        if(this.config.serverTracker)
             this.pingServerTracker();
-        }
+
+        // send keep alive ping to MySQL
+        if (this.sqlconfig.host != '')
+            this.mysql.ping();
+
         if(this.config.serverBots > 0)
             if(this.sinfo.humans < this.config.serverBots && this.sinfo.bots < this.config.serverBots)
                 this.bots.addBot();
-
     }
-
     this.tickCounter++;
 
     var diff = process.hrtime(tStart);
@@ -1349,8 +1370,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
         minCell.owner.mergeOverride = false;
     }
 
-    var isMinion = (maxCell.owner && maxCell.owner.isMinion) ||
-        (minCell.owner && minCell.owner.isMinion);
+    var isMinion = (maxCell.owner && maxCell.owner.isMinion) || (minCell.owner && minCell.owner.isMinion);
     if (!isMinion) {
         // Consume effect
         maxCell.onEat(minCell);
@@ -1359,6 +1379,20 @@ GameServer.prototype.resolveCollision = function (manifold) {
         // update bounds
         this.updateNodeQuad(maxCell);
     }
+
+    // Add Score
+    if (maxCell.cellType == 0) {
+        if (minCell.cellType == 0 && !isMinion)
+            if (maxCell.owner.pID != minCell.owner.pID)
+                maxCell.owner.stats.playereat++;
+        if (minCell.cellType == 1 || minCell.cellType == 3) maxCell.owner.stats.foodeat++;
+        if (minCell.cellType == 2) maxCell.owner.stats.viruseat++;
+        if (minCell.cellType == 4) maxCell.owner.stats.surpeat++;
+    }
+
+    if(minCell.cellType == 0)
+        if(minCell.owner.cells.length == 1)
+            minCell.owner.resetstats();
 
     // Remove cell
     minCell.setKiller(maxCell);
@@ -1690,6 +1724,16 @@ GameServer.prototype.loadConfig = function () {
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
     Logger.setVerbosity(this.config.logVerbosity);
     Logger.setFileVerbosity(this.config.logFileVerbosity);
+
+    try {
+        // Load the contents of the mysql config file
+        var load = ini.parse(fs.readFileSync('./mysql.ini', 'utf-8'));
+        for (var obj in load) {
+            if (obj.substr(0, 2) != "//") this.sqlconfig[obj] = load[obj];
+        }
+    } catch (err) {
+        // Noting to do...
+    }
 };
 
 GameServer.prototype.loadBadWords = function () {
@@ -1954,8 +1998,8 @@ GameServer.prototype.seconds2time = function (seconds) {
         time += minutes + ":";
     }
 
-    if (time === "") time = seconds;
-    else time += (seconds < 10) ? "0" + seconds : String(seconds);
+    if (time === "") time = "0:";
+    time += (seconds < 10) ? "0" + seconds : String(seconds);
 
     return time;
 };
@@ -2188,12 +2232,25 @@ GameServer.prototype.pingServerTracker = function () {
 GameServer.prototype.exitserver = function () {
     if(this.config.serverMaxConnections != 0) {
         this.sendChatMessage(null, null, "*** Automatic Server Restart in 30 seconds to clean connections and memory ***");
-        // console.log("\u001B[31m*** Automatic Server Restart in 30 seconds ***\u001B[0m");
         this.config.serverMaxConnections = 0;
         this.config.LBextraLine = ("\u2002\u2002\u2002\u2002» Restarting now! «\u2002\u2002\u2002\u2002\u2002\u2002");
         this.config.serverResetTime = 0;
+
         var temp = setTimeout(function () {
-            console.log("\u001B[31m*** Server Shutdown! ***\u001B[0m");
+            this.run = false;
+            // Close MySQL
+            if (this.sqlconfig.host != '') {
+                Logger.info("Closing mysql connection...");
+                var players = this.clients.length;
+                for (var i = 0; i < players; i++) {
+                    var playerTracker = this.clients[i].playerTracker;
+                    if (playerTracker.cells.length > 0) {
+                        playerTracker.resetstats();
+                    }
+                }
+                this.mysql.close();
+            }
+            Logger.warn("*** Server Shutdown! ***");
             this.wsServer.close();
             process.exit(1);
             window.close();
