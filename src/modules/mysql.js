@@ -39,10 +39,15 @@ MySQL.prototype.writeScore = function (name, skin, ip, stats, table) {
     var playtime = (time - stats.playstart) / 1000 >> 0;
     var score = stats.score / 100 >> 0
 
+    // Delete Old Records from Todays Score List
+    this.connection.query('DELETE FROM `' + table + '` WHERE DATE(`lastseen`) != CURDATE()');
+
+    // Write Score to Todays Score List
     this.connection.query('INSERT INTO `' + table + '` (`name`,`ip`,`score`,`lastseen`) VALUES ( ? , ? , ? ,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE `score` = IF(`score` < ? , ? , `score`),`lastseen` = CURRENT_TIMESTAMP', [name, ip, score, score, score], function (err, rows, fields) {
         if (err != null) console.log('\u001B[31mMySQL Error!\u001B[0m\n' + err);
     });
 
+    // Write All time score and additional info
     this.connection.query('INSERT INTO `' + table + 'all` (`name`,`skin`,`ip`,`score`,`eat_players`,`eat_virus`,`eat_food`,`eat_surprice`,`timeplayed`,`lastseen`) VALUES ( ?, ? , ? , ? , ? , ? , ? , ? , ? ,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE `score` = IF(`score` < ? , ? , `score`), `skin` = ?,`eat_players` = `eat_players` + ?, `eat_virus` = `eat_virus` + ?, `eat_food` = `eat_food` + ?, `eat_surprice` = `eat_surprice` + ?, `timeplayed` = `timeplayed` + ?, `lastseen` = CURRENT_TIMESTAMP', [name,skin,ip,score,stats.playereat,stats.viruseat,stats.foodeat,stats.surpeat,playtime,score,score,skin,stats.playereat,stats.viruseat,stats.foodeat,stats.surpeat,playtime], function (err, rows, fields) {
         if (err != null) console.log('\u001B[31mMySQL Error!\u001B[0m\n' + err);
     });
