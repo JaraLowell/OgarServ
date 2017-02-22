@@ -1,13 +1,13 @@
 ﻿var FFA = require('./FFA'); // Base gamemode
-var Food = require('../entity/Food');
+var Entity = require('../entity');
 
 function Rainbow() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
-    
+
     this.ID = 20;
     this.name = "Rainbow FFA";
     this.specByLeaderboard = true;
-    
+    this.interfall = 0;
     this.colors = [{
             'r': 255,
             'g': 0,
@@ -142,33 +142,55 @@ Rainbow.prototype.changeColor = function (node) {
     if (typeof node.rainbow == 'undefined') {
         node.rainbow = Math.floor(Math.random() * this.colors.length);
     }
-    
+
     if (node.rainbow >= this.colorsLength) {
         node.rainbow = 0;
     }
-    
-    node.setColor(this.colors[node.rainbow]);
+
+    node.color = this.colors[node.rainbow];
     node.rainbow += this.speed;
 };
 
 // Override
+Rainbow.prototype.onServerInit = function (gameServer) {
+    var self = this;
 
-Rainbow.prototype.onServerInit = function () {
+    Entity.Food.prototype.onAdd = function () {
+        self.changeColor(this);
+        gameServer.currentFood++;
+    };
+    Entity.Virus.prototype.onAdd = function () {
+        self.changeColor(this);
+        gameServer.nodesVirus.push(this);
+
+        // Lets Spawn our pretty spirals
+        if(gameServer.config.virusSpirals)
+            gameServer.spawnSpiral(this.position, this.color);
+
+    };
+    Entity.EjectedMass.prototype.onAdd = function () {
+        self.changeColor(this);
+        gameServer.nodesEjected.push(this);
+    };
 };
 
 Rainbow.prototype.onChange = function () {
 };
 
 Rainbow.prototype.onTick = function (gameServer) {
-    var color, node;
-    // Change color
-    for (var i in gameServer.nodes) {
-        node = gameServer.nodes[i];
-        
-        if (!node) {
-            continue;
+    if(this.interfall < 0) {
+        this.interfall = 3;
+        var color, node;
+        // Change color
+        for (var i in gameServer.clients) {
+            var client = gameServer.clients[i].playerTracker;
+            for (var j = 0, len = client.cells.length; j < len; j++) {
+                if(client.cells[j]) {
+                    node = client.cells[j];
+                    this.changeColor(node);
+                }
+            }
         }
-        
-        this.changeColor(node);
     }
+    this.interfall--;
 };
