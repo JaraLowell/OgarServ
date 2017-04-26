@@ -236,11 +236,13 @@ PlayerTracker.prototype.massChanged = function () {
 PlayerTracker.prototype.resetstats = function () {
     if(this.stats.score > 0) {
         // If we have MySQL dump it to MySQL
-        var ip = "BOT";
-        if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') ip = this.socket.remoteAddress;
+        if(this.gameServer.sqlconfig.host != '') {
+            var ip = "BOT";
+            if (typeof this.socket.remoteAddress != 'undefined' && this.socket.remoteAddress != 'undefined') ip = this.socket.remoteAddress;
 
-        if(ip != "BOT" && (this.stats.score / 100) > 500 ) {
-            this.gameServer.mysql.writeScore(this._name, this._skin.substring(1), ip, this.stats, this.gameServer.sqlconfig.table);
+            if(ip != "BOT" && (this.stats.score / 100) > 500 ) {
+                this.gameServer.mysql.writeScore(this._name, this._skin.substring(1), ip, this.stats, this.gameServer.sqlconfig.table);
+            }
         }
         // And Reset it
         this.stats = {score: 0, playereat: 0, viruseat: 0, foodeat: 0, surpeat: 0, playstart: 0};
