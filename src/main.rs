@@ -7,6 +7,7 @@ mod modes;
 mod net;
 mod player;
 mod protocol;
+mod mysql_scores;
 mod scores;
 mod tracker;
 mod world;
@@ -45,6 +46,16 @@ async fn main() -> anyhow::Result<()> {
         port = cfg.server.port,
         "OgarServ Rust starting"
     );
+    if cfg.mysql.enabled() {
+        let (host, port) = cfg.mysql.host_and_port();
+        info!(
+            %host,
+            port,
+            db = %cfg.mysql.database,
+            table = %cfg.mysql.table,
+            "MySQL high scores enabled (connect-on-write)"
+        );
+    }
 
     // Initial world fill for FFA
     let scores = ScoreStore::open(&cfg.scores.path, cfg.scores.max_entries_per_mode)?;

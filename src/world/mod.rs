@@ -1623,6 +1623,9 @@ impl GameServer {
     }
 
     fn surprise_on_eaten(&mut self, pid: PlayerId, cell_id: NodeId) {
+        if let Some(p) = self.players.get_mut(&pid) {
+            p.stats.surpeat += 1;
+        }
         let mut rng = rand::rng();
         let dice = rng.random::<f64>();
         let (size, mass, name, cell_count) = {
@@ -2197,7 +2200,7 @@ impl GameServer {
     }
 
     pub fn record_score(&mut self, pid: PlayerId) {
-        let (name, skin, ip, stats, mode_name, min_save) = {
+        let (name, skin, ip, stats, mode_name, min_save, is_bot) = {
             let p = match self.players.get(&pid) {
                 Some(p) if !p.is_mi => p,
                 _ => return,
@@ -2209,6 +2212,7 @@ impl GameServer {
                 p.stats.clone(),
                 self.mode.name().to_string(),
                 self.config.scores.min_score_to_save,
+                p.is_bot,
             )
         };
         let score = stats.score / 100;
@@ -2220,7 +2224,6 @@ impl GameServer {
         } else {
             0
         };
-        let _ = ip;
         let entry = ScoreEntry {
             name,
             skin,
@@ -2229,11 +2232,22 @@ impl GameServer {
             foodeat: stats.foodeat,
             playereat: stats.playereat,
             viruseat: stats.viruseat,
+            surpeat: stats.surpeat,
             play_seconds,
             at: Utc::now(),
         };
-        if let Err(e) = self.scores.record(entry) {
+        // Local JSON always
+        if let Err(e) = self.scores.record(entry.clone()) {
             tracing::warn!("score save failed: {e}");
+        }
+        // Optional MySQL (JS mysql.ini) — skip bots; connect only for this write
+        if self.config.mysql.enabled() && !is_bot {
+            let ip = if ip.eq_ignore_ascii_case("bot") {
+                "BOT".into()
+            } else {
+                ip
+            };
+            crate::mysql_scores::spawn_write(self.config.mysql.clone(), entry, ip);
         }
         if let Some(p) = self.players.get_mut(&pid) {
             p.stats = PlayerStats::default();

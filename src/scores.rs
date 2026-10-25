@@ -24,6 +24,8 @@ pub struct ScoreEntry {
     pub playereat: u32,
     #[serde(default)]
     pub viruseat: u32,
+    #[serde(default)]
+    pub surpeat: u32,
     pub play_seconds: u64,
     pub at: DateTime<Utc>,
 }

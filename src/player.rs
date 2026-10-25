@@ -13,6 +13,8 @@ pub struct PlayerStats {
     pub playereat: u32,
     pub viruseat: u32,
     pub foodeat: u32,
+    /// SurpriseCells eaten (JS `surpeat` / MySQL `eat_surprice`)
+    pub surpeat: u32,
     pub playstart: i64,
 }
 

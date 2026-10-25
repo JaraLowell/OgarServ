@@ -19,6 +19,8 @@ pub struct AppConfig {
     pub bots: BotsSection,
     #[serde(default)]
     pub tracker: TrackerSection,
+    #[serde(default)]
+    pub mysql: MysqlSection,
     pub scores: ScoresSection,
     #[serde(skip)]
     pub mode: ModeConfig,
@@ -268,6 +270,68 @@ fn default_tracker_interval() -> u64 {
 }
 fn default_tracker_empty_interval() -> u64 {
     300
+}
+
+/// Optional MySQL high scores (JS `mysql.ini` / `sqlconfig`). Empty `host` = disabled.
+/// Connects only when a score is written — no keep-alive ping.
+#[derive(Debug, Clone, Deserialize)]
+pub struct MysqlSection {
+    /// MySQL host, or `host:port`. Empty disables MySQL.
+    #[serde(default)]
+    pub host: String,
+    #[serde(default = "default_mysql_port")]
+    pub port: u16,
+    #[serde(default)]
+    pub user: String,
+    #[serde(default)]
+    pub password: String,
+    #[serde(default)]
+    pub database: String,
+    /// Base table name; also writes to `{table}all` (JS createTable / writeScore).
+    #[serde(default = "default_mysql_table")]
+    pub table: String,
+}
+
+impl Default for MysqlSection {
+    fn default() -> Self {
+        Self {
+            host: String::new(),
+            port: default_mysql_port(),
+            user: String::new(),
+            password: String::new(),
+            database: String::new(),
+            table: default_mysql_table(),
+        }
+    }
+}
+
+impl MysqlSection {
+    pub fn enabled(&self) -> bool {
+        !self.host.trim().is_empty()
+            && !self.user.is_empty()
+            && !self.database.is_empty()
+            && !self.table.is_empty()
+    }
+
+    /// Split optional `host:port` from `host`, falling back to `port`.
+    pub fn host_and_port(&self) -> (String, u16) {
+        let h = self.host.trim();
+        if let Some((host, port_s)) = h.rsplit_once(':') {
+            if !host.is_empty() && !host.contains(':') {
+                if let Ok(p) = port_s.parse::<u16>() {
+                    return (host.to_string(), p);
+                }
+            }
+        }
+        (h.to_string(), self.port)
+    }
+}
+
+fn default_mysql_port() -> u16 {
+    3306
+}
+fn default_mysql_table() -> String {
+    "score".into()
 }
 
 #[derive(Debug, Clone, Deserialize)]

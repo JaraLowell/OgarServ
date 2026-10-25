@@ -78,6 +78,7 @@ Still to port from the Node server: LMS, Tournament, HungerGames, Zombie, TeamZ,
 - Idle freeze when no human is playing (`bots.idle_when_empty = true`; spectators do not count); set it to `false` to let bots keep playing on an empty server (useful for stress tests). Spectate **Space** / **Q** still cycles humans + bots
 - Larger view via `world.view_base_x` / `view_base_y`
 - High scores → `data/highscores.json`
+- Optional MySQL high scores (`[mysql]` — same `{table}` / `{table}all` as Node; enabled when `host` is set; connect-on-write only)
 - Optional HTTP JSON stats/scores (`server.http_port`; `0` = off)
 - Optional master-list alive ping (`[tracker]` → same JSON as Node `masterjs.php`: players / alive / spectators / port / gamemode / …; outbound forced to **IPv4**)
 
@@ -89,7 +90,7 @@ Still to port from the Node server: LMS, Tournament, HungerGames, Zombie, TeamZ,
 
 | File | Purpose |
 |------|---------|
-| `config/server.toml` | Port, TLS, tracker, world, food/virus, bots, minions, surprise, mode name |
+| `config/server.toml` | Port, TLS, tracker, mysql, world, food/virus, bots, minions, surprise, mode name |
 | `config/modes/*.toml` | Per-mode id, decay, spawn/rules, Halloween-family toggles |
 | `botnames.txt` | Bot name pool (`[bots].names_file`) |
 | `data/highscores.json` | Saved scores |

@@ -113,3 +113,13 @@ size = 75.0
 path = "data/highscores.json"
 max_entries_per_mode = 100
 min_score_to_save = 500
+
+# Optional MySQL high scores (JS mysql.ini). Empty host = off.
+# Connects only when saving a score — no keep-alive ping. Creates `{table}` + `{table}all`.
+[mysql]
+host = ""
+port = 3306
+user = ""
+password = ""
+database = ""
+table = "score"
