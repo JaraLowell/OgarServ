@@ -47,8 +47,8 @@ count = 10
 name = "[BOT] {name}"
 names_file = "botnames.txt"
 think_interval = 2
-# When no human is playing (spectators don't count), world motion freezes and bots shrink
-idle_when_empty = false
+# When no human is playing (spectators don't count), world freezes and bots sleep at start size
+idle_when_empty = true
 
 [world]
 border_width = 14142.0
@@ -116,6 +116,7 @@ min_score_to_save = 500
 
 # Optional MySQL high scores (JS mysql.ini). Empty host = off.
 # Connects only when saving a score — no keep-alive ping. Creates `{table}` + `{table}all`.
+# Prefer 127.0.0.1 over "localhost" if mysqld only listens on IPv4 loopback.
 [mysql]
 host = ""
 port = 3306

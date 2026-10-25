@@ -26,14 +26,21 @@ pub fn spawn_write(cfg: MysqlSection, entry: ScoreEntry, ip: String) {
 
 fn write_score(cfg: &MysqlSection, entry: &ScoreEntry, ip: &str) -> anyhow::Result<()> {
     let (host, port) = cfg.host_and_port();
+    // mysqld often binds only 127.0.0.1:3306. Resolving "localhost" can hit ::1 first
+    // → connection refused. Force IPv4 loopback for local hosts.
+    let host = if host.eq_ignore_ascii_case("localhost") || host == "::1" {
+        "127.0.0.1".to_string()
+    } else {
+        host
+    };
+    let local = host == "127.0.0.1";
     let opts = OptsBuilder::new()
         .ip_or_hostname(Some(host.as_str()))
         .tcp_port(port)
         .user(Some(cfg.user.as_str()))
         .pass(Some(cfg.password.as_str()))
         .db_name(Some(cfg.database.as_str()))
-        // Prefer IPv4 when dual-stack (same idea as tracker ping)
-        .prefer_socket(false);
+        .prefer_socket(local);
 
     let pool = Pool::new(opts)?;
     let mut conn = pool.get_conn()?;

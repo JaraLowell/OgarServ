@@ -718,34 +718,31 @@ impl GameServer {
             }
         }
 
-        // Idle when no humans: shrink oversized bots (JS behavior)
+        // Idle when no humans: one cell at spawn size, AI sleeps (JS behavior)
         if self.config.bots.idle_when_empty && self.sinfo_humans == 0 {
-            let shrink: Vec<(PlayerId, Vec<NodeId>)> = self
+            let start_size = self.config.player.start_size;
+            let merge_extra: Vec<NodeId> = self
                 .players
                 .iter()
                 .filter(|(_, p)| p.is_bot && p.cells.len() > 1)
-                .map(|(id, p)| (*id, p.cells.clone()))
+                .flat_map(|(_, p)| p.cells.iter().skip(1).copied())
                 .collect();
-            for (_pid, cells) in shrink {
-                for &cid in cells.iter().skip(1) {
-                    self.remove_cell(cid);
-                }
+            for cid in merge_extra {
+                self.remove_cell(cid);
             }
-            let big: Vec<NodeId> = self
+            let bot_cells: Vec<NodeId> = self
                 .players
                 .values()
                 .filter(|p| p.is_bot)
                 .flat_map(|p| p.cells.iter().copied())
-                .filter(|&cid| {
-                    self.cells
-                        .get(&cid)
-                        .map(|c| c.size > 70.0)
-                        .unwrap_or(false)
-                })
                 .collect();
-            for cid in big {
+            for cid in bot_cells {
                 if let Some(c) = self.cells.get_mut(&cid) {
-                    c.set_size(63.0);
+                    if (c.size - start_size).abs() > 0.5 {
+                        c.set_size(start_size);
+                    }
+                    c.is_moving = false;
+                    c.boost_distance = 0.0;
                 }
             }
         }
