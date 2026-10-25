@@ -425,7 +425,7 @@ impl GameServer {
             };
             if moving {
                 let angle = rng.random::<f64>() * std::f64::consts::TAU;
-                let speed = 0.25 + rng.random::<f64>() * 3.0;
+                let speed = 0.125 + rng.random::<f64>() * 1.5;
                 cell.infinite_boost = true;
                 cell.set_boost(1.0e12, angle, speed);
             }

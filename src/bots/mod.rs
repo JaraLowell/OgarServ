@@ -108,7 +108,7 @@ fn decide(snap: &BotSnapshot) -> BotIntent {
                     } else {
                         -2.5 // avoid pop-split
                     }
-                } else if n.is_mother && n.size > snap.cell_size * 1.15 {
+                } else if n.cell_type == CellType::Virus && n.size > snap.cell_size * 1.15 {
                     -3.0
                 } else {
                     0.0

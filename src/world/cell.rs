@@ -130,10 +130,10 @@ impl Cell {
     pub fn can_eat(&self, prey: &Cell) -> bool {
         match self.cell_type {
             CellType::Player => true,
-            CellType::Virus if self.is_mother => {
+            // Mothers, flying viruses, and spiral viruses all consume a smaller player.
+            CellType::Virus => {
                 matches!(prey.cell_type, CellType::Player | CellType::Ejected)
             }
-            CellType::Virus => prey.cell_type == CellType::Ejected,
             CellType::Beacon => prey.cell_type == CellType::Ejected,
             _ => false,
         }

@@ -24,6 +24,23 @@ HTTPS client pages always open `wss://` + host:port (see OgarClient) — use you
 
 **Edge note:** public site → loopback may be blocked by Local Network Access (`edge://flags/#local-network-access-check`).
 
+### Client skins
+
+In `client/gameclient.js`, `SKIN_URL = "//ogar.mivabe.nl/skins/"` uses the
+client page's protocol: HTTP on HTTP pages and HTTPS on HTTPS pages. Keep the
+leading `//`; a bare `ogar.mivabe.nl/skins/` is a relative path, not a hostname.
+The skin host must serve HTTPS with a valid certificate for HTTPS clients;
+falling back to HTTP can be blocked as mixed content. If hosting your own client,
+point this URL at your own skin host.
+
+The client sends only a skin name, not its image URL, in the spawn nickname
+(`<skin-name>Player`). The server stores and broadcasts that skin name; each
+client loads the image from its own `SKIN_URL`. Selection updates `#myskin`, which
+Play reads, even when reselecting the saved skin.
+
+Browser local storage is separate for HTTP and HTTPS, so a skin saved on HTTP
+will not automatically be selected on HTTPS. Select it once on each origin.
+
 ### WSS / Let's Encrypt
 
 Defaults match certbot file names (no rename needed — symlink):
