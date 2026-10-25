@@ -1,0 +1,115 @@
+# OgarServ (Rust) — main server settings
+
+[server]
+name = "OgarServ Rust"
+welcome1 = "Welcome to OgarServ (Rust)"
+welcome2 = "Eat or be eaten"
+port = 8080
+# Optional JSON stats/scores HTTP (0 = off). Was used for Edge WS test page; removed.
+http_port = 0
+# WSS for HTTPS-hosted clients (browser blocks ws:// from https:// pages)
+tls_port = 8443
+# Let's Encrypt-style names (symlink live/…/fullchain.pem + privkey.pem into tls_dir)
+tls_dir = "data/tls"
+tls_cert = "fullchain.pem"
+tls_key = "privkey.pem"
+rcon_port = -1
+max_connections = 64
+ip_limit = 4
+timeout_secs = 300
+chat = true
+# 0 = best for most web clients (matches classic OgarServ.ini)
+scramble_level = 0
+max_leaderboard = 10
+# legacy alias; prefer [bots] below
+bots = -1
+protocol = 11
+# ffa | teams | experimental | halloween | christmas | virusoff
+mode = "halloween"
+
+# Alive ping → master list (same JSON as Node pingServerTracker / masterjs.php)
+# Outbound HTTP is forced to IPv4 (local bind 0.0.0.0) so the tracker sees your v4 address.
+[tracker]
+enabled = false
+url = "http://ogar.mivabe.nl/masterjs.php"
+# Client site listed on the tracker (no http://) — JS serverURL
+server_url = "ogar.mivabe.nl"
+# When players > 0; when empty uses empty_interval_secs (~5 min like JS comment)
+interval_secs = 30
+empty_interval_secs = 300
+
+# Player bots (AI runs on a dedicated thread — does not hold the physics lock)
+[bots]
+# Target bot count (-1 = off). Like Node serverBots: fill on start; spawn/respawn
+# only while humans < count AND bots < count. Extra humans do not remove bots.
+count = 10
+# {n} = index, {name} = from names_file (or Bot{n})
+name = "[BOT] {name}"
+names_file = "botnames.txt"
+think_interval = 2
+# When no human is playing (spectators don't count), world motion freezes and bots shrink
+idle_when_empty = false
+
+[world]
+border_width = 14142.0
+border_height = 14142.0
+tick_ms = 40
+view_base_x = 1920.0
+view_base_y = 1080.0
+
+[food]
+min_size = 10.0
+max_size = 20.0
+min_amount = 1000
+max_amount = 2000
+spawn_amount = 30
+spawn_interval_ticks = 20
+
+[virus]
+min_size = 100.0
+max_size = 140.0
+min_amount = 50
+max_amount = 100
+spirals = false
+moving = false
+color_r = 10
+color_g = 200
+color_b = 10
+push_on_eat = false
+
+[player]
+min_size = 32.0
+max_size = 1500.0
+min_split_size = 60.0
+start_size = 64.0
+max_cells = 16
+# MultiOgar default.json = 1 (gameserver.ini may override; keep vanilla feel when small)
+speed = 1.0
+decay_rate = 0.002
+recombine_time = 30.0
+max_nick_length = 15
+disconnect_time = 60.0
+bot_grow = false
+
+[eject]
+size = 38.0
+size_loss = 43.0
+distance = 780.0
+cooldown_ticks = 3
+
+# Player-controlled helpers (E split / R eject / T freeze / P collect)
+[minions]
+per_player = 0
+start_size = 32.0
+default_name = "minion"
+collect_pellets = false
+
+# Agitated red cells — lucky/unlucky/warp when eaten (0 = off)
+[surprise]
+amount = 0
+size = 75.0
+
+[scores]
+path = "data/highscores.json"
+max_entries_per_mode = 100
+min_score_to_save = 500

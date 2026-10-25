@@ -1,0 +1,18 @@
+# Teams — switch with server.mode = "teams"
+# Leaderboard is pie chart (opcode 0x32), not the FFA name list.
+
+id = 1
+name = "Teams"
+decay_mod = 1.5
+leaderboard = "pie"
+have_teams = true
+teams = 3
+spec_by_leaderboard = true
+
+[spawn]
+player_start_size = 64.0
+food_min_amount = 1000
+virus_min_amount = 50
+
+[rules]
+player_recombine_time = 30.0

@@ -1,0 +1,15 @@
+id = 0
+name = "Free For All"
+decay_mod = 1.0
+leaderboard = "list"
+have_teams = false
+teams = 0
+spec_by_leaderboard = true
+
+[spawn]
+player_start_size = 64.0
+food_min_amount = 1000
+virus_min_amount = 50
+
+[rules]
+player_recombine_time = 30.0

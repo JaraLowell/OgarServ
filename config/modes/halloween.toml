@@ -1,0 +1,33 @@
+id = 3
+name = "Halloween"
+decay_mod = 1.0
+leaderboard = "list"
+have_teams = false
+teams = 0
+spec_by_leaderboard = true
+
+# Mode needs SurpriseCells (matches classic gameserver.ini SurpriseCell = 4)
+surprise_amount = 4
+# Optional: auto minions per human (0 = only via terminal `minion`)
+minions_per_player = 0
+
+# Halloween toggles applied in on_server_init (see modes/halloween.rs)
+[halloween]
+virus_spirals = true
+virus_moving = true
+virus_push_on_eat = true
+virus_color_r = 230
+virus_color_g = 60
+virus_color_b = 10
+mother_spawn_interval = 125
+mother_update_interval = 5
+beacon = true
+beacon_size = 300.0
+disable_viruses = false
+
+[spawn]
+# Amounts are scaled from map size in code; these are fallbacks
+player_start_size = 64.0
+
+[rules]
+player_recombine_time = 30.0

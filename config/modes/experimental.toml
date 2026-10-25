@@ -1,0 +1,25 @@
+id = 2
+name = "Experimental"
+decay_mod = 1.0
+leaderboard = "list"
+have_teams = false
+teams = 0
+spec_by_leaderboard = true
+
+[halloween]
+virus_spirals = false
+virus_moving = false
+virus_push_on_eat = true
+virus_color_r = 33
+virus_color_g = 255
+virus_color_b = 33
+mother_spawn_interval = 125
+mother_update_interval = 5
+beacon = false
+disable_viruses = true
+
+[spawn]
+player_start_size = 64.0
+
+[rules]
+player_recombine_time = 30.0
